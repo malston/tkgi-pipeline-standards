@@ -1,130 +1,178 @@
-# CI Standardization Reference Implementation
+# TKGi CI/CD Standards Documentation
 
-This repository serves as a reference implementation for standardized CI folder structures, Concourse tasks, and fly scripts across pipeline repositories. It provides a consistent approach to organizing CI assets and interacting with Concourse CI.
+Welcome to the TKGi CI/CD standardization documentation. This repository contains standards, guidelines, and templates for consistent CI/CD implementation across all TKGi component repositories.
 
-## Table of Contents
-- [Folder Structure](#folder-structure)
-- [Fly Script Usage](#fly-script-usage)
-- [Task Definitions](#task-definitions)
-- [Migration Guide](#migration-guide)
-- [Validation Checklist](#validation-checklist)
+## Overview
 
-## Folder Structure
+This standardization effort aims to:
 
-We've standardized on the following folder structure for CI-related assets:
+- Create a consistent structure across all component repositories
+- Standardize pipeline definitions and task organization
+- Provide a unified interface for pipeline management
+- Simplify onboarding for new team members
+- Make maintenance and updates more straightforward
 
-```
-repository-root/
+## Repository Structure Standard
+
+All TKGi component repositories should follow this standard structure:
+
+```sh
+component-repository/
 ├── ci/
-│   ├── pipelines/       # Pipeline definition files
-│   ├── tasks/           # Task definitions and scripts
-│   ├── vars/            # Variables for different environments
-│   ├── resources/       # Custom resource types
-│   └── images/          # Dockerfile definitions
-└── scripts/             # Fly scripts and utilities
+│   ├── pipelines/            # Pipeline definition files
+│   │   ├── <component>-mgmt.yml    # Main pipeline
+│   │   ├── release.yml             # Release pipeline
+│   │   └── set-pipeline.yml        # Pipeline setup pipeline
+│   ├── scripts/              # Pipeline control scripts
+│   │   ├── fly.sh            # Standardized pipeline management script
+│   │   └── helpers.sh        # Helper functions (if needed)
+│   ├── tasks/                # Tasks organized by category
+│   │   ├── common/           # Common/shared tasks
+│   │   ├── k8s/              # Kubernetes-specific tasks
+│   │   ├── [deployment-specific]/  # Deployment-specific tasks
+│   │   ├── tkgi/             # TKGi-specific tasks
+│   │   └── testing/          # Testing tasks
+│   └── README.md             # CI documentation
+└── README.md                 # Main repository documentation
 ```
 
-See the [detailed folder structure documentation](./docs/folder-structure.md) for more information.
+Each component repository should contain only the tasks relevant to its deployment method. The `[deployment-specific]` directory will be one of:
 
-## Fly Script Usage
+- `kustomize/` - For Kustomize-based deployments
+- `helm/` - For Helm-based deployments
+- `cli-tool/` - For specialized CLI tool deployments (istioctl, tridentctl, etc.)
 
-The standardized fly script provides a consistent interface for interacting with Concourse CI. It supports the following commands:
+## Standard Pipelines
 
-```
-Usage: ./fly.sh COMMAND [options]
+All component repositories should implement these three standard pipelines:
 
-Commands:
-  set-pipeline    Set or update a pipeline
-  destroy-pipeline Remove a pipeline
-  execute-task    Execute a single task locally
-  login           Login to the Concourse instance
-  help            Display this help message
+### 1. Component Management Pipeline
 
-Global Options:
-  -t, --target    TARGET    Concourse target (required)
-  -v, --verbose             Enable verbose output
-  -h, --help                Display help for the given command
-```
+The main pipeline for deploying and managing the component, defined in `ci/pipelines/<component>-mgmt.yml`.
 
-Example usage:
+Key characteristics:
 
-```bash
-# Set a pipeline
-./scripts/fly.sh set-pipeline -t main -p my-pipeline -e prod
+- Triggered by configuration changes
+- Contains jobs for preparation, deployment, and validation
+- Manages the day-to-day operations of the component
 
-# Execute a task locally
-./scripts/fly.sh execute-task -t main -f ci/tasks/deploy/deploy-to-dev.yml
+### 2. Release Pipeline
 
-# Login to Concourse
-./scripts/fly.sh login -t main
-```
+Handles versioning and releases, defined in `ci/pipelines/release.yml`.
 
-See the [detailed fly script documentation](./docs/fly-script.md) for more information.
+Key characteristics:
 
-## Task Definitions
+- Creates versioned releases
+- Merges code from develop to release branch
+- Publishes GitHub releases
+- Updates version numbers
 
-Task definitions follow a standard format with consistent naming and organization:
+### 3. Set-Pipeline Pipeline
 
-1. Task YAML files are stored in `ci/tasks/<category>/<task-name>.yml`
-2. Task scripts are stored in `ci/tasks/<category>/scripts/<script-name>.sh`
-3. Common tasks that are used across multiple pipelines are stored in `ci/tasks/common/`
+Manages the deployment of pipelines themselves, defined in `ci/pipelines/set-pipeline.yml`.
 
-Example task definition:
+Key characteristics:
 
-```yaml
-# ci/tasks/deploy/deploy-to-dev.yml
----
-platform: linux
-image_resource:
-  type: registry-image
-  source:
-    repository: ((docker_registry))/deploy-image
-    tag: latest
-inputs:
-  - name: source-code
-run:
-  path: source-code/ci/tasks/deploy/scripts/deploy.sh
+- Downloads the appropriate version of pipeline definitions
+- Sets the pipeline with the correct parameters
+- Ensures consistent pipeline configuration
+
+## Standardized fly.sh Interface
+
+All repositories should use a standardized `fly.sh` script with this interface:
+
+```sh
+./ci/scripts/fly.sh [options] [command] [pipeline_name]
 ```
 
-See the [detailed task documentation](./docs/tasks.md) for more information.
+### Standard Commands
 
-## Migration Guide
+- `set`: Set pipeline (default)
+- `unpause`: Set and unpause pipeline
+- `destroy`: Destroy specified pipeline
+- `validate`: Validate pipeline YAML without setting
 
-To migrate an existing repository to this standardized structure:
+### Special Commands
 
-1. Clone this reference repository
-2. Copy the `scripts/` directory to your repository
-3. Create the standardized `ci/` directory structure
-4. Move existing pipeline definitions to `ci/pipelines/`
-5. Move existing task definitions and scripts to the appropriate locations under `ci/tasks/`
-6. Update pipeline references to task files to use the new paths
-7. Test all pipelines using the standardized fly script
+- `-r, --release [MESSAGE]`: Set the release pipeline
+- `-s, --set [NAME]`: Set the set-pipeline pipeline
 
-See the [detailed migration guide](./docs/migration.md) for step-by-step instructions.
+### Standard Options
 
-## Validation Checklist
+- `-f, --foundation NAME`: Foundation name (required)
+- `-t, --target TARGET`: Concourse target (default: <foundation>)
+- `-e, --environment ENV`: Environment type (lab|nonprod|prod)
+- `-b, --branch BRANCH`: Git branch for pipeline repository
+- `-c, --config-branch BRANCH`: Git branch for config repository
+- `-d, --params-branch BRANCH`: Params git branch (default: master)
+- And other standard options
 
-Use this checklist to verify that your repository adheres to the standardized structure:
+## Task Organization
 
-- [ ] All CI-related files are under the `ci/` directory
-- [ ] Pipeline definitions are in `ci/pipelines/`
-- [ ] Task definitions are in `ci/tasks/<category>/`
-- [ ] Task scripts are in `ci/tasks/<category>/scripts/`
-- [ ] Environment variables are in `ci/vars/`
-- [ ] The standardized fly script is used for all Concourse operations
-- [ ] Pipeline references to tasks use the standardized paths
-- [ ] All pipelines have been tested and verified to work with the new structure
+Tasks should be organized by function in task-specific directories:
+
+### Common Tasks
+
+Reusable utility tasks:
+
+- `common/make-git-commit/`: Git commit operations
+- `common/create-release-info/`: Generate release information
+
+### K8s Tasks
+
+Kubernetes-specific tasks:
+
+- `k8s/create-namespace/`: Create Kubernetes namespaces
+- `k8s/validate-deployment/`: Validate Kubernetes deployments
+
+### TKGi Tasks
+
+TKGi-related tasks:
+
+- `tkgi/tkgi-login/`: TKGi authentication
+
+### Testing Tasks
+
+Testing-related tasks:
+
+- `testing/run-unit-tests/`: Execute unit tests
+- `testing/run-integration-tests/`: Execute integration tests
+
+### Deployment-Specific Tasks
+
+Tasks specific to the deployment method of the component.
+
+## Component Templates
+
+Use the appropriate template based on your component's deployment method:
+
+### [Kustomize Template](./templates/kustomize/README.md)
+
+For components deployed using Kustomize with standard Kubernetes manifests.
+
+### [Helm Template](./templates/helm/README.md)
+
+For components packaged as Helm charts.
+
+### [CLI Tool Template](./templates/cli-tool/README.md)
+
+For components deployed with specialized CLI tools (istioctl, tridentctl, etc.).
+
+## Implementation Guide
+
+Follow these steps to implement the standards in your repository:
+
+1. **Assessment**: Review your current repository structure
+2. **Template Selection**: Choose the appropriate template for your component
+3. **Migration**: Follow the migration plan for your specific component type
+4. **Verification**: Use the compliance checklist to verify standardization
+5. **Documentation**: Update your repository documentation
 
 ## Best Practices
 
-- Use consistent naming for tasks and scripts
-- Keep task scripts focused on a single responsibility
-- Use environment variables for configuration
-- Leverage common tasks for shared functionality
-- Document all custom parameters and usage
-- Test all pipelines locally before pushing changes
-
-## Contributing
-
-If you have suggestions for improving these standards, please submit a pull request with your proposed changes.
-
+- Keep pipelines as simple as possible
+- Use tasks for all non-trivial operations
+- Store parameters in the params repository
+- Document task interfaces clearly
+- Use consistent naming conventions
+- Follow the directory structure standard
