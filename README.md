@@ -1,174 +1,298 @@
-# TKGI Pipeline Standards
+# CI/CD Standardization Guide for TKGi Repositories
 
-A reference implementation for standardizing CI folder structures, Concourse tasks, and fly scripts across TKGI platform component repositories (gatekeeper, istio, prisma-defender, etc.) with support for multiple datacenters and foundations.
+This document defines the standards for CI/CD pipeline organization across all TKGi pipeline repositories.
 
-## Overview
+## 1. Folder Structure
 
-This repository provides a standardized approach for managing component installation pipelines for TKGI clusters across multiple datacenters and foundations. It includes:
+All repositories should follow this standard structure:
 
-1. A consistent folder structure for component repositories
-2. Standardized fly scripts with datacenter/foundation awareness
-3. Integration with a separate params repository
-4. Pipeline promotion workflow for releasing to Ops Concourse
-5. Tools for validation and creation of conformant repositories
-
-## Folder Structure
-
-Each component repository should follow this standard structure:
-
-```
-component-repo-root/  # e.g., gatekeeper-mgmt, istio-mgmt, prisma-defender-mgmt
+```sh
+repository-root/
 ├── ci/
-│   ├── fly.sh        # Standardized fly script
-│   ├── lib/          # Fly script libraries
-│   ├── cmds/         # Fly subcommands 
-│   ├── pipelines/    # Pipeline definitions
-│   ├── tasks/        # Tasks organized by stage
-│   ├── helm/         # Helm values by environment
-│   └── vars/         # Component-specific variables (optional)
-├── release/          # Pipeline release automation
-└── scripts/          # Utility scripts (used both by CI and externally)
-```
-
-## Parameter Structure
-
-Parameters are stored in a separate repository called "params" with the following structure:
-
-```
-params-repo-root/
-├── global.yml            # Global parameters
-├── k8s-global.yml        # Kubernetes global parameters
-├── global-lab.yml        # Lab environment global parameters
-├── cml/                  # CML datacenter
-│   ├── cml.yml           # CML datacenter parameters
-│   ├── cml-k8s.yml       # CML Kubernetes parameters
-│   ├── cml-k8s-n-01.yml  # Foundation-specific parameters
-│   └── ...
-└── cic/                  # CIC datacenter
-    ├── cic.yml           # CIC datacenter parameters
-    ├── cic-vxrail.yml    # CIC vxrail parameters
-    ├── cic-vxrail-n-01.yml # Foundation-specific parameters
+│   ├── pipelines/            # Pipeline definition files
+│   │   ├── <app>-mgmt.yml    # Main pipeline
+│   │   ├── release.yml       # Release pipeline
+│   │   └── set-pipeline.yml  # Pipeline setup pipeline
+│   ├── scripts/              # Pipeline control scripts
+│   │   ├── fly.sh            # Standardized pipeline management script
+│   │   └── helpers.sh        # Helper functions (if needed)
+│   ├── tasks/                # Task definitions organized by category
+│   │   ├── common/           # Common/shared tasks
+│   │   │   ├── kapply/
+│   │   │   │   ├── task.yml
+│   │   │   │   └── task.sh
+│   │   │   ├── kustomize/
+│   │   │   │   ├── task.yml
+│   │   │   │   └── task.sh
+│   │   │   └── ...
+│   │   ├── k8s/              # Kubernetes-specific tasks
+│   │   │   ├── create-namespaces/
+│   │   │   │   ├── task.yml
+│   │   │   │   └── task.sh
+│   │   │   ├── validate-namespaces/
+│   │   │   │   ├── task.yml
+│   │   │   │   └── task.sh
+│   │   │   └── ...
+│   │   ├── tkgi/             # TKGi-specific tasks
+│   │   │   ├── tkgi-login/
+│   │   │   │   ├── task.yml
+│   │   │   │   └── task.sh
+│   │   │   └── ...
+│   │   └── testing/          # Testing tasks
+│   │       ├── run-unit-tests/
+│   │       │   ├── task.yml
+│   │       │   └── task.sh
+│   │       └── ...
+│   └── README.md             # Documentation for CI process
+└── scripts/                  # Repository-level scripts
+    ├── apply.sh
+    ├── build.sh
     └── ...
 ```
 
-## Usage
+## 2. `fly.sh` Command Interface
 
-Each component repository includes a standardized fly script that provides consistent commands:
+All repositories should use a standardized `fly.sh` script with a consistent interface:
 
-```bash
-# Set up a pipeline for a specific foundation
-./ci/fly.sh set-pipeline -t dev -p install -d cml -f cml-k8s-n-01 -P ~/repos/params
-
-# Execute a task locally for testing
-./ci/fly.sh execute-task -t dev -f ci/tasks/install/install.yml
-
-# Create a new version release
-./ci/fly.sh release-version -v 1.2.3 -m "Added new feature X" --tag
-
-# Promote a pipeline to Ops Concourse for a specific foundation
-./ci/fly.sh promote-pipeline -p install -d cml -f cml-k8s-n-01 --ops-target ops-concourse
+```sh
+./ci/scripts/fly.sh [options] [command] [pipeline_name]
 ```
 
-## Foundation Structure
+### Standard Commands
 
-The standardized approach supports multiple datacenters and foundations:
+- `set`: Set pipeline (default)
+- `unpause`: Set and unpause pipeline
+- `destroy`: Destroy specified pipeline
+- `validate`: Validate pipeline YAML without setting
 
-- **Datacenters**
-  - CML: Lab environment with two datacenters
-  - CIC: Lab environment with vxrail hardware
+### Special Commands
 
-- **Foundations**
-  - CML: `cml-k8s-n-01` through `cml-k8s-n-10`
-  - CIC: `cic-vxrail-n-01` through `cic-vxrail-n-06`
+- `-r, --release [MESSAGE]`: Set the release pipeline
+- `-s, --set [NAME]`: Set the set-pipeline pipeline
 
-## Workflow
-
-### Development Workflow
-
-1. Make changes to the component repository (pipelines, tasks, Helm values)
-2. Test locally using the fly script against a specific foundation
-3. Commit changes and create a pull request
-4. After approval, merge to main branch
-
-### Release Workflow
-
-1. Create a new version release:
-   ```bash
-   ./ci/fly.sh release-version -v 1.2.3 -m "Release notes" --tag
-   ```
-
-2. Promote to one or more foundations:
-   ```bash
-   # Promote to CML foundation 01
-   ./ci/fly.sh promote-pipeline -p install -d cml -f cml-k8s-n-01 --ops-target ops-concourse
-   
-   # Promote to CIC foundation 02
-   ./ci/fly.sh promote-pipeline -p install -d cic -f cic-vxrail-n-02 --ops-target ops-concourse
-   ```
-
-## Tools
-
-This repository includes tools to help maintain standardization:
-
-### validate-repo-structure.sh
-
-Validates that a component repository follows the standardized structure:
-
-```bash
-./validate-repo-structure.sh /path/to/repo
-```
-
-### create-component-repo.sh
-
-Creates a new component repository with the standardized structure:
-
-```bash
-./create-component-repo.sh gatekeeper
-```
-
-## Pipeline Naming Convention
-
-Pipelines follow a consistent naming convention:
+### Standard Options
 
 ```
-<component>-<pipeline>-<foundation>
+-f, --foundation NAME     Foundation name (required)
+-t, --target TARGET       Concourse target (default: <foundation>)
+-e, --environment ENV     Environment type (lab|nonprod|prod)
+-b, --branch BRANCH       Git branch for pipeline repository 
+-c, --config-branch BRANCH Git branch for config repository
+-n, --config-repo NAME    Config repository name
+-d, --params-branch BRANCH Params git branch (default: master)
+-p, --pipeline NAME       Custom pipeline name prefix
+-o, --github-org ORG      GitHub organization 
+-v, --version VERSION     Pipeline version
+--dry-run                 Simulate without making changes
+--verbose                 Increase output verbosity
+--timer DURATION          Set timer trigger duration
+-h, --help                Show help message
 ```
 
-Examples:
-- `gatekeeper-install-cml-k8s-n-01`
-- `istio-upgrade-cic-vxrail-n-02`
-- `prisma-defender-install-cml-k8s-n-03`
+## 3. Task Organization
 
-## Best Practices
+Tasks are organized by functional category with consistent structure:
 
-- Use the standardized fly.sh script for all Concourse operations
-- Store all component-specific variables in the ci/vars directory
-- Use the scripts/ directory for reusable functionality
-- Always validate changes before promoting to production
-- Use the release-version command to track versions properly
-- Keep Helm values separate from pipeline configuration
+1. **Task Directory**: Each task has its own directory named after the task function
+2. **Task Files**: Each task directory contains:
+   - `task.yml`: Task YAML definition
+   - `task.sh`: Task implementation script
+3. **Common Tasks**: Reusable tasks are stored in `ci/tasks/common/` until they can be moved to a shared repository
 
-## Versioning and Promotion
+### Common Tasks
+Place reusable utility tasks and general-purpose operations:
+- `common/kapply/`: Kubernetes resource application task
+- `common/kustomize/`: Kustomize resource generation task
+- `common/make-git-commit/`: Git commit creation task
+- `common/prepare-kustomize/`: Kustomize preparation task
+- `common/create-release-info/`: Generate release information for GitHub releases
 
-The `versions.yml` file in the `release/` directory tracks version information and promotion history for each foundation:
+### K8s Tasks
+Place Kubernetes-specific operational tasks:
+- `k8s/create-legacy-netpol/`: Legacy network policy creation task
+- `k8s/create-legacy-rbac/`: Legacy RBAC resource creation task
+- `k8s/create-limits-quotas/`: Resource limits and quotas creation task
+- `k8s/create-namespaces/`: Namespace creation task
+- `k8s/delete-namespaces/`: Namespace deletion task
+- `k8s/validate-namespaces/`: Namespace validation task
+
+### TKGi Tasks
+Place TKGi-specific operations:
+- `tkgi/tkgi-login/`: TKGi authentication task
+
+### Testing Tasks
+Place testing tasks:
+- `testing/run-unit-tests/`: Execute unit tests
+- `testing/run-integration-tests/`: Execute integration tests
+
+## 4. Task YAML Standards
+
+Each task.yml file should follow this structure:
 
 ```yaml
-gatekeeper:
-  version: "1.2.3"
-  date: "2025-04-08T12:34:56Z"
-  message: "Added new feature X"
-  promotions:
-    cml:
-      cml-k8s-n-01:
-        pipeline: "install"
-        date: "2025-04-08T13:00:00Z"
-      cml-k8s-n-02:
-        pipeline: "install"
-        date: "2025-04-08T14:00:00Z"
-    cic:
-      cic-vxrail-n-01:
-        pipeline: "install"
-        date: "2025-04-09T09:00:00Z"
+platform: linux
+inputs:
+  - name: repo-name   # Repository containing the task script
+  - name: input1      # Other inputs as needed
+outputs:
+  - name: output1     # Outputs as needed
+run:
+  path: repo-name/ci/tasks/<category>/<task-name>/task.sh
+  args:
+    - arg1
+    - arg2
+params:
+  PARAM1: ((param1))
+  PARAM2: ((param2))
 ```
 
-This allows tracking of which version is deployed to each foundation and when it was promoted.
+## 5. Pipeline YAML Standards
+
+1. **Naming Convention**: 
+   - Main pipeline: `<app>-mgmt.yml`
+   - Release pipeline: `release.yml`
+   - Pipeline setup: `set-pipeline.yml`
+
+2. **Structure**:
+   - Use groups to organize jobs logically
+   - Include descriptive job and task names
+   - Use consistent resource naming
+
+3. **Task Reference**:
+   - Reference task YAML files rather than defining tasks inline
+   - Example: `file: repo-name/ci/tasks/common/kustomize/task.yml`
+   - For inline tasks that still need to be converted, use paths relative to the repository root:
+     ```yaml
+     task: kustomize
+     config:
+       platform: linux
+       inputs:
+         - name: repo-name
+       run:
+         path: repo-name/ci/tasks/common/kustomize/task.sh
+     ```
+
+## 6. Script Standards
+
+All scripts should follow these standards:
+
+1. **Shebang**: Start with `#!/usr/bin/env bash`
+2. **Strict Mode**: Include `set -o errexit` and `set -o pipefail`
+3. **Script Directory**: Use `__DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"`
+4. **Help Documentation**: Include usage information
+5. **Error Handling**: Implement proper error handling and validation
+6. **Exit Codes**: Use meaningful exit codes
+7. **Logging**: Include clear logging with error/success messaging
+
+### Example Script Template
+
+```bash
+#!/usr/bin/env bash
+#
+# Script Name: task.sh
+# Description: Brief description of what the script does
+#
+# Usage: ./task.sh [options] <required_arg>
+#
+# Options:
+#   -h, --help          Show this help message
+#   -v, --verbose       Increase verbosity
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
+
+# Get script directory for relative paths
+__DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Source common functions if needed
+# source "${__DIR}/../../../../scripts/helpers.sh"
+
+# Default values
+VERBOSE=false
+
+# Function to display usage
+function show_usage() {
+    grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+    exit 1
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            show_usage
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        *)
+            # Handle positional arguments
+            if [[ -z "$REQUIRED_ARG" ]]; then
+                REQUIRED_ARG="$1"
+            else
+                echo "Error: Unexpected argument: $1"
+                show_usage
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Validate required arguments
+if [[ -z "$REQUIRED_ARG" ]]; then
+    echo "Error: Required argument missing"
+    show_usage
+fi
+
+# Main script logic
+function main() {
+    # Script implementation
+    echo "Script executed successfully"
+}
+
+main
+```
+
+## 7. Implementation Process
+
+Follow this process for standardizing each repository:
+
+1. **Assessment**: Review current structure and identify changes needed
+2. **Planning**: Create a detailed migration plan
+3. **Testing**: Test changes in a branch before merging
+4. **Gradual Migration**: Implement changes in phases to minimize disruption
+5. **Documentation**: Update documentation to reflect the new structure
+
+## 8. Documentation Requirements
+
+Each repository's CI directory should include a README.md that documents:
+
+1. **Directory Structure**: Description of the CI directory structure
+2. **Tasks**: Documentation of task purposes and usage
+3. **Pipelines**: Description of each pipeline's purpose and behavior
+4. **Usage Examples**: Common usage examples for the fly.sh script
+
+## 9. Compliance Checklist
+
+Use this checklist to verify compliance with the standardization:
+
+- [ ] Folder structure follows the standard layout
+- [ ] `fly.sh` implements the standard interface
+- [ ] Task scripts are organized by function in task-specific directories
+- [ ] Each task has both task.yml and task.sh files
+- [ ] All scripts follow the documented standards
+- [ ] Pipeline YAML files follow naming conventions
+- [ ] Documentation is complete and up-to-date
+- [ ] Backward compatibility is maintained (during transition)
+- [ ] All tests pass
+
+## Appendix: Implementation Across Repositories
+
+| Repository | Current Status | Migration Plan | Target Date |
+|------------|----------------|----------------|-------------|
+| ns-mgmt    | Legacy         | See detailed plan | TBD |
+| cluster-mgmt | Legacy      | To be developed | TBD |
+| cert-mgmt  | Legacy         | To be developed | TBD |
+| tkgi-release | Legacy       | To be developed | TBD |
