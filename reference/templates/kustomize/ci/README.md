@@ -14,6 +14,8 @@ This directory contains all CI/CD pipeline configurations and tasks for the kust
 - `scripts/`: Control scripts for more advanced functionality
   - `fly.sh`: Comprehensive pipeline management script with advanced features
   - `cmd_set_pipeline.sh`: Command implementations for the advanced fly.sh script
+  - `ns-mgmt-fly.sh`: Reference implementation from the ns-mgmt repository (pre-migration)
+  - `ns-mgmt-helpers.sh`: Helper functions from the ns-mgmt repository (pre-migration)
 
 - `tasks/`: Tasks organized by functional category
   - `common/`: Common/shared tasks
@@ -33,11 +35,11 @@ Each task directory contains both a `task.yml` file (the task definition) and a 
 
 ## Using fly.sh
 
-This template provides two versions of the `fly.sh` script:
+This template provides multiple versions of the `fly.sh` script for different use cases:
 
 ### 1. Simplified Version (ci/fly.sh)
 
-The simplified version in the `ci` directory follows the pattern used in the ns-mgmt repository:
+The simplified version in the `ci` directory follows the pattern used in the ns-mgmt repository's migrated structure:
 
 ```bash
 ./ci/fly.sh -t <concourse-target> -p <pipeline> -f <foundation> [-v] [-c <config-repo-path>]
@@ -66,6 +68,15 @@ This version includes:
 - Advanced options for environments, branches, and configurations
 - Dry-run capabilities
 - Pipeline validation
+
+### 3. Reference Implementations (ns-mgmt)
+
+For reference, the original scripts from the ns-mgmt repository (before migration) are included:
+
+- `ci/scripts/ns-mgmt-fly.sh`: The original fly.sh from ns-mgmt before standardization
+- `ci/scripts/ns-mgmt-helpers.sh`: The original helpers.sh from ns-mgmt before standardization
+
+These scripts are provided for reference purposes to help understand the migration process and as examples of alternative implementation approaches.
 
 ## Task Design Pattern
 
