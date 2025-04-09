@@ -396,7 +396,7 @@ To use these reference templates for a new project:
 
 1. **Create a new repository**: Set up the basic repository structure
 2. **Copy template structure**: Copy the appropriate template from `/reference/templates/` to your repository
-3. **Update configuration**: 
+3. **Update configuration**:
    - Rename files and update references to match your project
    - Update pipeline files to reference your repositories
    - Configure foundation-specific parameters
