@@ -57,7 +57,7 @@ BRANCH="develop"
 CONFIG_BRANCH="master"
 CONFIG_REPO="config-lab"
 PARAMS_BRANCH="master"
-PIPELINE_PREFIX="${REPO_NAME//-mgmt/}"
+PIPELINE="${REPO_NAME}"
 GITHUB_ORG="your-org"
 VERSION="latest"
 DRY_RUN=false
@@ -163,7 +163,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -p|--pipeline)
-      PIPELINE_PREFIX="$2"
+      PIPELINE="$2"
       shift 2
       ;;
     -o|--github-org)

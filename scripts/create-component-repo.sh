@@ -28,11 +28,11 @@ Create a new component repository with the standardized structure.
 
 Arguments:
   component-name    Name of the component (e.g., gatekeeper, istio)
-  target-dir        Target directory (default: ./<component-name>-mgmt)
+  target-dir        Target directory (default: ./<component-name>)
 
 Examples:
   $0 gatekeeper
-  $0 istio ~/repos/istio-mgmt
+  $0 istio ~/repos/istio
 EOF
   exit 1
 }
@@ -44,7 +44,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 COMPONENT_NAME="$1"
-TARGET_DIR="${2:-${COMPONENT_NAME}-mgmt}"
+TARGET_DIR="${2:-${COMPONENT_NAME}}"
 
 # Ensure target directory doesn't already exist
 if [[ -d "$TARGET_DIR" ]]; then
@@ -75,7 +75,7 @@ mkdir -p release
 
 # Create basic README.md
 cat > README.md <<EOF
-# ${COMPONENT_NAME}-mgmt
+# ${COMPONENT_NAME}
 
 Repository for managing the installation and lifecycle of ${COMPONENT_NAME} on TKGI clusters.
 

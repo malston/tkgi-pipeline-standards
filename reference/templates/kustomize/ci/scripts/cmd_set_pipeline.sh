@@ -158,7 +158,7 @@ function cmd_set_pipeline() {
   fi
   
   # Get component name from repo directory
-  local component=$(basename "$REPO_ROOT" | sed 's/-mgmt//')
+  local component=$(basename "$REPO_ROOT" | sed 's/-main//')
   
   # Construct pipeline file path
   local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
@@ -283,7 +283,7 @@ function cmd_destroy_pipeline() {
   fi
   
   # Get component name from repo directory
-  local component=$(basename "$REPO_ROOT" | sed 's/-mgmt//')
+  local component=$(basename "$REPO_ROOT" | sed 's/-main//')
   
   # Construct the pipeline name: component-pipeline-foundation
   local pipeline_name="${component}-${pipeline}-${foundation}"

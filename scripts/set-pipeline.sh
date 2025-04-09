@@ -151,7 +151,7 @@ function cmd_set_pipeline() {
   fi
   
   # Get component name from repo directory
-  local component=$(basename "$REPO_ROOT" | sed 's/-mgmt//')
+  local component=$(basename "$REPO_ROOT")
   
   # Construct pipeline file path
   local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"

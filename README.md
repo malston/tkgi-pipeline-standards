@@ -10,7 +10,7 @@ All repositories should follow this standard structure:
 repository-root/
 ├── ci/
 │   ├── pipelines/            # Pipeline definition files
-│   │   ├── <app>-mgmt.yml    # Main pipeline
+│   │   ├── <app>-main.yml    # Main pipeline
 │   │   ├── release.yml       # Release pipeline
 │   │   └── set-pipeline.yml  # Pipeline setup pipeline
 │   ├── scripts/              # Pipeline control scripts
@@ -148,8 +148,8 @@ params:
 
 ## 5. Pipeline YAML Standards
 
-1. **Naming Convention**: 
-   - Main pipeline: `<app>-mgmt.yml`
+1. **Naming Convention**:
+   - Main pipeline: `<app>-main.yml`
    - Release pipeline: `release.yml`
    - Pipeline setup: `set-pipeline.yml`
 

@@ -20,7 +20,7 @@ All TKGi component repositories should follow this standard structure:
 component-repository/
 ├── ci/
 │   ├── pipelines/            # Pipeline definition files
-│   │   ├── <component>-mgmt.yml    # Main pipeline
+│   │   ├── <component>-main.yml    # Main pipeline
 │   │   ├── release.yml             # Release pipeline
 │   │   └── set-pipeline.yml        # Pipeline setup pipeline
 │   ├── scripts/              # Pipeline control scripts
@@ -48,7 +48,7 @@ All component repositories should implement these three standard pipelines:
 
 ### 1. Component Management Pipeline
 
-The main pipeline for deploying and managing the component, defined in `ci/pipelines/<component>-mgmt.yml`.
+The main pipeline for deploying and managing the component, defined in `ci/pipelines/<component>-main.yml`.
 
 Key characteristics:
 
@@ -99,11 +99,11 @@ All repositories should use a standardized `fly.sh` script with this interface:
 
 ### Standard Options
 
-- `-f, --foundation NAME`: Foundation name (required)
-- `-t, --target TARGET`: Concourse target (default: <foundation>)
+- `-f, --foundation FOUNDATION`: Foundation name (required)
+- `-t, --target TARGET`: Concourse target (default: FOUNDATION)
 - `-e, --environment ENV`: Environment type (lab|nonprod|prod)
-- `-b, --branch BRANCH`: Git branch for pipeline repository
-- `-c, --config-branch BRANCH`: Git branch for config repository
+- `-b, --branch BRANCH`: Git branch for pipeline repository (default: develop)
+- `-c, --config-branch BRANCH`: Git branch for config repository (default: master)
 - `-d, --params-branch BRANCH`: Params git branch (default: master)
 - And other standard options
 
