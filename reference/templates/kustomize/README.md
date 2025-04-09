@@ -256,7 +256,7 @@ This template includes a comprehensive test suite for validating script function
 ci/scripts/tests/
 ├── README.md                  # Test documentation
 ├── run_tests.sh               # Script to run all tests
-├── test_framework.sh          # Test utilities and assertions
+├── test-framework.sh          # Test utilities and assertions
 └── test_fly.sh                # Tests for fly.sh
 ```
 

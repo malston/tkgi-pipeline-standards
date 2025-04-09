@@ -238,7 +238,7 @@ All scripts should follow these standards:
 All critical scripts should be tested using the included test framework:
 
 1. **Test Directory**: Each scripts directory should include a `tests/` subdirectory
-2. **Test Framework**: Use the common test framework provided in `test_framework.sh`
+2. **Test Framework**: Use the common test framework provided in `test-framework.sh`
 3. **Test Runner**: Include a `run_tests.sh` script to execute all tests
 4. **Test Coverage**: Each script should have corresponding test cases
 5. **Mock Functions**: Use mock functions to simulate dependencies
@@ -248,7 +248,7 @@ Example test framework usage:
 
 ```bash
 # Source test framework
-source "$(dirname "${BASH_SOURCE[0]}")/test_framework.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/test-framework.sh"
 
 # Define test functions
 function test_command_execution() {

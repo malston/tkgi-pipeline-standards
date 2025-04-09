@@ -36,14 +36,14 @@ function error() {
 function run_test_file() {
   local test_file="$1"
   local test_name=$(basename "$test_file" .sh)
-  
+
   echo_color "$YELLOW" "=============================="
   echo_color "$YELLOW" "Running tests: $test_name"
   echo_color "$YELLOW" "=============================="
-  
+
   # Make sure the file is executable
   chmod +x "$test_file"
-  
+
   # Run the test
   if "$test_file"; then
     success "All tests passed in $test_name"

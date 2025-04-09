@@ -23,11 +23,11 @@ function echo_color() {
 }
 
 function success() {
-  echo_color "$GREEN" "✓ $1"
+  echo_color "$GREEN" "✅ $1"
 }
 
 function error() {
-  echo_color "$RED" "✗ $1"
+  echo_color "$RED" "❌ $1"
   exit 1
 }
 
@@ -72,9 +72,9 @@ function test_command() {
 function setup_mock() {
   # Create temp directory for mocks
   MOCK_DIR=$(mktemp -d)
-  
+
   # Create mock fly
-  cat > "${MOCK_DIR}/fly" << 'EOF'
+  cat >"${MOCK_DIR}/fly" <<'EOF'
 #!/usr/bin/env bash
 echo "FLY: $@"
 if [[ "$1" == "targets" ]]; then
@@ -85,7 +85,7 @@ fi
 exit 0
 EOF
   chmod +x "${MOCK_DIR}/fly"
-  
+
   # Add to PATH
   export PATH="${MOCK_DIR}:${PATH}"
 }
