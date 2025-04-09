@@ -33,6 +33,11 @@ The script is divided into several logical modules:
    - `handle_legacy_behavior()`: Handles legacy flag options
    - `validate_and_set_defaults()`: Validates required parameters and sets defaults
 
+5. **pipelines.sh**: Contains pipeline-specific helper functions
+   - `get_latest_version()`: Gets the latest version from git tags
+   - `pipeline_pause_check()`: Checks if a pipeline is paused and offers to unpause it
+   - `generate_pipeline_config()`: Generates pipeline configuration using ytt
+
 ## How It Works
 
 The main fly.sh script sources these modules and orchestrates their execution:

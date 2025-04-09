@@ -50,8 +50,10 @@ source "${LIB_DIR}/utils.sh"
 source "${LIB_DIR}/help.sh"
 source "${LIB_DIR}/parsing.sh"
 source "${LIB_DIR}/commands.sh"
+source "${LIB_DIR}/pipelines.sh"
 
-# Source helper functions if available
+# Source additional helper functions if available
+# This is for backward compatibility, but should be empty now
 if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
   source "${SCRIPT_DIR}/helpers.sh"
 fi
