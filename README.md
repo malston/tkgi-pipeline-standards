@@ -2,6 +2,37 @@
 
 This document defines the standards for CI/CD pipeline organization across all TKGi pipeline repositories.
 
+## Repository Structure
+
+This repository contains:
+
+1. **Standards Documentation**: This guide defines the standards for CI/CD pipeline structure
+2. **Reference Templates**: Example implementations of standardized CI/CD patterns for different project types
+3. **Migration Plans**: Guides for migrating existing repositories to follow these standards
+4. **Scripts**: Utility scripts for creating and validating standardized repositories
+
+### Repository Relationships
+
+This repository works together with the following related repositories:
+
+- **params**: Contains environment-specific parameters (symlinked in `reference/templates/params`)
+- **ns-mgmt**: Reference implementation of these standards
+- **config-lab**: Configuration for lab environment
+
+### Symlinks
+
+This repository uses symlinks to reference related repositories:
+
+- `reference/templates/params` → `../../../params`: Points to the params repository at the same level as this repository. This allows reference implementations to access foundation-specific configuration parameters without duplicating files.
+
+For this symlink to work correctly, the `params` repository should be cloned at the same level as this repository:
+
+```
+git-root/
+├── tkgi-pipeline-standards/
+└── params/
+```
+
 ## 1. Folder Structure
 
 All repositories should follow this standard structure:
@@ -358,3 +389,19 @@ The ns-mgmt repository serves as a real-world implementation of the standardized
 3. **Pipeline Structure**: Pipeline files reference task.yml files instead of defining tasks inline
 4. **Documentation**: The CI directory includes comprehensive documentation about its structure and usage
 5. **Standardized fly.sh**: Implements the full command interface as specified in this guide
+
+### Using the Reference Templates
+
+To use these reference templates for a new project:
+
+1. **Create a new repository**: Set up the basic repository structure
+2. **Copy template structure**: Copy the appropriate template from `/reference/templates/` to your repository
+3. **Update configuration**: 
+   - Rename files and update references to match your project
+   - Update pipeline files to reference your repositories
+   - Configure foundation-specific parameters
+4. **Test the implementation**: Run the included tests to validate your setup
+5. **Deploy pipelines**: Use the provided `fly.sh` script to deploy your pipelines
+
+The reference templates are designed to be used with minimal modifications while providing a
+fully-functional CI/CD implementation that follows these standards.
