@@ -19,7 +19,13 @@ usage() {
   echo "  -c CONFIG_REPO  Path to config repository (default: ../config-lab)"
   echo "  -v              Verbose output"
   echo ""
-  echo "Note: For more advanced options, use ci/scripts/fly.sh which provides additional functionality."
+  echo "Note: For more advanced options, use ci/scripts/fly.sh which provides:"
+  echo "  - Command support (set, unpause, destroy, validate, release)"
+  echo "  - Command-specific help (try: scripts/fly.sh --help set)"
+  echo "  - Improved params handling"
+  echo "  - More configuration options"
+  echo ""
+  echo "Run: ${SCRIPT_DIR}/scripts/fly.sh --help for full details"
   exit 1
 }
 

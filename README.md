@@ -98,6 +98,19 @@ All repositories should use a standardized `fly.sh` script with a consistent int
 - `validate`: Validate pipeline YAML without setting
 - `release`: Create a release pipeline
 
+### Command-Specific Help
+
+The `fly.sh` script provides detailed help for each specific command. You can get command-specific help using any of these formats:
+
+```sh
+./fly.sh --help [command]     # Example: ./fly.sh --help set
+./fly.sh -h [command]         # Example: ./fly.sh -h unpause
+./fly.sh [command] --help     # Example: ./fly.sh destroy --help
+./fly.sh [command] -h         # Example: ./fly.sh validate -h
+```
+
+This provides more detailed usage information specific to each command, rather than the general usage help.
+
 ### Standard Options
 
 ```
@@ -117,6 +130,7 @@ All repositories should use a standardized `fly.sh` script with a consistent int
 --timer DURATION           Set timer trigger duration
 --enable-validation-testing Enable validation testing
 -h, --help                 Show help message
+--help [command]           Show help for specific command (e.g., --help set)
 ```
 
 ## 3. Task Organization

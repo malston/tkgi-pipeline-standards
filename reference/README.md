@@ -20,9 +20,9 @@ All TKGi component repositories should follow this standard structure:
 component-repository/
 ├── ci/
 │   ├── pipelines/            # Pipeline definition files
-│   │   ├── <component>-main.yml    # Main pipeline
-│   │   ├── release.yml             # Release pipeline
-│   │   └── set-pipeline.yml        # Pipeline setup pipeline
+│   │   ├── main.yml          # Main pipeline
+│   │   ├── release.yml       # Release pipeline
+│   │   └── set-pipeline.yml  # Pipeline setup pipeline
 │   ├── scripts/              # Pipeline control scripts
 │   │   ├── fly.sh            # Standardized pipeline management script
 │   │   └── helpers.sh        # Helper functions (if needed)
@@ -48,7 +48,7 @@ All component repositories should implement these three standard pipelines:
 
 ### 1. Component Management Pipeline
 
-The main pipeline for deploying and managing the component, defined in `ci/pipelines/<component>-main.yml`.
+The main pipeline for deploying and managing the component, defined in `ci/pipelines/main.yml`.
 
 Key characteristics:
 
