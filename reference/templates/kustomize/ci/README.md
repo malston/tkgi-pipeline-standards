@@ -12,8 +12,13 @@ This directory contains all CI/CD pipeline configurations and tasks for the kust
 - `fly.sh`: Simplified script for setting and managing pipelines (mirroring the ns-mgmt pattern)
 
 - `scripts/`: Control scripts for more advanced functionality
-  - `fly.sh`: Comprehensive pipeline management script with advanced features
-  - `cmd_set_pipeline.sh`: Command implementations for the advanced fly.sh script
+  - `fly.sh`: Comprehensive modular pipeline management script
+  - `lib/`: Modular components for the fly.sh script
+    - `commands.sh`: Command implementations
+    - `help.sh`: Help text and display functions
+    - `parsing.sh`: Argument parsing logic
+    - `utils.sh`: Utility functions
+    - `README.md`: Module documentation
   - `tests/`: Test suite for validating script functionality
 
 - `tasks/`: Tasks organized by functional category
@@ -63,11 +68,18 @@ The advanced version in the `ci/scripts` directory provides more functionality w
 
 This version includes:
 - Multiple commands (set, unpause, destroy, validate)
+- Command-specific help with detailed usage information
 - Special commands for release pipelines
 - Advanced options for environments, branches, and configurations
 - Dry-run capabilities
 - Pipeline validation
 - Backward compatibility with legacy flag style
+
+The advanced script uses a modular architecture for better maintainability:
+- Main script is only ~120 lines, with functionality broken into logical modules
+- Each module has a single responsibility (commands, help, utils, parsing)
+- New features can be added by extending the appropriate module
+- Comprehensive testing suite to validate functionality
 
 Example usage:
 ```bash
@@ -82,6 +94,10 @@ Example usage:
 
 # Using dry-run to test without making changes
 ./ci/scripts/fly.sh set main -f cml-k8s-n-01 -t concourse-target --dry-run
+
+# Getting command-specific help
+./ci/scripts/fly.sh --help set
+./ci/scripts/fly.sh set --help
 ```
 
 The advanced script provides a full range of pipeline management capabilities while still supporting simpler usage patterns from the original approach.
@@ -115,16 +131,16 @@ The CI structure includes a test suite for validating script functionality:
 
 ```sh
 scripts/tests/
-├── README.md                  # Test documentation
-├── run_tests.sh               # Script to run all tests
-└── test_framework.sh          # Test utilities and assertions
+├── test_help_commands.sh      # Tests for command-specific help
+├── test_commands.sh           # Tests for command functionality
+└── helpers.sh                 # Test utilities and assertions
 ```
 
-To run the tests:
+To run all tests:
 
 ```bash
-cd ci/scripts/tests
-./run_tests.sh
+cd ci/scripts
+make test
 ```
 
 The test suite verifies:
@@ -132,6 +148,36 @@ The test suite verifies:
 1. **Script Functionality**: Ensures scripts behave as expected
 2. **Command Handling**: Validates command-based interface
 3. **Option Parsing**: Tests argument parsing and validation
-4. **Backward Compatibility**: Ensures legacy flag support works correctly
+4. **Help System**: Tests the command-specific help functionality
+5. **Backward Compatibility**: Ensures legacy flag support works correctly
 
 This testing approach provides confidence when modifying scripts and serves as documentation for how the scripts are expected to behave.
+
+## Modular Architecture
+
+The advanced fly.sh script uses a modular architecture to improve maintainability:
+
+```sh
+scripts/
+├── fly.sh                     # Main script (120 lines)
+├── lib/                       # Modules
+│   ├── commands.sh            # Command implementations
+│   ├── help.sh                # Help text and display functions
+│   ├── parsing.sh             # Argument parsing logic
+│   ├── utils.sh               # Utility functions
+│   └── README.md              # Module documentation
+├── Makefile                   # Build and test automation
+└── tests/                     # Test scripts
+```
+
+This architecture allows each module to have a single responsibility, making the script easier to understand, maintain, and extend. New features can be added to the appropriate module without impacting other functionality.
+
+The Makefile provides convenient targets for building, testing, and maintaining the script:
+
+```sh
+make build      # Ensure proper file permissions
+make test       # Run all tests
+make clean      # Clean up temporary files
+```
+
+This modular approach significantly reduces the complexity of the main script while making the codebase more maintainable and easier to extend.
