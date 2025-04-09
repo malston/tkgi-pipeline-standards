@@ -292,7 +292,18 @@ Use this checklist to verify compliance with the standardization:
 
 | Repository | Current Status | Migration Plan | Target Date |
 |------------|----------------|----------------|-------------|
-| ns-mgmt    | Legacy         | See detailed plan | TBD |
+| ns-mgmt    | Migrated       | [Implemented](migration-plans/ns-mgmt/README.md) in feature/standardize-ci-structure branch | Completed |
 | cluster-mgmt | Legacy      | To be developed | TBD |
 | cert-mgmt  | Legacy         | To be developed | TBD |
 | tkgi-release | Legacy       | To be developed | TBD |
+
+### Reference Implementation
+
+The ns-mgmt repository now serves as a reference implementation for the standardized CI/CD structure. Key aspects of this implementation include:
+
+1. **Task Organization**: Tasks are categorized into common, k8s, tkgi, and testing directories.
+2. **Task Definition**: Each task has both a task.yml (definition) and task.sh (implementation) file.
+3. **Pipeline Structure**: Pipeline files reference task.yml files instead of defining tasks inline.
+4. **Documentation**: The CI directory includes comprehensive documentation about its structure and usage.
+
+To view the implementation, check out the `feature/standardize-ci-structure` branch of the ns-mgmt repository.
