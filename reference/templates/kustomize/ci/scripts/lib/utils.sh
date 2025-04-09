@@ -54,7 +54,10 @@ function determine_datacenter() {
 }
 
 # Function to check if fly is installed and accessible
+# @param target The concourse target to check
 function check_fly() {
+  local target="${1:-$TARGET}"  # Use passed target or global TARGET as fallback
+  
   # In test mode, skip these checks
   if [[ "${TEST_MODE}" == "true" ]]; then
     return 0
@@ -67,14 +70,14 @@ function check_fly() {
   fi
 
   # Check if target is defined
-  if [[ -z "${TARGET}" ]]; then
+  if [[ -z "${target}" ]]; then
     error "Concourse target not specified"
     exit 1
   fi
 
   # Check if target exists
-  if ! fly targets | grep -q "${TARGET}" 2>/dev/null; then
-    error "Concourse target not found: ${TARGET}"
+  if ! fly targets | grep -q "${target}" 2>/dev/null; then
+    error "Concourse target not found: ${target}"
     error "Available targets:"
     fly targets 2>/dev/null || echo "  None found"
     exit 1

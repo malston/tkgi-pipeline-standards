@@ -93,22 +93,22 @@ main() {
     set -x
   fi
   
-  # Execute the requested command
+  # Execute the requested command with parameters instead of global variables
   case "${COMMAND}" in
   set)
-    cmd_set_pipeline
+    cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   unpause)
-    cmd_unpause_pipeline
+    cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   destroy)
-    cmd_destroy_pipeline
+    cmd_destroy_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${DRY_RUN}"
     ;;
   validate)
-    cmd_validate_pipeline
+    cmd_validate_pipeline "${PIPELINE}" "${DRY_RUN}"
     ;;
   release)
-    cmd_release_pipeline
+    cmd_release_pipeline "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   *)
     error "Unknown command: ${COMMAND}"

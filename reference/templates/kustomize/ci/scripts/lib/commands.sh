@@ -5,15 +5,38 @@
 #
 
 # Implementation of set pipeline command
+# This function takes parameters instead of using global variables
+# @param pipeline_name The name of the pipeline without foundation
+# @param foundation The foundation name
+# @param target The concourse target
+# @param environment The environment (lab, nonprod, prod)
+# @param datacenter The datacenter
+# @param branch The git branch
+# @param timer_duration The timer trigger duration
+# @param version The pipeline version (optional)
+# @param dry_run Whether to perform a dry run (true/false)
+# @param verbose Whether to be verbose (true/false)
 function cmd_set_pipeline() {
-  check_fly
+  # Parse parameters
+  local pipeline="$1"
+  local foundation="$2"
+  local target="$3"
+  local environment="$4"
+  local datacenter="$5"
+  local branch="$6"
+  local timer_duration="$7"
+  local version="$8"
+  local dry_run="$9"
+  local verbose="${10}"
+
+  check_fly "$target"
 
   # Prepare variables
-  local pipeline_name="${PIPELINE}-${FOUNDATION}"
-  local pipeline_file="${CI_DIR}/pipelines/${PIPELINE}.yml"
+  local pipeline_name="${pipeline}-${foundation}"
+  local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
 
   # Handle release pipeline
-  if [[ "$PIPELINE" == "release" ]]; then
+  if [[ "$pipeline" == "release" ]]; then
     pipeline_file="${CI_DIR}/pipelines/release.yml"
   fi
 
@@ -29,26 +52,26 @@ function cmd_set_pipeline() {
 
   # Build variables array
   local vars=(
-    "-v" "foundation=${FOUNDATION}"
-    "-v" "environment=${ENVIRONMENT}"
-    "-v" "branch=${BRANCH}"
-    "-v" "timer_duration=${TIMER_DURATION}"
-    "-v" "verbose=${VERBOSE}"
+    "-v" "foundation=${foundation}"
+    "-v" "environment=${environment}"
+    "-v" "branch=${branch}"
+    "-v" "timer_duration=${timer_duration}"
+    "-v" "verbose=${verbose}"
   )
 
   # Add version if set
-  if [[ -n "${VERSION}" ]]; then
-    vars+=("-v" "version=${VERSION}")
+  if [[ -n "${version}" ]]; then
+    vars+=("-v" "version=${version}")
   fi
 
   # Add datacenter if available
-  if [[ -n "${DATACENTER}" ]]; then
-    vars+=("-v" "datacenter=${DATACENTER}")
+  if [[ -n "${datacenter}" ]]; then
+    vars+=("-v" "datacenter=${datacenter}")
   fi
 
   # Add foundation path
-  if [[ -n "${DATACENTER}" ]]; then
-    vars+=("-v" "foundation_path=${DATACENTER}/${FOUNDATION}")
+  if [[ -n "${datacenter}" ]]; then
+    vars+=("-v" "foundation_path=${datacenter}/${foundation}")
   fi
 
   # Build vars files array if params directory exists
@@ -65,13 +88,13 @@ function cmd_set_pipeline() {
     fi
 
     # Add datacenter params if they exist
-    if [[ -d "${params_path}/${DATACENTER}" ]]; then
-      if [[ -f "${params_path}/${DATACENTER}/${DATACENTER}.yml" ]]; then
-        vars_files+=("-l" "${params_path}/${DATACENTER}/${DATACENTER}.yml")
+    if [[ -d "${params_path}/${datacenter}" ]]; then
+      if [[ -f "${params_path}/${datacenter}/${datacenter}.yml" ]]; then
+        vars_files+=("-l" "${params_path}/${datacenter}/${datacenter}.yml")
       fi
 
-      if [[ -f "${params_path}/${DATACENTER}/${FOUNDATION}.yml" ]]; then
-        vars_files+=("-l" "${params_path}/${DATACENTER}/${FOUNDATION}.yml")
+      if [[ -f "${params_path}/${datacenter}/${foundation}.yml" ]]; then
+        vars_files+=("-l" "${params_path}/${datacenter}/${foundation}.yml")
       fi
     fi
   fi
@@ -79,20 +102,20 @@ function cmd_set_pipeline() {
   # Execute the command
   info "Setting pipeline: ${pipeline_name}"
 
-  if [[ "${DRY_RUN}" == "true" ]]; then
+  if [[ "${dry_run}" == "true" ]]; then
     info "DRY RUN: Would execute:"
-    info "fly -t \"$TARGET\" set-pipeline -p \"${pipeline_name}\" -c \"${pipeline_file}\" ${vars_files[*]} ${vars[*]}"
+    info "fly -t \"$target\" set-pipeline -p \"${pipeline_name}\" -c \"${pipeline_file}\" ${vars_files[*]} ${vars[*]}"
   else
     # With vars_files
     if [[ ${#vars_files[@]} -gt 0 ]]; then
-      fly -t "$TARGET" set-pipeline \
+      fly -t "$target" set-pipeline \
         -p "${pipeline_name}" \
         -c "${pipeline_file}" \
         "${vars_files[@]}" \
         "${vars[@]}"
     else
       # Without vars_files
-      fly -t "$TARGET" set-pipeline \
+      fly -t "$target" set-pipeline \
         -p "${pipeline_name}" \
         -c "${pipeline_file}" \
         "${vars[@]}"
@@ -100,31 +123,69 @@ function cmd_set_pipeline() {
 
     success "Pipeline '${pipeline_name}' set successfully"
   fi
+  
+  return 0
 }
 
 # Implementation of unpause pipeline command
+# This function takes parameters instead of using global variables
+# @param pipeline_name The name of the pipeline without foundation
+# @param foundation The foundation name
+# @param target The concourse target
+# @param environment The environment (lab, nonprod, prod)
+# @param datacenter The datacenter
+# @param branch The git branch
+# @param timer_duration The timer trigger duration
+# @param version The pipeline version (optional)
+# @param dry_run Whether to perform a dry run (true/false)
+# @param verbose Whether to be verbose (true/false)
 function cmd_unpause_pipeline() {
-  # First set the pipeline
-  cmd_set_pipeline
+  # Parse parameters
+  local pipeline="$1"
+  local foundation="$2"
+  local target="$3"
+  local environment="$4"
+  local datacenter="$5"
+  local branch="$6"
+  local timer_duration="$7"
+  local version="$8"
+  local dry_run="$9"
+  local verbose="${10}"
 
-  local pipeline_name="${PIPELINE}-${FOUNDATION}"
+  # First set the pipeline
+  cmd_set_pipeline "$pipeline" "$foundation" "$target" "$environment" "$datacenter" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
+
+  local pipeline_name="${pipeline}-${foundation}"
 
   info "Unpausing pipeline: ${pipeline_name}"
 
-  if [[ "${DRY_RUN}" == "true" ]]; then
+  if [[ "${dry_run}" == "true" ]]; then
     info "DRY RUN: Would execute:"
-    info "fly -t \"$TARGET\" unpause-pipeline -p \"${pipeline_name}\""
+    info "fly -t \"$target\" unpause-pipeline -p \"${pipeline_name}\""
   else
-    fly -t "$TARGET" unpause-pipeline -p "${pipeline_name}"
+    fly -t "$target" unpause-pipeline -p "${pipeline_name}"
     success "Pipeline '${pipeline_name}' unpaused successfully"
   fi
+  
+  return 0
 }
 
 # Implementation of destroy pipeline command
+# This function takes parameters instead of using global variables
+# @param pipeline_name The name of the pipeline without foundation
+# @param foundation The foundation name
+# @param target The concourse target
+# @param dry_run Whether to perform a dry run (true/false)
 function cmd_destroy_pipeline() {
-  check_fly
+  # Parse parameters
+  local pipeline="$1"
+  local foundation="$2"
+  local target="$3"
+  local dry_run="$4"
+  
+  check_fly "$target"
 
-  local pipeline_name="${PIPELINE}-${FOUNDATION}"
+  local pipeline_name="${pipeline}-${foundation}"
   local confirmation=""
 
   # Confirm destruction
@@ -140,27 +201,36 @@ function cmd_destroy_pipeline() {
   # Execute the command
   info "Destroying pipeline: ${pipeline_name}"
 
-  if [[ "${DRY_RUN}" == "true" ]]; then
+  if [[ "${dry_run}" == "true" ]]; then
     info "DRY RUN: Would execute:"
-    info "fly -t \"$TARGET\" destroy-pipeline -p \"${pipeline_name}\""
+    info "fly -t \"$target\" destroy-pipeline -p \"${pipeline_name}\""
   else
-    fly -t "$TARGET" destroy-pipeline -p "${pipeline_name}"
+    fly -t "$target" destroy-pipeline -p "${pipeline_name}"
     success "Pipeline '${pipeline_name}' destroyed successfully"
   fi
+  
+  return 0
 }
 
 # Implementation of validate pipeline command
+# This function takes parameters instead of using global variables
+# @param pipeline_name The name of the pipeline without foundation
+# @param dry_run Whether to perform a dry run (true/false)
 function cmd_validate_pipeline() {
+  # Parse parameters
+  local pipeline="$1"
+  local dry_run="$2"
+  
   # Determine pipeline file
-  local pipeline_file="${CI_DIR}/pipelines/${PIPELINE}.yml"
+  local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
 
   # Handle special pipeline names
-  if [[ "$PIPELINE" == "release" ]]; then
+  if [[ "$pipeline" == "release" ]]; then
     pipeline_file="${CI_DIR}/pipelines/release.yml"
   fi
 
   # Validate all pipelines if requested
-  if [[ "$PIPELINE" == "all" ]]; then
+  if [[ "$pipeline" == "all" ]]; then
     info "Validating all pipelines"
 
     for pipeline_file in "${CI_DIR}"/pipelines/*.yml; do
@@ -185,26 +255,48 @@ function cmd_validate_pipeline() {
     exit 1
   fi
 
-  info "Validating pipeline: ${PIPELINE}"
+  info "Validating pipeline: ${pipeline}"
 
-  if [[ "${DRY_RUN}" == "true" ]]; then
+  if [[ "${dry_run}" == "true" ]]; then
     info "DRY RUN: Would execute:"
     info "fly validate-pipeline -c \"${pipeline_file}\""
   else
     fly validate-pipeline -c "${pipeline_file}" || {
-      error "Pipeline validation failed: ${PIPELINE}"
+      error "Pipeline validation failed: ${pipeline}"
       return 1
     }
 
-    success "Pipeline validated successfully: ${PIPELINE}"
+    success "Pipeline validated successfully: ${pipeline}"
   fi
+  
+  return 0
 }
 
 # Implementation of release pipeline command (legacy behavior)
+# This function takes parameters instead of using global variables
+# @param foundation The foundation name
+# @param target The concourse target
+# @param environment The environment (lab, nonprod, prod)
+# @param datacenter The datacenter
+# @param branch The git branch
+# @param timer_duration The timer trigger duration
+# @param version The pipeline version (optional)
+# @param dry_run Whether to perform a dry run (true/false)
+# @param verbose Whether to be verbose (true/false)
 function cmd_release_pipeline() {
-  # Switch to release pipeline
-  PIPELINE="release"
+  # Parse parameters - all except pipeline
+  local foundation="$1"
+  local target="$2"
+  local environment="$3"
+  local datacenter="$4"
+  local branch="$5"
+  local timer_duration="$6"
+  local version="$7"
+  local dry_run="$8"
+  local verbose="$9"
 
-  # Set the pipeline
-  cmd_set_pipeline
+  # Set the pipeline using the release pipeline
+  cmd_set_pipeline "release" "$foundation" "$target" "$environment" "$datacenter" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
+  
+  return 0
 }
