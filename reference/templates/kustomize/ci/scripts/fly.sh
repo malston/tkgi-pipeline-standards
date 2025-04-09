@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Script: ns-mgmt-refactored.sh
-# Description: Enhanced pipeline management script that combines ns-mgmt functionality with advanced commands
+# Script: fly.sh
+# Description: Enhanced pipeline management script that combines default fly functionality with advanced commands
 #
-# Usage: ./ns-mgmt-refactored.sh [options] [command] [pipeline_name]
+# Usage: ./fly.sh [options] [command] [pipeline_name]
 #
 # Commands:
 #   set          Set pipeline (default)
@@ -16,11 +16,11 @@
 #   -f, --foundation NAME      Foundation name (required)
 #   -t, --target TARGET        Concourse target (default: <foundation>)
 #   -e, --environment ENV      Environment type (lab|nonprod|prod)
-#   -b, --branch BRANCH        Git branch for pipeline repository 
+#   -b, --branch BRANCH        Git branch for pipeline repository
 #   -c, --config-branch BRANCH Git branch for config repository
 #   -d, --params-branch BRANCH Params git branch (default: master)
 #   -p, --pipeline NAME        Custom pipeline name prefix
-#   -o, --github-org ORG       GitHub organization 
+#   -o, --github-org ORG       GitHub organization
 #   -v, --version VERSION      Pipeline version
 #   --release                  Create a release pipeline
 #   --set-release-pipeline     Set the release pipeline
@@ -42,13 +42,11 @@ REPO_ROOT="$(cd "${CI_DIR}/.." &>/dev/null && pwd)"
 REPO_NAME=$(basename "${REPO_ROOT}")
 
 # Source helper functions if available
-if [[ -f "${__DIR}/ns-mgmt-helpers.sh" ]]; then
-  source "${__DIR}/ns-mgmt-helpers.sh"
-elif [[ -f "${__DIR}/helpers.sh" ]]; then
+if [[ -f "${__DIR}/helpers.sh" ]]; then
   source "${__DIR}/helpers.sh"
 fi
 
-# Default values (from original ns-mgmt-fly.sh)
+# Default values
 PIPELINE="tkgi-ns-mgmt"
 RELEASE_PIPELINE_NAME="$PIPELINE-release"
 PIPELINE_FILE="${CI_DIR}/pipelines/main.yml"
@@ -70,7 +68,37 @@ COMMAND="set"
 
 # Function to display usage
 function show_usage() {
-  grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+  cat << USAGE
+Script: fly.sh
+Description: Enhanced pipeline management script that combines simple usage with advanced commands
+
+Usage: ./fly.sh [options] [command] [pipeline_name]
+
+Commands:
+  set          Set pipeline (default)
+  unpause      Set and unpause pipeline
+  destroy      Destroy specified pipeline
+  validate     Validate pipeline YAML without setting
+  release      Create a release pipeline
+
+Options:
+  -f, --foundation NAME      Foundation name (required)
+  -t, --target TARGET        Concourse target (default: <foundation>)
+  -e, --environment ENV      Environment type (lab|nonprod|prod)
+  -b, --branch BRANCH        Git branch for pipeline repository
+  -c, --config-branch BRANCH Git branch for config repository
+  -d, --params-branch BRANCH Params git branch (default: master)
+  -p, --pipeline NAME        Custom pipeline name prefix
+  -o, --github-org ORG       GitHub organization
+  -v, --version VERSION      Pipeline version
+  --release                  Create a release pipeline
+  --set-release-pipeline     Set the release pipeline
+  --dry-run                  Simulate without making changes
+  --verbose                  Increase output verbosity
+  --timer DURATION           Set timer trigger duration
+  --enable-validation-testing Enable validation testing
+  -h, --help                 Show this help message
+USAGE
   exit 1
 }
 
@@ -98,7 +126,7 @@ function success() {
 # Function to determine environment based on foundation name
 function determine_environment() {
   local foundation="$1"
-  
+
   if [[ "$foundation" == *"-lab-"* || "$foundation" == *"-n-"* ]]; then
     echo "lab"
   elif [[ "$foundation" == *"-nonprod-"* || "$foundation" == *"-d-"* ]]; then
@@ -106,24 +134,24 @@ function determine_environment() {
   elif [[ "$foundation" == *"-prod-"* || "$foundation" == *"-p-"* ]]; then
     echo "prod"
   else
-    echo "lab"  # Default to lab if not determined
+    echo "lab" # Default to lab if not determined
   fi
 }
 
 # Function to check if fly is installed and accessible
 function check_fly() {
-  if ! command -v fly &> /dev/null; then
+  if ! command -v fly &>/dev/null; then
     error "fly command not found"
     error "Please install the Concourse CLI: https://concourse-ci.org/download.html"
     exit 1
   fi
-  
+
   # Check if target is defined
   if [[ -z "${TARGET}" ]]; then
     error "Concourse target not specified"
     exit 1
   fi
-  
+
   # Check if target exists
   if ! fly targets | grep -q "${TARGET}"; then
     error "Concourse target not found: ${TARGET}"
@@ -131,7 +159,7 @@ function check_fly() {
     fly targets
     exit 1
   fi
-  
+
   return 0
 }
 
@@ -139,12 +167,12 @@ function check_fly() {
 function validate_file_exists() {
   local file_path="$1"
   local description="${2:-File}"
-  
+
   if [[ ! -f "$file_path" ]]; then
     error "$description not found: $file_path"
     return 1
   fi
-  
+
   return 0
 }
 
@@ -165,87 +193,87 @@ if getopt -T &>/dev/null; then
       # Parse using getopt
       while true; do
         case "$1" in
-          -f|--foundation)
-            FOUNDATION="$2"
-            shift 2
-            ;;
-          -t|--target)
-            TARGET="$2"
-            shift 2
-            ;;
-          -e|--environment)
-            ENVIRONMENT="$2"
-            shift 2
-            ;;
-          -b|--branch)
-            BRANCH="$2"
-            shift 2
-            ;;
-          -c|--config-branch)
-            CONFIG_GIT_BRANCH="$2"
-            shift 2
-            ;;
-          -d|--params-branch)
-            PARAMS_GIT_BRANCH="$2"
-            shift 2
-            ;;
-          -p|--pipeline)
-            PIPELINE="$2"
-            shift 2
-            ;;
-          -o|--github-org)
-            GITHUB_ORG="$2"
-            shift 2
-            ;;
-          -v|--version)
-            VERSION="$2"
-            shift 2
-            ;;
-          -r|--release)
-            CREATE_RELEASE=true
-            shift
-            ;;
-          -s|--set-release-pipeline)
-            SET_RELEASE_PIPELINE=true
-            shift
-            ;;
-          --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-          --verbose)
-            VERBOSE=true
-            shift
-            ;;
-          --timer)
-            TIMER_DURATION="$2"
-            shift 2
-            ;;
-          --enable-validation-testing)
-            ENABLE_VALIDATION_TESTING=true
-            shift
-            ;;
-          -h|--help)
-            show_usage
-            ;;
-          --)
-            shift
-            break
-            ;;
-          *)
-            error "Internal error!"
-            exit 1
-            ;;
+        -f | --foundation)
+          FOUNDATION="$2"
+          shift 2
+          ;;
+        -t | --target)
+          TARGET="$2"
+          shift 2
+          ;;
+        -e | --environment)
+          ENVIRONMENT="$2"
+          shift 2
+          ;;
+        -b | --branch)
+          BRANCH="$2"
+          shift 2
+          ;;
+        -c | --config-branch)
+          CONFIG_GIT_BRANCH="$2"
+          shift 2
+          ;;
+        -d | --params-branch)
+          PARAMS_GIT_BRANCH="$2"
+          shift 2
+          ;;
+        -p | --pipeline)
+          PIPELINE="$2"
+          shift 2
+          ;;
+        -o | --github-org)
+          GITHUB_ORG="$2"
+          shift 2
+          ;;
+        -v | --version)
+          VERSION="$2"
+          shift 2
+          ;;
+        -r | --release)
+          CREATE_RELEASE=true
+          shift
+          ;;
+        -s | --set-release-pipeline)
+          SET_RELEASE_PIPELINE=true
+          shift
+          ;;
+        --dry-run)
+          DRY_RUN=true
+          shift
+          ;;
+        --verbose)
+          VERBOSE=true
+          shift
+          ;;
+        --timer)
+          TIMER_DURATION="$2"
+          shift 2
+          ;;
+        --enable-validation-testing)
+          ENABLE_VALIDATION_TESTING=true
+          shift
+          ;;
+        -h | --help)
+          show_usage
+          ;;
+        --)
+          shift
+          break
+          ;;
+        *)
+          error "Internal error!"
+          exit 1
+          ;;
         esac
       done
-      
+
       # Check for additional arguments (command and pipeline)
       if [[ $# -gt 0 ]]; then
         if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
           COMMAND="$1"
           shift
         fi
-        
+
         if [[ $# -gt 0 ]]; then
           PIPELINE="$1"
           shift
@@ -259,79 +287,79 @@ fi
 if [[ -z "$TEMP" ]]; then
   while getopts ":f:t:e:b:c:d:p:o:v:rsh" opt; do
     case ${opt} in
-      f)
-        FOUNDATION=$OPTARG
-        ;;
-      t)
-        TARGET=$OPTARG
-        ;;
-      e)
-        ENVIRONMENT=$OPTARG
-        ;;
-      b)
-        BRANCH=$OPTARG
-        ;;
-      c)
-        CONFIG_GIT_BRANCH=$OPTARG
-        ;;
-      d)
-        PARAMS_GIT_BRANCH=$OPTARG
-        ;;
-      p)
-        PIPELINE=$OPTARG
-        ;;
-      o)
-        GITHUB_ORG=$OPTARG
-        ;;
-      v)
-        VERSION=$OPTARG
-        ;;
-      r)
-        CREATE_RELEASE=true
-        ;;
-      s)
-        SET_RELEASE_PIPELINE=true
-        ;;
-      h)
-        show_usage
-        ;;
-      \?)
-        echo "Invalid option: $OPTARG" 1>&2
-        show_usage
-        ;;
-      :)
-        echo "Invalid option: $OPTARG requires an argument" 1>&2
-        show_usage
-        ;;
+    f)
+      FOUNDATION=$OPTARG
+      ;;
+    t)
+      TARGET=$OPTARG
+      ;;
+    e)
+      ENVIRONMENT=$OPTARG
+      ;;
+    b)
+      BRANCH=$OPTARG
+      ;;
+    c)
+      CONFIG_GIT_BRANCH=$OPTARG
+      ;;
+    d)
+      PARAMS_GIT_BRANCH=$OPTARG
+      ;;
+    p)
+      PIPELINE=$OPTARG
+      ;;
+    o)
+      GITHUB_ORG=$OPTARG
+      ;;
+    v)
+      VERSION=$OPTARG
+      ;;
+    r)
+      CREATE_RELEASE=true
+      ;;
+    s)
+      SET_RELEASE_PIPELINE=true
+      ;;
+    h)
+      show_usage
+      ;;
+    \?)
+      echo "Invalid option: $OPTARG" 1>&2
+      show_usage
+      ;;
+    :)
+      echo "Invalid option: $OPTARG requires an argument" 1>&2
+      show_usage
+      ;;
     esac
   done
-  shift $((OPTIND -1))
-  
+  shift $((OPTIND - 1))
+
   # Check for command and pipeline arguments
   if [[ $# -gt 0 ]]; then
     if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
       COMMAND="$1"
       shift
     fi
-    
+
     if [[ $# -gt 0 ]]; then
       PIPELINE="$1"
       shift
     fi
   fi
-  
+
   # Handle legacy flags that would otherwise be dropped
   for arg in "$@"; do
     case "$arg" in
-      --dry-run)
-        DRY_RUN=true
-        ;;
-      --verbose)
-        VERBOSE=true
-        ;;
-      --enable-validation-testing)
-        ENABLE_VALIDATION_TESTING=true
-        ;;
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    --verbose)
+      VERBOSE=true
+      ;;
+    --enable-validation-testing)
+      ENABLE_VALIDATION_TESTING=true
+      ;;
     esac
   done
 fi
@@ -393,21 +421,21 @@ fi
 # Implementation of set pipeline command
 function cmd_set_pipeline() {
   check_fly
-  
+
   # Prepare variables
   local pipeline_name="$PIPELINE-$FOUNDATION"
   local pipeline_file="${PIPELINE_FILE}"
-  
+
   # Handle release pipeline
   if [[ "$PIPELINE" == *"-release"* ]]; then
     pipeline_file="${RELEASE_PIPELINE_FILE}"
   fi
-  
+
   # Validate pipeline file exists
   if ! validate_file_exists "$pipeline_file" "Pipeline file"; then
     exit 1
   fi
-  
+
   # Build the list of vars files in the correct hierarchy
   local vars_files=(
     "-l" "${REPO_ROOT}/../params/global.yml"
@@ -415,7 +443,7 @@ function cmd_set_pipeline() {
     "-l" "${REPO_ROOT}/../params/${DATACENTER}/${DATACENTER}.yml"
     "-l" "${REPO_ROOT}/../params/${DATACENTER}/${FOUNDATION}.yml"
   )
-  
+
   # Build variables
   local vars=(
     "-v" "foundation=${FOUNDATION}"
@@ -431,10 +459,10 @@ function cmd_set_pipeline() {
     "-v" "enable_validation_testing=${ENABLE_VALIDATION_TESTING}"
     "-v" "verbose=${VERBOSE}"
   )
-  
+
   # Execute the command
   info "Setting pipeline: ${pipeline_name}"
-  
+
   if [[ "${DRY_RUN}" == "true" ]]; then
     info "DRY RUN: Would execute:"
     info "fly -t \"$TARGET\" set-pipeline -p \"${pipeline_name}\" -c \"${pipeline_file}\" ${vars_files[@]} ${vars[@]}"
@@ -444,7 +472,7 @@ function cmd_set_pipeline() {
       -c "${pipeline_file}" \
       "${vars_files[@]}" \
       "${vars[@]}"
-      
+
     success "Pipeline '${pipeline_name}' set successfully"
   fi
 }
@@ -453,11 +481,11 @@ function cmd_set_pipeline() {
 function cmd_unpause_pipeline() {
   # First set the pipeline
   cmd_set_pipeline
-  
+
   local pipeline_name="$PIPELINE-$FOUNDATION"
-  
+
   info "Unpausing pipeline: ${pipeline_name}"
-  
+
   if [[ "${DRY_RUN}" == "true" ]]; then
     info "DRY RUN: Would execute:"
     info "fly -t \"$TARGET\" unpause-pipeline -p \"${pipeline_name}\""
@@ -470,23 +498,23 @@ function cmd_unpause_pipeline() {
 # Implementation of destroy pipeline command
 function cmd_destroy_pipeline() {
   check_fly
-  
+
   local pipeline_name="$PIPELINE-$FOUNDATION"
   local confirmation=""
-  
+
   # Confirm destruction
   if [[ -z "$confirmation" ]]; then
     read -p "Are you sure you want to destroy pipeline '${pipeline_name}'? (yes/no): " confirmation
   fi
-  
+
   if [[ "${confirmation}" != "yes" ]]; then
     info "Pipeline destruction cancelled"
     return 0
   fi
-  
+
   # Execute the command
   info "Destroying pipeline: ${pipeline_name}"
-  
+
   if [[ "${DRY_RUN}" == "true" ]]; then
     info "DRY RUN: Would execute:"
     info "fly -t \"$TARGET\" destroy-pipeline -p \"${pipeline_name}\""
@@ -499,43 +527,43 @@ function cmd_destroy_pipeline() {
 # Implementation of validate pipeline command
 function cmd_validate_pipeline() {
   local pipeline_file="${PIPELINE_FILE}"
-  
+
   # Handle release pipeline
   if [[ "$PIPELINE" == *"-release"* ]]; then
     pipeline_file="${RELEASE_PIPELINE_FILE}"
   fi
-  
+
   # Validate all pipelines if requested
   if [[ "$PIPELINE" == "all" ]]; then
     info "Validating all pipelines"
-    
+
     for pipeline_file in "${CI_DIR}"/pipelines/*.yml; do
       local pipeline_name=$(basename "${pipeline_file}" .yml)
       info "Validating pipeline: ${pipeline_name}"
-      
+
       fly validate-pipeline -c "${pipeline_file}" || {
         error "Pipeline validation failed: ${pipeline_name}"
         return 1
       }
     done
-    
+
     success "All pipelines validated successfully"
     return 0
   fi
-  
+
   # Validate a specific pipeline
   # Validate pipeline file exists
   if ! validate_file_exists "$pipeline_file" "Pipeline file"; then
     exit 1
   fi
-  
+
   info "Validating pipeline: ${PIPELINE}"
-  
+
   fly validate-pipeline -c "${pipeline_file}" || {
     error "Pipeline validation failed: ${PIPELINE}"
     return 1
   }
-  
+
   success "Pipeline validated successfully: ${PIPELINE}"
 }
 
@@ -544,30 +572,30 @@ function cmd_release_pipeline() {
   # Update to use release pipeline
   PIPELINE="${RELEASE_PIPELINE_NAME}"
   PIPELINE_FILE="${RELEASE_PIPELINE_FILE}"
-  
+
   # Set the pipeline
   cmd_set_pipeline
 }
 
 # Execute the requested command
 case "${COMMAND}" in
-  set)
-    cmd_set_pipeline
-    ;;
-  unpause)
-    cmd_unpause_pipeline
-    ;;
-  destroy)
-    cmd_destroy_pipeline
-    ;;
-  validate)
-    cmd_validate_pipeline
-    ;;
-  release)
-    cmd_release_pipeline
-    ;;
-  *)
-    error "Unknown command: ${COMMAND}"
-    show_usage
-    ;;
+set)
+  cmd_set_pipeline
+  ;;
+unpause)
+  cmd_unpause_pipeline
+  ;;
+destroy)
+  cmd_destroy_pipeline
+  ;;
+validate)
+  cmd_validate_pipeline
+  ;;
+release)
+  cmd_release_pipeline
+  ;;
+*)
+  error "Unknown command: ${COMMAND}"
+  show_usage
+  ;;
 esac

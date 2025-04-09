@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Tests for ns-mgmt-refactored.sh script
+# Tests for fly.sh script
 #
 
 # Source test framework
@@ -26,11 +26,18 @@ function test_help_command() {
   output=$("${SCRIPT_PATH}" -h 2>&1 || true)
   
   # Verify output contains usage information
-  assert_contains "$output" "Usage:"
+  assert_contains "$output" "Usage: ./fly.sh"
   assert_contains "$output" "Commands:"
   assert_contains "$output" "Options:"
+  assert_contains "$output" "-f, --foundation"
+  assert_contains "$output" "set"
   
-  test_pass "Help command displays usage"
+  # Verify we're not seeing any unintended output
+  if echo "$output" | grep -q "ERROR" || echo "$output" | grep -q "^#"; then
+    test_fail "Found unexpected content in help output"
+  else
+    test_pass "Help command displays usage correctly"
+  fi
 }
 
 # Test 2: Check exit code when required parameters are missing
