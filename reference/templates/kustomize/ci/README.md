@@ -16,6 +16,7 @@ This directory contains all CI/CD pipeline configurations and tasks for the kust
   - `cmd_set_pipeline.sh`: Command implementations for the advanced fly.sh script
   - `ns-mgmt-fly.sh`: Reference implementation from the ns-mgmt repository (pre-migration)
   - `ns-mgmt-helpers.sh`: Helper functions from the ns-mgmt repository (pre-migration)
+  - `ns-mgmt-refactored.sh`: Enhanced version of ns-mgmt-fly.sh with advanced commands
 
 - `tasks/`: Tasks organized by functional category
   - `common/`: Common/shared tasks
@@ -77,6 +78,23 @@ For reference, the original scripts from the ns-mgmt repository (before migratio
 - `ci/scripts/ns-mgmt-helpers.sh`: The original helpers.sh from ns-mgmt before standardization
 
 These scripts are provided for reference purposes to help understand the migration process and as examples of alternative implementation approaches.
+
+### 4. Refactored ns-mgmt Implementation
+
+An enhanced version of the ns-mgmt fly.sh script that provides more advanced functionality:
+
+```bash
+./ci/scripts/ns-mgmt-refactored.sh [options] [command] [pipeline_name]
+```
+
+This script combines the original ns-mgmt functionality with enhanced features:
+
+- Maintains backward compatibility with original ns-mgmt-fly.sh arguments
+- Adds support for commands like set, unpause, destroy, validate
+- Provides advanced options like dry-run and environment selection
+- Supports both legacy flag style and modern command style interfaces
+
+This implementation demonstrates how to enhance existing scripts while preserving backward compatibility.
 
 ## Task Design Pattern
 
