@@ -61,7 +61,7 @@ To build and test the modular script, use the provided Makefile:
 make build
 
 # Test the script
-make test-modular
+make test
 
 # Install the modular script (replace the original)
 make install
@@ -75,4 +75,4 @@ To add new features:
 2. Add your functions to the appropriate module
 3. Update the main script if needed
 4. Add tests for your new functionality
-5. Test using `make test-modular`
+5. Test using `make test`

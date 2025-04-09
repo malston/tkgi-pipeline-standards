@@ -1,0 +1,149 @@
+resources:
+  - name: s3-container-image
+    type: s3
+    icon: cloud-download-outline
+    source:
+      access_key_id: ((concourse_s3_access_key_id))
+      secret_access_key: ((concourse_s3_secret_access_key))
+      bucket: ((concourse-s3-bucket))
+      endpoint: ((concourse-s3-endpoint))
+      regexp: ((cflinux_current_image))/((cflinux_current_image))-(.*).tgz
+    tags:
+      - ((worker_tags))
+
+  - name: version
+    type: semver
+    icon: counter
+    source:
+      driver: git
+      uri: ((git_uri))
+      branch: version
+      file: ((version_file))
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+    tags:
+      - ((worker_tags))
+
+  - name: gh-release
+    type: github-release
+    source:
+      owner: ((owner))
+      repository: ((repository))
+      access_token: ((ns_mgmt_github_token))
+      github_api_url: https://github.com/api/v3
+      github_uploads_url: https://github.com/api/uploads/
+      insecure: true
+    tags:
+      - ((worker_tags))
+
+  - name: ((repository))-((git_release_branch))
+    type: git
+    icon: github
+    source:
+      branch: ((git_release_branch))
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+      uri: ((git_uri))
+    tags:
+      - ((worker_tags))
+
+  - name: ((repository))-develop
+    type: git
+    icon: github
+    source:
+      branch: develop
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+      uri: ((git_uri))
+    tags:
+      - ((worker_tags))
+
+jobs:
+  - name: create-final-release
+    serial: true
+    plan:
+      - in_parallel:
+          - get: ((repository))
+            resource: ((repository))-((git_release_branch))
+            tags:
+              - ((worker_tags))
+          - get: ((repository))-develop
+            trigger: false
+            tags:
+              - ((worker_tags))
+          - get: version
+            params:
+              bump: final
+            tags:
+              - ((worker_tags))
+          - get: s3-container-image
+            params:
+              unpack: true
+            tags:
+              - ((worker_tags))
+      - put: ((repository))
+        resource: ((repository))-((git_release_branch))
+        params:
+          repository: ((repository))-develop
+          merge: true
+          tag: version/number
+          tag_prefix: release-v
+        tags:
+          - ((worker_tags))
+      - put: version
+        params:
+          file: version/number
+        tags:
+          - ((worker_tags))
+
+      - task: create-release-info
+        image: s3-container-image
+        config:
+          platform: linux
+          inputs:
+            - name: repo
+            - name: version
+          outputs:
+            - name: pipelines
+          run:
+            path: repo/ci/tasks/create-release-info.sh
+            args:
+          params:
+            PIPELINE_TEMPLATE: repo/ci/pipelines/main.yml
+            RELEASE_BODY: ((release_body))
+        input_mapping:
+          repo: ((repository))
+        tags:
+          - ((worker_tags))
+      - put: gh-release
+        params:
+          name: pipelines/release_name.txt
+          tag: pipelines/release_tag.txt
+          body: pipelines/release_body.txt
+          commitish: pipelines/COMMITISH
+          generate_release_notes: true
+          globs:
+            - pipelines/pipeline-*.yml
+        tags:
+          - ((worker_tags))
+
+  - name: bump-patch-version
+    plan:
+      - get: version
+        passed:
+          - create-final-release
+        trigger: true
+        tags:
+          - ((worker_tags))
+      - put: version
+        params:
+          bump: patch
+          pre: rc
+        tags:
+          - ((worker_tags))
+
+  - name: bump-minor-version
+    plan:
+      - put: version
+        params:
+          bump: minor
+          pre: rc
+        tags:
+          - ((worker_tags))
