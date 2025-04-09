@@ -8,21 +8,47 @@
 function info() {
   local timestamp
   timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  echo "[INFO] [${timestamp}] $1"
+  local caller_info
+  if [[ "${BASH_VERSINFO[0]}" -ge 4 && "${DEBUG}" == "true" ]]; then
+    # Only add caller info in debug mode
+    caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}"
+    echo "[INFO] [${timestamp}] [${caller_info}] $1"
+  else
+    # Normal mode without caller info
+    echo "[INFO] [${timestamp}] $1"
+  fi
 }
 
 # Function to log error messages
 function error() {
   local timestamp
   timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  echo "[ERROR] [${timestamp}] $1" >&2
+  local caller_info
+  if [[ "${BASH_VERSINFO[0]}" -ge 4 ]]; then
+    # Get caller information (file and line number)
+    # BASH_SOURCE[1] is the file that called the error function
+    # BASH_LINENO[0] is the line number in that file
+    caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}"
+    echo "[ERROR] [${timestamp}] [${caller_info}] $1" >&2
+  else
+    # Fallback for older Bash versions
+    echo "[ERROR] [${timestamp}] $1" >&2
+  fi
 }
 
 # Function to log success messages
 function success() {
   local timestamp
   timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  echo "[SUCCESS] [${timestamp}] $1"
+  local caller_info
+  if [[ "${BASH_VERSINFO[0]}" -ge 4 && "${DEBUG}" == "true" ]]; then
+    # Only add caller info in debug mode
+    caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}"
+    echo "[SUCCESS] [${timestamp}] [${caller_info}] $1"
+  else
+    # Normal mode without caller info
+    echo "[SUCCESS] [${timestamp}] $1"
+  fi
 }
 
 # Function to determine environment based on foundation name

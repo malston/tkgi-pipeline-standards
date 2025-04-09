@@ -27,6 +27,9 @@ LIB_DIR="${SCRIPT_DIR}/lib"
 # Test mode for automated testing (used in check_fly and other functions)
 TEST_MODE=false
 
+# Debug mode for additional logging
+DEBUG=false
+
 # Initialize default values
 PIPELINE="main"
 RELEASE_PIPELINE_NAME="release"

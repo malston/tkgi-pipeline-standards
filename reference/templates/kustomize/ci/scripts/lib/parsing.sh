@@ -229,6 +229,10 @@ function process_args() {
         TEST_MODE=true
         shift
         ;;
+      --debug)
+        DEBUG=true
+        shift
+        ;;
       
       # End of options marker
       --)

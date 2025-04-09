@@ -150,6 +150,7 @@ Options:
   --set-release-pipeline     Set the release pipeline
   --dry-run                  Simulate without making changes
   --verbose                  Increase output verbosity
+  --debug                    Show line numbers in log messages
   --timer DURATION           Set timer trigger duration
   --enable-validation-testing Enable validation testing
   -h, --help                 Show this help message and exit
