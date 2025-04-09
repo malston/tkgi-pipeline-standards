@@ -113,7 +113,7 @@ This provides more detailed usage information specific to each command, rather t
 
 ### Standard Options
 
-```
+```sh
 -f, --foundation NAME      Foundation name (required)
 -t, --target TARGET        Concourse target (default: <foundation>)
 -e, --environment ENV      Environment type (lab|nonprod|prod)
