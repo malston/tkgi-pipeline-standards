@@ -23,11 +23,12 @@ function cmd_set_pipeline() {
   local target="$3"
   local environment="$4"
   local datacenter="$5"
-  local branch="$6"
-  local timer_duration="$7"
-  local version="$8"
-  local dry_run="$9"
-  local verbose="${10}"
+  local datacenter_type="$6"
+  local branch="$7"
+  local timer_duration="$8"
+  local version="$9"
+  local dry_run="${10}"
+  local verbose="${11}"
 
   # If we're calling from the main script, pass by reference
   if [[ "$#" -ge 10 ]]; then
