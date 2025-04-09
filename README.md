@@ -258,14 +258,24 @@ report_results
 ```bash
 #!/usr/bin/env bash
 #
-# Script Name: task.sh
-# Description: Brief description of what the script does
+# Script: example.sh
+# Description: Enhanced script template that follows our standards
 #
-# Usage: ./task.sh [options] <required_arg>
+# Usage: ./example.sh [options] [command] [argument]
+#
+# Commands:
+#   command1    First command description
+#   command2    Second command description
+#   command3    Third command description
 #
 # Options:
-#   -h, --help          Show this help message
-#   -v, --verbose       Increase verbosity
+#   -f, --flag1 VALUE    First flag description (required)
+#   -o, --flag2 VALUE    Second flag description
+#   --option1            Boolean option description
+#   --dry-run            Simulate without making changes
+#   --verbose            Increase output verbosity
+#   -h, --help           Show this help message
+#
 
 # Enable strict mode
 set -o errexit
@@ -274,54 +284,234 @@ set -o pipefail
 # Get script directory for relative paths
 __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# Source common functions if needed
-# source "${__DIR}/../../../../scripts/helpers.sh"
+# Source helper functions if available
+if [[ -f "${__DIR}/helpers.sh" ]]; then
+  source "${__DIR}/helpers.sh"
+fi
 
 # Default values
+COMMAND="command1"
+DRY_RUN=false
 VERBOSE=false
 
 # Function to display usage
 function show_usage() {
-    grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
-    exit 1
+  cat << USAGE
+Script: example.sh
+Description: Enhanced script template that follows our standards
+
+Usage: ./example.sh [options] [command] [argument]
+
+Commands:
+  command1    First command description
+  command2    Second command description
+  command3    Third command description
+
+Options:
+  -f, --flag1 VALUE    First flag description (required)
+  -o, --flag2 VALUE    Second flag description
+  --option1            Boolean option description
+  --dry-run            Simulate without making changes
+  --verbose            Increase output verbosity
+  -h, --help           Show this help message
+USAGE
+  exit 1
 }
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -h|--help)
-            show_usage
-            ;;
-        -v|--verbose)
-            VERBOSE=true
-            shift
-            ;;
-        *)
-            # Handle positional arguments
-            if [[ -z "$REQUIRED_ARG" ]]; then
-                REQUIRED_ARG="$1"
-            else
-                echo "Error: Unexpected argument: $1"
-                show_usage
-            fi
-            shift
-            ;;
-    esac
-done
+# Function to log info messages
+function info() {
+  local timestamp
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  echo "[INFO] [${timestamp}] $1"
+}
 
-# Validate required arguments
-if [[ -z "$REQUIRED_ARG" ]]; then
-    echo "Error: Required argument missing"
-    show_usage
+# Function to log error messages
+function error() {
+  local timestamp
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  echo "[ERROR] [${timestamp}] $1" >&2
+}
+
+# Function to log success messages
+function success() {
+  local timestamp
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  echo "[SUCCESS] [${timestamp}] $1"
+}
+
+# Parse arguments - supporting both getopt and traditional argument parsing
+SUPPORTED_OPTIONS="f:o:h"
+SUPPORTED_LONG_OPTIONS="flag1:,flag2:,option1,dry-run,verbose,help"
+
+# Try to use getopt for enhanced option parsing
+if getopt -T &>/dev/null && [[ $? -eq 4 ]]; then
+  # Enhanced getopt is available
+  TEMP=$(getopt -o "$SUPPORTED_OPTIONS" --long "$SUPPORTED_LONG_OPTIONS" -n "$0" -- "$@" 2>/dev/null)
+  if [[ $? -eq 0 ]]; then
+    eval set -- "$TEMP"
+    # Parse using getopt
+    while true; do
+      case "$1" in
+        -f|--flag1)
+          FLAG1="$2"
+          shift 2
+          ;;
+        -o|--flag2)
+          FLAG2="$2"
+          shift 2
+          ;;
+        --option1)
+          OPTION1=true
+          shift
+          ;;
+        --dry-run)
+          DRY_RUN=true
+          shift
+          ;;
+        --verbose)
+          VERBOSE=true
+          shift
+          ;;
+        -h|--help)
+          show_usage
+          ;;
+        --)
+          shift
+          break
+          ;;
+      esac
+    done
+    
+    # Check for additional arguments (command and argument)
+    if [[ $# -gt 0 ]]; then
+      if [[ "$1" =~ ^(command1|command2|command3)$ ]]; then
+        COMMAND="$1"
+        shift
+      fi
+      
+      if [[ $# -gt 0 ]]; then
+        ARGUMENT="$1"
+        shift
+      fi
+    fi
+  fi
+else
+  # Fall back to traditional option parsing
+  while getopts ":f:o:h" opt; do
+    case ${opt} in
+      f)
+        FLAG1=$OPTARG
+        ;;
+      o)
+        FLAG2=$OPTARG
+        ;;
+      h)
+        show_usage
+        ;;
+      \?)
+        error "Invalid option: $OPTARG"
+        show_usage
+        ;;
+      :)
+        error "Invalid option: $OPTARG requires an argument"
+        show_usage
+        ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+  
+  # Check for command and argument
+  if [[ $# -gt 0 ]]; then
+    if [[ "$1" =~ ^(command1|command2|command3)$ ]]; then
+      COMMAND="$1"
+      shift
+    fi
+    
+    if [[ $# -gt 0 ]]; then
+      ARGUMENT="$1"
+      shift
+    fi
+  fi
+  
+  # Handle legacy flags that would otherwise be dropped
+  for arg in "$@"; do
+    case "$arg" in
+      --option1)
+        OPTION1=true
+        ;;
+      --dry-run)
+        DRY_RUN=true
+        ;;
+      --verbose)
+        VERBOSE=true
+        ;;
+    esac
+  done
 fi
 
-# Main script logic
-function main() {
-    # Script implementation
-    echo "Script executed successfully"
+# Enable verbose output if requested
+if [[ "${VERBOSE}" == "true" ]]; then
+  set -x
+fi
+
+# Validate required parameters
+if [[ -z "${FLAG1}" ]]; then
+  error "Flag1 not specified. Use -f or --flag1 option."
+  show_usage
+fi
+
+# Implementation of command1
+function cmd_command1() {
+  info "Executing command1 with flag1='${FLAG1}'"
+  
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    info "DRY RUN: Would execute command1 here"
+  else
+    # Actual command implementation
+    success "Command1 executed successfully"
+  fi
 }
 
-main
+# Implementation of command2
+function cmd_command2() {
+  info "Executing command2 with flag1='${FLAG1}'"
+  
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    info "DRY RUN: Would execute command2 here"
+  else
+    # Actual command implementation
+    success "Command2 executed successfully"
+  fi
+}
+
+# Implementation of command3
+function cmd_command3() {
+  info "Executing command3 with flag1='${FLAG1}'"
+  
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    info "DRY RUN: Would execute command3 here"
+  else
+    # Actual command implementation
+    success "Command3 executed successfully"
+  fi
+}
+
+# Execute the requested command
+case "${COMMAND}" in
+  command1)
+    cmd_command1
+    ;;
+  command2)
+    cmd_command2
+    ;;
+  command3)
+    cmd_command3
+    ;;
+  *)
+    error "Unknown command: ${COMMAND}"
+    show_usage
+    ;;
+esac
 ```
 
 ## 7. Implementation Process
