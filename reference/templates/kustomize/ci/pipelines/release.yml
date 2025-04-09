@@ -28,7 +28,7 @@ resources:
     source:
       owner: ((owner))
       repository: ((repository))
-      access_token: ((ns_mgmt_github_token))
+      access_token: ((github_token))
       github_api_url: https://github.com/api/v3
       github_uploads_url: https://github.com/api/uploads/
       insecure: true
