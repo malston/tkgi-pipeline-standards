@@ -17,6 +17,7 @@ This directory contains all CI/CD pipeline configurations and tasks for the kust
   - `ns-mgmt-fly.sh`: Reference implementation from the ns-mgmt repository (pre-migration)
   - `ns-mgmt-helpers.sh`: Helper functions from the ns-mgmt repository (pre-migration)
   - `ns-mgmt-refactored.sh`: Enhanced version of ns-mgmt-fly.sh with advanced commands
+  - `tests/`: Test suite for validating script functionality
 
 - `tasks/`: Tasks organized by functional category
   - `common/`: Common/shared tasks
@@ -118,3 +119,31 @@ Pipelines are organized to follow a standard workflow:
 3. **Deployment**: Apply resources to Kubernetes clusters
 
 This structure ensures resources are properly validated and built before being applied to any clusters.
+
+## Testing
+
+The CI structure includes a test suite for validating script functionality:
+
+```
+scripts/tests/
+├── README.md                  # Test documentation
+├── run_tests.sh               # Script to run all tests
+├── test_framework.sh          # Test utilities and assertions
+└── test_ns_mgmt_refactored.sh # Tests for ns-mgmt-refactored.sh
+```
+
+To run the tests:
+
+```bash
+cd ci/scripts/tests
+./run_tests.sh
+```
+
+The test suite verifies:
+
+1. **Script Functionality**: Ensures scripts behave as expected
+2. **Command Handling**: Validates command-based interface
+3. **Option Parsing**: Tests argument parsing and validation
+4. **Backward Compatibility**: Ensures legacy flag support works correctly
+
+This testing approach provides confidence when modifying scripts and serves as documentation for how the scripts are expected to behave.

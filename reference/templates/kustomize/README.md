@@ -244,5 +244,34 @@ This template aligns with the CI/CD standardization work done in the ns-mgmt rep
    - Repository scripts separate from CI task scripts
    - Helper functions for common operations
    - Consistent error handling and logging
+   - Comprehensive test suite for script validation
 
 By following this template, you can ensure your repository is consistent with the standardized approach implemented across TKGi repositories while still having access to more advanced functionality when needed.
+
+## Testing
+
+This template includes a comprehensive test suite for validating script functionality:
+
+```
+ci/scripts/tests/
+├── README.md                  # Test documentation
+├── run_tests.sh               # Script to run all tests
+├── test_framework.sh          # Test utilities and assertions
+└── test_ns_mgmt_refactored.sh # Tests for ns-mgmt-refactored.sh
+```
+
+To run the tests:
+
+```bash
+cd ci/scripts/tests
+./run_tests.sh
+```
+
+The test suite validates key functionality including:
+- Command handling
+- Option parsing
+- Environment determination
+- Flag behavior
+- Advanced features like dry-run and validation
+
+This ensures that scripts continue to work correctly after modifications and helps document expected behavior.
