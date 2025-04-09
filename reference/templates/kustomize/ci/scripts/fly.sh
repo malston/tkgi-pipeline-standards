@@ -31,10 +31,10 @@ TEST_MODE=false
 PIPELINE="main"
 RELEASE_PIPELINE_NAME="release"
 GITHUB_ORG="Utilities-tkgieng"
-GIT_RELEASE_BRANCH="release"
+# Removed unused variable: GIT_RELEASE_BRANCH
 CONFIG_GIT_BRANCH="master"
 PARAMS_GIT_BRANCH="master"
-VERSION_FILE="version"
+# Removed unused variable: VERSION_FILE
 VERSION=""
 CREATE_RELEASE=false
 SET_RELEASE_PIPELINE=false
