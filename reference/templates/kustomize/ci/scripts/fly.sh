@@ -78,17 +78,17 @@ main() {
     VERSION="$(get_latest_version)"
   fi
   
-  # Find command and pipeline name
-  detect_command_and_pipeline "$@"
+  # Find command and pipeline name - explicitly pass globals by reference
+  detect_command_and_pipeline COMMAND PIPELINE DRY_RUN VERBOSE ENABLE_VALIDATION_TESTING TEST_MODE CREATE_RELEASE SET_RELEASE_PIPELINE "$@"
   
-  # Handle legacy behavior flags
-  handle_legacy_behavior
+  # Handle legacy behavior flags - explicitly pass globals by reference
+  handle_legacy_behavior CREATE_RELEASE SET_RELEASE_PIPELINE COMMAND PIPELINE RELEASE_PIPELINE_NAME
   
   # Determine datacenter from foundation name
   DATACENTER=$(determine_datacenter "${FOUNDATION}")
   
-  # Validate required parameters and set defaults
-  validate_and_set_defaults
+  # Validate required parameters and set defaults - explicitly pass globals by reference
+  validate_and_set_defaults FOUNDATION TARGET ENVIRONMENT BRANCH
   
   # Enable verbose output if requested
   if [[ "${VERBOSE}" == "true" ]]; then

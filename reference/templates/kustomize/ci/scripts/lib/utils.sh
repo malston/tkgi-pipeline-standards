@@ -54,12 +54,22 @@ function determine_datacenter() {
 }
 
 # Function to check if fly is installed and accessible
-# @param target The concourse target to check
+# @param target_ref Reference to TARGET variable
+# @param test_mode_ref Reference to TEST_MODE variable
 function check_fly() {
-  local target="${1:-$TARGET}"  # Use passed target or global TARGET as fallback
+  # Get references to variables if they're passed, otherwise use the values directly
+  if [[ "$#" -ge 2 ]]; then
+    local -n _target="$1"
+    local -n _test_mode="$2"
+    local target="${_target}"
+  else
+    # Fallback to direct parameter for backward compatibility
+    local target="$1"
+    local _test_mode="${TEST_MODE}"
+  fi
   
   # In test mode, skip these checks
-  if [[ "${TEST_MODE}" == "true" ]]; then
+  if [[ "${_test_mode}" == "true" ]]; then
     return 0
   fi
 

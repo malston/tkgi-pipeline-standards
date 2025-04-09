@@ -241,16 +241,39 @@ function process_short_args() {
 }
 
 # Function to detect command and pipeline arguments
+# Takes variable references to allow explicit modification of globals
+# @param command_ref Reference to COMMAND variable
+# @param pipeline_ref Reference to PIPELINE variable
+# @param dry_run_ref Reference to DRY_RUN variable
+# @param verbose_ref Reference to VERBOSE variable
+# @param validation_ref Reference to ENABLE_VALIDATION_TESTING variable
+# @param test_mode_ref Reference to TEST_MODE variable
+# @param create_release_ref Reference to CREATE_RELEASE variable
+# @param set_pipeline_ref Reference to SET_RELEASE_PIPELINE variable
+# @param args The command line arguments to process
 function detect_command_and_pipeline() {
+  # Get references to variables
+  local -n _command="$1"
+  local -n _pipeline="$2"
+  local -n _dry_run="$3"
+  local -n _verbose="$4"
+  local -n _validation="$5"
+  local -n _test_mode="$6"
+  local -n _create_release="$7"
+  local -n _set_pipeline="$8"
+  
+  # Shift to get to the original arguments
+  shift 8
+  
   # Check for command and pipeline arguments
   if [[ $# -gt 0 ]]; then
     if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
-      COMMAND="$1"
+      _command="$1"
       shift
     fi
     
     if [[ $# -gt 0 ]]; then
-      PIPELINE="$1"
+      _pipeline="$1"
       shift
     fi
   fi
@@ -259,68 +282,93 @@ function detect_command_and_pipeline() {
   for arg in "$@"; do
     case "$arg" in
     --dry-run)
-      DRY_RUN=true
+      _dry_run=true
       ;;
     --verbose)
-      VERBOSE=true
+      _verbose=true
       ;;
     --enable-validation-testing)
-      ENABLE_VALIDATION_TESTING=true
+      _validation=true
       ;;
     --test-mode)
-      TEST_MODE=true
+      _test_mode=true
       ;;
     --release)
-      CREATE_RELEASE=true
+      _create_release=true
       ;;
     --set-release-pipeline)
-      SET_RELEASE_PIPELINE=true
+      _set_pipeline=true
       ;;
     esac
   done
 }
 
 # Function to handle legacy behavior conversion to new command format
+# Takes variable references to allow explicit modification of globals
+# @param create_release_ref Reference to CREATE_RELEASE variable
+# @param set_pipeline_ref Reference to SET_RELEASE_PIPELINE variable
+# @param command_ref Reference to COMMAND variable
+# @param pipeline_ref Reference to PIPELINE variable
+# @param release_pipeline_name The name of the release pipeline
 function handle_legacy_behavior() {
-  if [[ "${CREATE_RELEASE}" == "true" ]]; then
-    COMMAND="release"
+  # Get references to variables
+  local -n _create_release="$1"
+  local -n _set_pipeline="$2"
+  local -n _command="$3"
+  local -n _pipeline="$4"
+  local _release_pipeline_name="$5"
+
+  # Apply legacy behavior rules
+  if [[ "${_create_release}" == "true" ]]; then
+    _command="release"
   fi
 
-  if [[ "${SET_RELEASE_PIPELINE}" == "true" ]]; then
-    PIPELINE="${RELEASE_PIPELINE_NAME}"
+  if [[ "${_set_pipeline}" == "true" ]]; then
+    _pipeline="${_release_pipeline_name}"
   fi
 }
 
 # Function to validate required parameters and set defaults
+# Takes variable references to allow explicit modification of globals
+# @param foundation_ref Reference to FOUNDATION variable
+# @param target_ref Reference to TARGET variable
+# @param environment_ref Reference to ENVIRONMENT variable
+# @param branch_ref Reference to BRANCH variable
 function validate_and_set_defaults() {
+  # Get references to variables
+  local -n _foundation="$1"
+  local -n _target="$2"
+  local -n _environment="$3"
+  local -n _branch="$4"
+
   # Validate required parameters
-  if [[ -z "${FOUNDATION}" ]]; then
+  if [[ -z "${_foundation}" ]]; then
     error "Foundation not specified. Use -f or --foundation option."
     show_usage 1
   fi
 
   # Set default target if not provided
-  if [[ -z "${TARGET}" ]]; then
-    TARGET="${FOUNDATION}"
+  if [[ -z "${_target}" ]]; then
+    _target="${_foundation}"
   fi
 
   # Set default environment if not provided
-  if [[ -z "${ENVIRONMENT}" ]]; then
-    ENVIRONMENT=$(determine_environment "${FOUNDATION}")
+  if [[ -z "${_environment}" ]]; then
+    _environment=$(determine_environment "${_foundation}")
   fi
 
   # Set default branch based on environment if not provided
-  if [[ -z "${BRANCH}" ]]; then
-    if [[ "${ENVIRONMENT}" == "lab" ]]; then
-      BRANCH="develop"
+  if [[ -z "${_branch}" ]]; then
+    if [[ "${_environment}" == "lab" ]]; then
+      _branch="develop"
     else
-      BRANCH="main"
+      _branch="main"
     fi
   fi
 
   # Validate environment
-  if [[ ! "${ENVIRONMENT}" =~ ^(lab|nonprod|prod)$ ]]; then
-    error "Invalid environment: ${ENVIRONMENT}. Must be one of: lab, nonprod, prod"
+  if [[ ! "${_environment}" =~ ^(lab|nonprod|prod)$ ]]; then
+    error "Invalid environment: ${_environment}. Must be one of: lab, nonprod, prod"
     show_usage 1
   fi
 }

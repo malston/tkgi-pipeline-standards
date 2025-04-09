@@ -29,7 +29,13 @@ function cmd_set_pipeline() {
   local dry_run="$9"
   local verbose="${10}"
 
-  check_fly "$target"
+  # If we're calling from the main script, pass by reference
+  if [[ "$#" -ge 10 ]]; then
+    check_fly TARGET TEST_MODE
+  else
+    # Otherwise, use the parameter directly
+    check_fly "$target"
+  fi
 
   # Prepare variables
   local pipeline_name="${pipeline}-${foundation}"
@@ -183,7 +189,13 @@ function cmd_destroy_pipeline() {
   local target="$3"
   local dry_run="$4"
   
-  check_fly "$target"
+  # If we're calling from the main script, pass by reference
+  if [[ "$#" -ge 10 ]]; then
+    check_fly TARGET TEST_MODE
+  else
+    # Otherwise, use the parameter directly
+    check_fly "$target"
+  fi
 
   local pipeline_name="${pipeline}-${foundation}"
   local confirmation=""
