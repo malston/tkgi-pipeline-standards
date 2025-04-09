@@ -169,7 +169,7 @@ function cmd_set_pipeline() {
   # fi
 
   # Get component name from repo directory
-  local component=$(basename "$REPO_ROOT")
+  # local component=$(basename "$REPO_ROOT")
 
   # Construct pipeline file path
   local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
@@ -355,7 +355,8 @@ function cmd_validate_pipeline() {
     info "Validating all pipelines"
 
     for pipeline_file in "${CI_DIR}"/pipelines/*.yml; do
-      local pipeline_name=$(basename "${pipeline_file}" .yml)
+      local pipeline_name
+      pipeline_name=$(basename "${pipeline_file}" .yml)
       info "Validating pipeline: ${pipeline_name}"
 
       fly validate-pipeline -c "${pipeline_file}" || {

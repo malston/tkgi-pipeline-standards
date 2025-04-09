@@ -49,9 +49,8 @@ function cmd_set_pipeline() {
 
   # Validate pipeline file exists
   if ! validate_file_exists "$pipeline_file" "Pipeline file"; then
-    error "Pipeline file not found: ${pipeline_file}"
-    error "Available pipelines:"
-    find "${CI_DIR}/pipelines/" -name "*.yml" -exec basename {} \; | sort | sed 's/\.yml$//'
+    error "Available pipelines under ${CI_DIR}/pipelines:"
+    find "${CI_DIR}/pipelines/" -name "*.yml" -exec basename {} \; | sort
     exit 1
   fi
 
@@ -272,8 +271,8 @@ function cmd_validate_pipeline() {
   # Validate a specific pipeline
   # Validate pipeline file exists
   if ! validate_file_exists "$pipeline_file" "Pipeline file"; then
-    error "Available pipelines:"
-    find "${CI_DIR}/pipelines/" -name "*.yml" -exec basename {} \; | sort | sed 's/\.yml$//'
+    error "Available pipelines under ${CI_DIR}/pipelines:"
+    find "${CI_DIR}/pipelines/" -name "*.yml" -exec basename {} \; | sort
     exit 1
   fi
 
