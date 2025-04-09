@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 #
-# Simplified test for fly.sh script
+# Tests for fly.sh script
 #
+
+# Enable error handling
+set -e
 
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 CI_DIR="$(cd "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
-FLY_SCRIPT="${CI_DIR}/fly.sh"
+REPO_ROOT="$(cd "${CI_DIR}/.." &>/dev/null && pwd)"
+SCRIPT_PATH="${CI_DIR}/fly.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -21,98 +25,165 @@ function echo_color() {
   echo -e "${color}${message}${NC}"
 }
 
-function success() {
-  echo_color "$GREEN" "✓ $1"
-}
-
-function error() {
-  echo_color "$RED" "✗ $1"
-  return 1
-}
-
 function start_test() {
   echo_color "$YELLOW" "=== Running test: $1 ==="
 }
 
-# Create a temporary directory for mock tools
-TEMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TEMP_DIR"' EXIT
-
-# Create mock fly executable
-cat > "$TEMP_DIR/fly" << 'EOF'
-#!/usr/bin/env bash
-# Mock fly command for testing
-echo "Mock fly executing: $@"
-echo "$@" > "$TEMP_DIR/fly.log"
-exit 0
-EOF
-chmod +x "$TEMP_DIR/fly"
-
-# Add mock directory to PATH
-export PATH="$TEMP_DIR:$PATH"
-
-# Create lib directory if it doesn't exist
-mkdir -p "${CI_DIR}/lib"
-
-# Create mock help.sh to bypass actual validation
-cat > "${CI_DIR}/lib/help.sh" << 'EOF'
-#!/usr/bin/env bash
-
-# Help and usage information for fly.sh
-
-# Function to show usage information
-function show_usage() {
-  local exit_code=${1:-0}
-  echo "Usage: ./fly.sh [options] [command] [pipeline_name]"
-  echo "Commands:"
-  echo "  set          Set pipeline (default)"
-  echo "  unpause      Set and unpause pipeline"
-  echo "Options:"
-  echo "  -f, --foundation NAME      Foundation name (required)"
-  exit "${exit_code}"
+function test_pass() {
+  echo_color "$GREEN" "✓ $1"
 }
 
-# Function to show general usage information
-function show_general_usage() {
-  local exit_code=${1:-0}
-  show_usage "${exit_code}"
+function test_fail() {
+  echo_color "$RED" "✗ $1"
+  exit 1
 }
 
-# Function to show command-specific usage information
-function show_command_usage() {
-  local command="$1"
-  local exit_code=${2:-0}
-  echo "Usage for $command"
-  exit "${exit_code}"
-}
-EOF
+function assert_contains() {
+  local haystack="$1"
+  local needle="$2"
 
-# Function to test help flag
-function test_help_flag() {
-  start_test "Help flag shows usage"
-  
-  local output=$("$FLY_SCRIPT" -h 2>&1 || true)
-  
-  if echo "$output" | grep -q "Usage: ./fly.sh" && 
-     echo "$output" | grep -q "Commands:" &&
-     echo "$output" | grep -q "Options:" &&
-     echo "$output" | grep -q "-f, --foundation"; then
-    success "Help flag shows usage correctly"
+  if echo "$haystack" | grep -q "$needle"; then
     return 0
   else
-    error "Help flag doesn't display correct usage"
-    echo "Output was:"
-    echo "$output"
+    echo "Expected to find: $needle"
+    echo "Got: $haystack"
     return 1
   fi
 }
 
-# Main test runner
-echo "=== Testing fly.sh script ==="
+function assert_exit_code() {
+  local command="$1"
+  local expected_code="$2"
 
-# Test help flag (this is a simple test that should pass)
-test_help_flag
+  local exit_code=0
+  eval "$command" >/dev/null 2>&1 || exit_code=$?
 
-# Exit successfully for this simplified test
-echo_color "$GREEN" "All simplified tests passed!"
+  if [[ "$exit_code" == "$expected_code" ]]; then
+    return 0
+  else
+    echo "Expected exit code $expected_code, got $exit_code"
+    return 1
+  fi
+}
+
+# Setup test environment
+function setup_test_env() {
+  # Create temp directory
+  TEST_DIR=$(mktemp -d)
+  trap 'rm -rf "$TEST_DIR"' EXIT
+
+  # Create pipeline files
+  mkdir -p "${CI_DIR}/pipelines"
+  touch "${CI_DIR}/pipelines/main.yml"
+  touch "${CI_DIR}/pipelines/release.yml"
+
+  # Create mock fly executable
+  cat > "${TEST_DIR}/fly" << 'EOF'
+#!/usr/bin/env bash
+echo "$@" > "$TEST_DIR/fly_command.log"
+if [[ "$1" == "targets" ]]; then
+  echo "name           url                       team  expiry"
+  echo "----           ---                       ----  -----"
+  echo "test-target    https://test.concourse/   main  n/a"
+  exit 0
+fi
+exit 0
+EOF
+  chmod +x "${TEST_DIR}/fly"
+
+  # Add test directory to PATH
+  export PATH="${TEST_DIR}:${PATH}"
+
+  # Export TEST_MODE flag
+  export TEST_MODE=true
+}
+
+# Initialize test environment
+setup_test_env
+
+# Tests
+
+# Test 1: Check help command displays usage
+function test_help_command() {
+  start_test "Help command displays usage"
+  
+  # Run the script with -h flag
+  local output
+  output=$("${SCRIPT_PATH}" -h 2>&1 || true)
+  
+  # Verify output contains usage information
+  assert_contains "$output" "Usage: ./fly.sh"
+  assert_contains "$output" "Commands:"
+  assert_contains "$output" "Options:"
+  assert_contains "$output" "-f, --foundation"
+  assert_contains "$output" "set"
+  
+  test_pass "Help command displays usage correctly"
+}
+
+# Test 2: Check exit code when required parameters are missing
+function test_missing_required_params() {
+  start_test "Exit code when foundation is missing"
+  
+  # Run without foundation parameter - should fail with exit code 1
+  if ! assert_exit_code "${SCRIPT_PATH}" 1; then
+    test_fail "Script should exit with code 1 when foundation is missing"
+  fi
+  
+  test_pass "Script exits with code 1 when foundation is missing"
+}
+
+# Test 3: Test basic set pipeline command
+function test_basic_set_pipeline() {
+  start_test "Basic set pipeline command"
+  
+  # Clear previous command log
+  rm -f "${TEST_DIR}/fly_command.log"
+  
+  # Run the script with minimal params
+  "${SCRIPT_PATH}" -f "cml-k8s-n-01" -t "test-target" --dry-run --test-mode >/dev/null 2>&1
+  
+  # Verify fly was called with the right arguments
+  if [[ -f "${TEST_DIR}/fly_command.log" ]]; then
+    local last_command
+    last_command=$(cat "${TEST_DIR}/fly_command.log")
+    
+    assert_contains "$last_command" "set-pipeline"
+    test_pass "Basic set pipeline command succeeded"
+  else
+    test_fail "No fly command was logged"
+  fi
+}
+
+# Test 4: Test command-based interface
+function test_command_interface() {
+  start_test "Command-based interface"
+  
+  # Clear previous command log
+  rm -f "${TEST_DIR}/fly_command.log"
+  
+  # Run the script with validate command
+  "${SCRIPT_PATH}" -f "cml-k8s-n-01" -t "test-target" validate main --dry-run --test-mode >/dev/null 2>&1
+  
+  # Verify fly was called with validate-pipeline
+  if [[ -f "${TEST_DIR}/fly_command.log" ]]; then
+    local last_command
+    last_command=$(cat "${TEST_DIR}/fly_command.log")
+    
+    assert_contains "$last_command" "validate-pipeline"
+    test_pass "Command-based interface works correctly"
+  else
+    test_fail "No fly command was logged"
+  fi
+}
+
+# Run all tests
+test_help_command
+test_missing_required_params
+test_basic_set_pipeline
+test_command_interface
+
+# Report final results
+echo
+echo_color "$GREEN" "All tests have passed successfully!"
 exit 0
