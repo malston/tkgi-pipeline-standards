@@ -17,9 +17,9 @@ Options:
   -h, --help                    Display this help message
 
 Examples:
-  ./ci/fly.sh set-pipeline -t dev -p install -d cml -f cml-k8s-n-01
-  ./ci/fly.sh set-pipeline -t dev -p upgrade -d cic -f cic-vxrail-n-02 -n
-  ./ci/fly.sh set-pipeline -t dev -p install -P ~/repos/params -d cml -f cml-k8s-n-01
+  ./ci/fly.sh set-pipeline -t dev -p main -d cml -f cml-k8s-n-01
+  ./ci/fly.sh set-pipeline -t dev -p release -d cic -f cic-vxrail-n-02 -n
+  ./ci/fly.sh set-pipeline -t dev -p main -P ~/repos/params -d cml -f cml-k8s-n-01
 EOF
   exit 1
 }
@@ -101,7 +101,7 @@ function cmd_set_pipeline() {
     pipeline="pipeline-manager"
     
     # Construct pipeline file path
-    local pipeline_file="${CI_DIR}/pipelines/pipeline-manager.yml"
+    local pipeline_file="${CI_DIR}/pipelines/set-pipeline.yml"
     
     # Validate pipeline file exists
     if ! validate_file_exists "$pipeline_file" "Pipeline file"; then
@@ -114,13 +114,20 @@ function cmd_set_pipeline() {
     
     # Execute the command
     info "Setting pipeline: ${pipeline}"
-    fly -t "$TARGET" set-pipeline \
-      -p "${pipeline}" \
-      -c "${pipeline_file}" \
-      "${vars_files[@]}" \
-      ${non_interactive:+-n}
-      
-    success "Self-update pipeline '${pipeline}' set successfully"
+    
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      info "DRY RUN: Would execute:"
+      info "fly -t \"$TARGET\" set-pipeline -p \"${pipeline}\" -c \"${pipeline_file}\" ${vars_files[@]} ${non_interactive:+-n}"
+    else
+      fly -t "$TARGET" set-pipeline \
+        -p "${pipeline}" \
+        -c "${pipeline_file}" \
+        "${vars_files[@]}" \
+        ${non_interactive:+-n}
+        
+      success "Self-update pipeline '${pipeline}' set successfully"
+    fi
+    
     return 0
   fi
   
@@ -151,7 +158,7 @@ function cmd_set_pipeline() {
   fi
   
   # Get component name from repo directory
-  local component=$(basename "$REPO_ROOT")
+  local component=$(basename "$REPO_ROOT" | sed 's/-main//')
   
   # Construct pipeline file path
   local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
@@ -195,20 +202,180 @@ function cmd_set_pipeline() {
   
   # Execute the command
   info "Setting pipeline: ${pipeline_name}"
-  fly -t "$TARGET" set-pipeline \
-    -p "${pipeline_name}" \
-    -c "${pipeline_file}" \
-    "${vars_files[@]}" \
-    -v "foundation=${foundation}" \
-    -v "datacenter=${datacenter}" \
-    -v "component=${component}" \
-    ${non_interactive:+-n}
-    
-  success "Pipeline '${pipeline_name}' set successfully"
+  
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    info "DRY RUN: Would execute:"
+    info "fly -t \"$TARGET\" set-pipeline -p \"${pipeline_name}\" -c \"${pipeline_file}\" ${vars_files[@]} -v \"foundation=${foundation}\" -v \"datacenter=${datacenter}\" -v \"component=${component}\" ${non_interactive:+-n}"
+  else
+    fly -t "$TARGET" set-pipeline \
+      -p "${pipeline_name}" \
+      -c "${pipeline_file}" \
+      "${vars_files[@]}" \
+      -v "foundation=${foundation}" \
+      -v "datacenter=${datacenter}" \
+      -v "component=${component}" \
+      ${non_interactive:+-n}
+      
+    success "Pipeline '${pipeline_name}' set successfully"
+  fi
   
   # Save the params repo location for future use
   if [[ ! -f "${REPO_ROOT}/.pipeline-config" ]] || ! grep -q "^params_repo=" "${REPO_ROOT}/.pipeline-config"; then
     echo "params_repo=${params_repo}" > "${REPO_ROOT}/.pipeline-config"
     info "Saved params repository location to .pipeline-config"
   fi
+}
+
+function cmd_unpause_pipeline() {
+  # Similar to cmd_set_pipeline but also unpauses the pipeline
+  cmd_set_pipeline "$@"
+  
+  local pipeline_name="${component}-${pipeline}-${foundation}"
+  
+  info "Unpausing pipeline: ${pipeline_name}"
+  
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    info "DRY RUN: Would execute:"
+    info "fly -t \"$TARGET\" unpause-pipeline -p \"${pipeline_name}\""
+  else
+    fly -t "$TARGET" unpause-pipeline -p "${pipeline_name}"
+    success "Pipeline '${pipeline_name}' unpaused successfully"
+  fi
+}
+
+function cmd_destroy_pipeline() {
+  # Implementation of pipeline destruction command
+  check_fly
+  
+  local pipeline=""
+  local confirmation=""
+  
+  # Parse command-specific options
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -p|--pipeline)
+        pipeline="$2"
+        shift 2
+        ;;
+      -y|--yes)
+        confirmation="yes"
+        shift
+        ;;
+      -h|--help)
+        cmd_destroy_pipeline_usage
+        ;;
+      *)
+        if [[ -z "$pipeline" ]]; then
+          pipeline="$1"
+        else
+          error "Unknown option: $1"
+          cmd_destroy_pipeline_usage
+        fi
+        shift
+        ;;
+    esac
+  done
+  
+  # Validate required parameters
+  if [[ -z "$pipeline" ]]; then
+    error "Pipeline name not specified. Use -p or --pipeline option."
+    cmd_destroy_pipeline_usage
+  fi
+  
+  # Get component name from repo directory
+  local component=$(basename "$REPO_ROOT" | sed 's/-main//')
+  
+  # Construct the pipeline name: component-pipeline-foundation
+  local pipeline_name="${component}-${pipeline}-${foundation}"
+  
+  # Confirm destruction
+  if [[ -z "$confirmation" ]]; then
+    read -p "Are you sure you want to destroy pipeline '${pipeline_name}'? (yes/no): " confirmation
+  fi
+  
+  if [[ "${confirmation}" != "yes" ]]; then
+    info "Pipeline destruction cancelled"
+    return 0
+  fi
+  
+  # Execute the command
+  info "Destroying pipeline: ${pipeline_name}"
+  
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    info "DRY RUN: Would execute:"
+    info "fly -t \"$TARGET\" destroy-pipeline -p \"${pipeline_name}\""
+  else
+    fly -t "$TARGET" destroy-pipeline -p "${pipeline_name}"
+    success "Pipeline '${pipeline_name}' destroyed successfully"
+  fi
+}
+
+function cmd_validate_pipeline() {
+  # Implementation of pipeline validation command
+  local pipeline=""
+  
+  # Parse command-specific options
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -p|--pipeline)
+        pipeline="$2"
+        shift 2
+        ;;
+      -h|--help)
+        cmd_validate_pipeline_usage
+        ;;
+      *)
+        if [[ -z "$pipeline" && "$1" != "all" ]]; then
+          pipeline="$1"
+        elif [[ "$1" == "all" ]]; then
+          pipeline="all"
+        else
+          error "Unknown option: $1"
+          cmd_validate_pipeline_usage
+        fi
+        shift
+        ;;
+    esac
+  done
+  
+  # Validate all pipelines if requested
+  if [[ "$pipeline" == "all" ]]; then
+    info "Validating all pipelines"
+    
+    for pipeline_file in "${CI_DIR}"/pipelines/*.yml; do
+      local pipeline_name=$(basename "${pipeline_file}" .yml)
+      info "Validating pipeline: ${pipeline_name}"
+      
+      fly validate-pipeline -c "${pipeline_file}" || {
+        error "Pipeline validation failed: ${pipeline_name}"
+        return 1
+      }
+    done
+    
+    success "All pipelines validated successfully"
+    return 0
+  fi
+  
+  # Validate a specific pipeline
+  if [[ -z "$pipeline" ]]; then
+    error "Pipeline name not specified. Use -p or --pipeline option."
+    cmd_validate_pipeline_usage
+  fi
+  
+  # Construct pipeline file path
+  local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
+  
+  # Validate pipeline file exists
+  if ! validate_file_exists "$pipeline_file" "Pipeline file"; then
+    exit 1
+  fi
+  
+  info "Validating pipeline: ${pipeline}"
+  
+  fly validate-pipeline -c "${pipeline_file}" || {
+    error "Pipeline validation failed: ${pipeline}"
+    return 1
+  }
+  
+  success "Pipeline validated successfully: ${pipeline}"
 }

@@ -1,0 +1,204 @@
+---
+# Main Pipeline for CLI Tool Component
+# This example is tailored for the Trident component, but can be adapted for other CLI tools
+
+groups:
+  - name: overview
+    jobs:
+      - wipe-tool
+      - install-tool
+      - validate-tool
+      - configure-tool
+  - name: utils
+    jobs:
+      - update-pipeline
+
+resources:
+  - name: repo
+    type: git
+    icon: github
+    source:
+      uri: ((github_uri))
+      branch: ((branch))
+      private_key: ((github_private_key))
+
+  - name: config-repo
+    type: git
+    icon: github
+    source:
+      uri: ((config_github_uri))
+      branch: ((config_branch))
+      private_key: ((github_private_key))
+      paths: [foundations/((foundation))]
+
+  - name: timer-trigger
+    type: time
+    icon: clock-outline
+    source:
+      interval: ((timer_duration))
+
+jobs:
+  - name: update-pipeline
+    plan:
+      - get: repo
+        trigger: true
+      - get: config-repo
+      - task: set-pipeline
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: concourse/concourse-pipeline-resource
+          inputs:
+            - name: repo
+            - name: config-repo
+          run:
+            path: repo/ci/scripts/fly.sh
+            args:
+              - ((foundation))
+              - update-self
+        params:
+          FLY_TARGET: ((fly_target))
+          PIPELINE_NAME: ((pipeline_name))
+
+  - name: wipe-tool
+    plan:
+      - in_parallel:
+        - get: repo
+          trigger: true
+        - get: config-repo
+      
+      # Login to TKGi cluster
+      - task: tkgi-login
+        file: repo/ci/tasks/tkgi/tkgi-login/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+      
+      # Download CLI tool
+      - task: download-tool
+        file: repo/ci/tasks/cli-tool/download-tool/task.yml
+        params:
+          TOOL_NAME: ((tool_name))
+          TOOL_VERSION: ((tool_version))
+          HARBOR_HOSTNAME: ((harbor_hostname))
+      
+      # Wipe (use the install-tool task with a different command)
+      - task: wipe-tool
+        file: repo/ci/tasks/cli-tool/install-tool/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          TOOL_NAME: ((tool_name))
+          TOOL_VERSION: ((tool_version))
+          NAMESPACE: ((namespace))
+          HARBOR_HOSTNAME: ((harbor_hostname))
+          TOOL_CMD: "wipe"
+          VERBOSE: true
+
+  - name: install-tool
+    plan:
+      - in_parallel:
+        - get: repo
+          trigger: true
+        - get: config-repo
+      
+      # Login to TKGi cluster
+      - task: tkgi-login
+        file: repo/ci/tasks/tkgi/tkgi-login/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+      
+      # Download CLI tool
+      - task: download-tool
+        file: repo/ci/tasks/cli-tool/download-tool/task.yml
+        params:
+          TOOL_NAME: ((tool_name))
+          TOOL_VERSION: ((tool_version))
+          HARBOR_HOSTNAME: ((harbor_hostname))
+      
+      # Install tool
+      - task: install-tool
+        file: repo/ci/tasks/cli-tool/install-tool/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          TOOL_NAME: ((tool_name))
+          TOOL_VERSION: ((tool_version))
+          NAMESPACE: ((namespace))
+          HARBOR_HOSTNAME: ((harbor_hostname))
+          INSTALL_OPTIONS: ((install_options))
+          VERBOSE: true
+
+  - name: validate-tool
+    plan:
+      - in_parallel:
+        - get: repo
+          passed: [install-tool]
+        - get: config-repo
+          passed: [install-tool]
+      
+      # Login to TKGi cluster
+      - task: tkgi-login
+        file: repo/ci/tasks/tkgi/tkgi-login/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+      
+      # Download CLI tool
+      - task: download-tool
+        file: repo/ci/tasks/cli-tool/download-tool/task.yml
+        params:
+          TOOL_NAME: ((tool_name))
+          TOOL_VERSION: ((tool_version))
+          HARBOR_HOSTNAME: ((harbor_hostname))
+      
+      # Validate the installation
+      - task: validate-tool
+        file: repo/ci/tasks/cli-tool/validate-tool/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          TOOL_NAME: ((tool_name))
+          NAMESPACE: ((namespace))
+          VERBOSE: true
+
+  - name: configure-tool
+    plan:
+      - in_parallel:
+        - get: repo
+          passed: [validate-tool]
+        - get: config-repo
+          passed: [validate-tool]
+      
+      # Login to TKGi cluster
+      - task: tkgi-login
+        file: repo/ci/tasks/tkgi/tkgi-login/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+      
+      # Download CLI tool
+      - task: download-tool
+        file: repo/ci/tasks/cli-tool/download-tool/task.yml
+        params:
+          TOOL_NAME: ((tool_name))
+          TOOL_VERSION: ((tool_version))
+          HARBOR_HOSTNAME: ((harbor_hostname))
+      
+      # Configure the tool (storage backends, etc.)
+      - task: configure-tool
+        file: repo/ci/tasks/cli-tool/configure-tool/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          TOOL_NAME: ((tool_name))
+          NAMESPACE: ((namespace))
+          CONFIG_OPTIONS: ((config_options))
+          VERBOSE: true
