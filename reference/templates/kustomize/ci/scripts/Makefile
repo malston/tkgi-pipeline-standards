@@ -19,6 +19,9 @@ build:
 test:
 	@echo "Testing script..."
 	@cd $(TEST_DIR) && ./test_help_commands.sh
+	# @cd $(TEST_DIR) && ./test_commands.sh
+	# @cd $(TEST_DIR) && ./test_fly.sh
+	# @cd $(TEST_DIR) && ./tests/validate_fly.sh
 
 # Clean up
 clean:
