@@ -160,8 +160,13 @@ function cmd_unpause_pipeline() {
   local dry_run="${10}"
   local verbose="${11}"
 
-  # First set the pipeline
-  cmd_set_pipeline "$pipeline" "$foundation" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
+  # Check if fly is installed and the target exists
+  if [[ "$#" -ge 10 ]]; then
+    check_fly TARGET TEST_MODE
+  else
+    # Otherwise, use the parameter directly
+    check_fly "$target"
+  fi
 
   local pipeline_name="${pipeline}-${foundation}"
 
