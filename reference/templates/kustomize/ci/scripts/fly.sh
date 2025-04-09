@@ -60,6 +60,9 @@ fi
 
 # Main execution flow
 main() {
+  # Process help flags first
+  check_help_flags "$@"
+  
   # Simple argument processing with our new comprehensive function
   process_args "$@"
 
