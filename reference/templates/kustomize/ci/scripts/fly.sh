@@ -24,7 +24,7 @@ REPO_ROOT="$(cd "${CI_DIR}/.." &>/dev/null && pwd)"
 REPO_NAME=$(basename "${REPO_ROOT}")
 LIB_DIR="${SCRIPT_DIR}/lib"
 
-# Test mode for automated testing
+# Test mode for automated testing (used in check_fly and other functions)
 TEST_MODE=false
 
 # Initialize default values

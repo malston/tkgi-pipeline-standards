@@ -109,7 +109,7 @@ function preprocess_args() {
 
 # Function to process short form args that weren't handled during preprocessing
 function process_short_args() {
-  local short_args=("$@")
+  # Process the passed arguments directly
   
   # Process short-form arguments and their values
   local i=1
