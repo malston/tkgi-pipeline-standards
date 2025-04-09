@@ -224,9 +224,9 @@ function cmd_destroy_pipeline() {
 
   if [[ "${dry_run}" == "true" ]]; then
     info "DRY RUN: Would execute:"
-    info "fly -t \"$target\" destroy-pipeline -p \"${pipeline_name}\""
+    info "fly -t \"$target\" destroy-pipeline -p \"${pipeline_name}\" --non-interactive"
   else
-    fly -t "$target" destroy-pipeline -p "${pipeline_name}"
+    fly -t "$target" destroy-pipeline -p "${pipeline_name}" --non-interactive
     success "Pipeline '${pipeline_name}' destroyed successfully"
   fi
 
