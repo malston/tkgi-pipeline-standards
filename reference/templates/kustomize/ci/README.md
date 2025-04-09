@@ -14,10 +14,12 @@ This directory contains all CI/CD pipeline configurations and tasks for the kust
 - `scripts/`: Control scripts for more advanced functionality
   - `fly.sh`: Comprehensive pipeline management script with advanced features
   - `cmd_set_pipeline.sh`: Command implementations for the advanced fly.sh script
-  - `ns-mgmt-fly.sh`: Reference implementation from the ns-mgmt repository (pre-migration)
-  - `ns-mgmt-helpers.sh`: Helper functions from the ns-mgmt repository (pre-migration)
-  - `ns-mgmt-refactored.sh`: Enhanced version of ns-mgmt-fly.sh with advanced commands
   - `tests/`: Test suite for validating script functionality
+  - `reference/`: Reference implementations (for historical context)
+    - `fly.sh.original`: Original implementation of the advanced fly.sh
+    - `ns-mgmt-fly.sh`: Original implementation from the ns-mgmt repository
+    - `ns-mgmt-helpers.sh`: Helper functions from the ns-mgmt repository
+    - `ns-mgmt-refactored.sh`: Intermediate refactored version
 
 - `tasks/`: Tasks organized by functional category
   - `common/`: Common/shared tasks
@@ -37,7 +39,7 @@ Each task directory contains both a `task.yml` file (the task definition) and a 
 
 ## Using fly.sh
 
-This template provides multiple versions of the `fly.sh` script for different use cases:
+This template provides two versions of the `fly.sh` script for different use cases:
 
 ### 1. Simplified Version (ci/fly.sh)
 
@@ -58,7 +60,7 @@ Example:
 
 ### 2. Advanced Version (ci/scripts/fly.sh)
 
-The advanced version in the `ci/scripts` directory provides more functionality:
+The advanced version in the `ci/scripts` directory provides more functionality while maintaining backward compatibility:
 
 ```bash
 ./ci/scripts/fly.sh [options] [command] [pipeline_name]
@@ -66,36 +68,28 @@ The advanced version in the `ci/scripts` directory provides more functionality:
 
 This version includes:
 - Multiple commands (set, unpause, destroy, validate)
-- Special commands for release pipelines and self-updates
+- Special commands for release pipelines
 - Advanced options for environments, branches, and configurations
 - Dry-run capabilities
 - Pipeline validation
+- Backward compatibility with legacy flag style
 
-### 3. Reference Implementations (ns-mgmt)
-
-For reference, the original scripts from the ns-mgmt repository (before migration) are included:
-
-- `ci/scripts/ns-mgmt-fly.sh`: The original fly.sh from ns-mgmt before standardization
-- `ci/scripts/ns-mgmt-helpers.sh`: The original helpers.sh from ns-mgmt before standardization
-
-These scripts are provided for reference purposes to help understand the migration process and as examples of alternative implementation approaches.
-
-### 4. Refactored ns-mgmt Implementation
-
-An enhanced version of the ns-mgmt fly.sh script that provides more advanced functionality:
-
+Example usage:
 ```bash
-./ci/scripts/ns-mgmt-refactored.sh [options] [command] [pipeline_name]
+# Basic usage with command-style interface
+./ci/scripts/fly.sh set main -f cml-k8s-n-01 -t concourse-target
+
+# Validate pipeline without setting it
+./ci/scripts/fly.sh validate main -f cml-k8s-n-01 -t concourse-target
+
+# Destroy pipeline with confirmation
+./ci/scripts/fly.sh destroy main -f cml-k8s-n-01 -t concourse-target
+
+# Using dry-run to test without making changes
+./ci/scripts/fly.sh set main -f cml-k8s-n-01 -t concourse-target --dry-run
 ```
 
-This script combines the original ns-mgmt functionality with enhanced features:
-
-- Maintains backward compatibility with original ns-mgmt-fly.sh arguments
-- Adds support for commands like set, unpause, destroy, validate
-- Provides advanced options like dry-run and environment selection
-- Supports both legacy flag style and modern command style interfaces
-
-This implementation demonstrates how to enhance existing scripts while preserving backward compatibility.
+The advanced script provides a full range of pipeline management capabilities while still supporting simpler usage patterns from the original approach.
 
 ## Task Design Pattern
 

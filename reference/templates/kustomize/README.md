@@ -257,7 +257,7 @@ ci/scripts/tests/
 ├── README.md                  # Test documentation
 ├── run_tests.sh               # Script to run all tests
 ├── test_framework.sh          # Test utilities and assertions
-└── test_ns_mgmt_refactored.sh # Tests for ns-mgmt-refactored.sh
+└── test_fly.sh                # Tests for fly.sh
 ```
 
 To run the tests:

@@ -5,7 +5,7 @@ This directory contains tests for the CI scripts in the kustomize template. The 
 ## Test Structure
 
 - `test_framework.sh`: Core testing utilities and helpers
-- `test_ns_mgmt_refactored.sh`: Tests for the ns-mgmt-refactored.sh script
+- `test_fly.sh`: Tests for the fly.sh script
 - `run_tests.sh`: Script to run all tests
 
 ## Running Tests
@@ -19,12 +19,12 @@ To run all tests:
 To run a specific test file:
 
 ```bash
-./test_ns_mgmt_refactored.sh
+./test_fly.sh
 ```
 
 ## Test Coverage
 
-The tests for ns-mgmt-refactored.sh cover:
+The tests for fly.sh cover:
 
 1. Basic functionality:
    - Help command displays usage

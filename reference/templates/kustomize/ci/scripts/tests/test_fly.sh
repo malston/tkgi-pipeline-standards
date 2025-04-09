@@ -7,7 +7,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/test_framework.sh"
 
 # Path to the script being tested
-SCRIPT_PATH="${__SCRIPTS_DIR}/ns-mgmt-refactored.sh"
+SCRIPT_PATH="${__SCRIPTS_DIR}/fly.sh"
 
 # Make sure the script exists and is executable
 if [[ ! -x "${SCRIPT_PATH}" ]]; then
