@@ -179,7 +179,7 @@ params:
 ## 5. Pipeline YAML Standards
 
 1. **Naming Convention**:
-   - Main pipeline: `<app>-main.yml`
+   - Main pipeline: `main.yml`
    - Release pipeline: `release.yml`
    - Pipeline setup: `set-pipeline.yml`
 
