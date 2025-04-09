@@ -66,7 +66,7 @@ function assert_equals() {
   local expected="$1"
   local actual="$2"
   local message="${3:-Expected '$expected' but got '$actual'}"
-  
+
   if [[ "$expected" != "$actual" ]]; then
     test_fail "equals assertion" "$message"
     return 1
@@ -77,8 +77,8 @@ function assert_equals() {
 function assert_contains() {
   local haystack="$1"
   local needle="$2"
-  local message="${3:-Expected '$haystack' to contain '$needle'"}"
-  
+  local message="${3:-"Expected '$haystack' to contain '$needle'"}"
+
   if ! echo "$haystack" | grep -q "$needle"; then
     test_fail "contains assertion" "$message"
     return 1
@@ -90,12 +90,12 @@ function assert_exit_code() {
   local command="$1"
   local expected_code="$2"
   local message="${3:-Expected exit code $expected_code}"
-  
+
   local exit_code=0
   eval "$command" >/dev/null 2>&1 || exit_code=$?
-  
+
   if [[ "$exit_code" != "$expected_code" ]]; then
-    test_fail "exit code assertion" "$message (got $exit_code)"
+    test_fail "exit code assertion" "$message - got $exit_code"
     return 1
   fi
   return 0
@@ -122,7 +122,7 @@ function mock_fly() {
   local command="$1"
   local expected_args="$2"
   local exit_code="${3:-0}"
-  
+
   # Create a temporary mock script
   cat > "${__TEST_DIR}/.fly_mock" <<EOF
 #!/usr/bin/env bash
@@ -143,9 +143,9 @@ fi
 # For testing other commands or argument patterns
 exit $exit_code
 EOF
-  
+
   chmod +x "${__TEST_DIR}/.fly_mock"
-  
+
   # Override PATH to use our mock
   export PATH="${__TEST_DIR}:${PATH}"
   ln -sf "${__TEST_DIR}/.fly_mock" "${__TEST_DIR}/fly"
@@ -169,9 +169,9 @@ function test_teardown() {
 
 function run_test() {
   local test_func="$1"
-  
+
   test_setup
-  "$test_func"
+  $test_func
   test_teardown
 }
 

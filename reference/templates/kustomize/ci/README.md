@@ -15,11 +15,6 @@ This directory contains all CI/CD pipeline configurations and tasks for the kust
   - `fly.sh`: Comprehensive pipeline management script with advanced features
   - `cmd_set_pipeline.sh`: Command implementations for the advanced fly.sh script
   - `tests/`: Test suite for validating script functionality
-  - `reference/`: Reference implementations (for historical context)
-    - `fly.sh.original`: Original implementation of the advanced fly.sh
-    - `ns-mgmt-fly.sh`: Original implementation from the ns-mgmt repository
-    - `ns-mgmt-helpers.sh`: Helper functions from the ns-mgmt repository
-    - `ns-mgmt-refactored.sh`: Intermediate refactored version
 
 - `tasks/`: Tasks organized by functional category
   - `common/`: Common/shared tasks
@@ -118,12 +113,11 @@ This structure ensures resources are properly validated and built before being a
 
 The CI structure includes a test suite for validating script functionality:
 
-```
+```sh
 scripts/tests/
 ├── README.md                  # Test documentation
 ├── run_tests.sh               # Script to run all tests
-├── test_framework.sh          # Test utilities and assertions
-└── test_ns_mgmt_refactored.sh # Tests for ns-mgmt-refactored.sh
+└── test_framework.sh          # Test utilities and assertions
 ```
 
 To run the tests:

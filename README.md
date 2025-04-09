@@ -10,12 +10,13 @@ All repositories should follow this standard structure:
 repository-root/
 ├── ci/
 │   ├── pipelines/            # Pipeline definition files
-│   │   ├── <app>-main.yml    # Main pipeline
+│   │   ├── main.yml          # Main pipeline
 │   │   ├── release.yml       # Release pipeline
 │   │   └── set-pipeline.yml  # Pipeline setup pipeline
 │   ├── scripts/              # Pipeline control scripts
 │   │   ├── fly.sh            # Standardized pipeline management script
-│   │   └── helpers.sh        # Helper functions (if needed)
+│   │   ├── helpers.sh        # Helper functions (if needed)
+│   │   └── tests/            # Test scripts for CI scripts
 │   ├── tasks/                # Task definitions organized by category
 │   │   ├── common/           # Common/shared tasks
 │   │   │   ├── kapply/
@@ -64,29 +65,27 @@ All repositories should use a standardized `fly.sh` script with a consistent int
 - `unpause`: Set and unpause pipeline
 - `destroy`: Destroy specified pipeline
 - `validate`: Validate pipeline YAML without setting
-
-### Special Commands
-
-- `-r, --release [MESSAGE]`: Set the release pipeline
-- `-s, --set [NAME]`: Set the set-pipeline pipeline
+- `release`: Create a release pipeline
 
 ### Standard Options
 
 ```
--f, --foundation NAME     Foundation name (required)
--t, --target TARGET       Concourse target (default: <foundation>)
--e, --environment ENV     Environment type (lab|nonprod|prod)
--b, --branch BRANCH       Git branch for pipeline repository 
+-f, --foundation NAME      Foundation name (required)
+-t, --target TARGET        Concourse target (default: <foundation>)
+-e, --environment ENV      Environment type (lab|nonprod|prod)
+-b, --branch BRANCH        Git branch for pipeline repository
 -c, --config-branch BRANCH Git branch for config repository
--n, --config-repo NAME    Config repository name
 -d, --params-branch BRANCH Params git branch (default: master)
--p, --pipeline NAME       Custom pipeline name prefix
--o, --github-org ORG      GitHub organization 
--v, --version VERSION     Pipeline version
---dry-run                 Simulate without making changes
---verbose                 Increase output verbosity
---timer DURATION          Set timer trigger duration
--h, --help                Show help message
+-p, --pipeline NAME        Custom pipeline name prefix
+-o, --github-org ORG       GitHub organization
+-v, --version VERSION      Pipeline version
+--release                  Create a release pipeline
+--set-release-pipeline     Set the release pipeline
+--dry-run                  Simulate without making changes
+--verbose                  Increase output verbosity
+--timer DURATION           Set timer trigger duration
+--enable-validation-testing Enable validation testing
+-h, --help                 Show help message
 ```
 
 ## 3. Task Organization
@@ -183,6 +182,45 @@ All scripts should follow these standards:
 5. **Error Handling**: Implement proper error handling and validation
 6. **Exit Codes**: Use meaningful exit codes
 7. **Logging**: Include clear logging with error/success messaging
+8. **Testing**: Include automated tests for all scripts
+
+### Testing Standards
+
+All critical scripts should be tested using the included test framework:
+
+1. **Test Directory**: Each scripts directory should include a `tests/` subdirectory
+2. **Test Framework**: Use the common test framework provided in `test_framework.sh`
+3. **Test Runner**: Include a `run_tests.sh` script to execute all tests
+4. **Test Coverage**: Each script should have corresponding test cases
+5. **Mock Functions**: Use mock functions to simulate dependencies
+6. **Assertions**: Use assertions to validate script behavior
+
+Example test framework usage:
+
+```bash
+# Source test framework
+source "$(dirname "${BASH_SOURCE[0]}")/test_framework.sh"
+
+# Define test functions
+function test_command_execution() {
+  start_test "Command execution"
+  
+  # Mock command
+  mock_command "expected_args"
+  
+  # Execute script
+  "../my_script.sh" -f test_arg
+  
+  # Assert expectations
+  assert_contains "$(get_last_command)" "expected_args"
+  
+  test_pass "Command execution test"
+}
+
+# Run tests
+run_test test_command_execution
+report_results
+```
 
 ### Example Script Template
 
@@ -279,31 +317,44 @@ Each repository's CI directory should include a README.md that documents:
 Use this checklist to verify compliance with the standardization:
 
 - [ ] Folder structure follows the standard layout
-- [ ] `fly.sh` implements the standard interface
+- [ ] `fly.sh` implements the standard interface with all commands
 - [ ] Task scripts are organized by function in task-specific directories
 - [ ] Each task has both task.yml and task.sh files
 - [ ] All scripts follow the documented standards
 - [ ] Pipeline YAML files follow naming conventions
 - [ ] Documentation is complete and up-to-date
+- [ ] Test framework is implemented for critical scripts
+- [ ] All script commands are tested with automated tests
+- [ ] Test coverage includes error conditions
 - [ ] Backward compatibility is maintained (during transition)
-- [ ] All tests pass
+- [ ] All tests pass when run with the test framework
 
 ## Appendix: Implementation Across Repositories
 
-| Repository | Current Status | Migration Plan | Target Date |
-|------------|----------------|----------------|-------------|
-| ns-mgmt    | Migrated       | [Implemented](migration-plans/ns-mgmt/README.md) in feature/standardize-ci-structure branch | Completed |
-| cluster-mgmt | Legacy      | To be developed | TBD |
-| cert-mgmt  | Legacy         | To be developed | TBD |
-| tkgi-release | Legacy       | To be developed | TBD |
+| Repository | Current Status | Notes |
+|------------|----------------|-------|
+| ns-mgmt    | Migrated       | Fully compliant with CI/CD standardization |
+| tkgi-pipeline-standards | Reference Templates | Contains template implementations of standardized CI structure |
+| cluster-mgmt | To be migrated | Migration planned for future sprint |
+| cert-mgmt  | To be migrated | Migration planned for future sprint |
+| trident    | To be migrated | Migration planned for future sprint |
 
-### Reference Implementation
+### Reference Implementation Templates
 
-The ns-mgmt repository now serves as a reference implementation for the standardized CI/CD structure. Key aspects of this implementation include:
+The tkgi-pipeline-standards repository contains reference implementations for several CI/CD patterns:
 
-1. **Task Organization**: Tasks are categorized into common, k8s, tkgi, and testing directories.
-2. **Task Definition**: Each task has both a task.yml (definition) and task.sh (implementation) file.
-3. **Pipeline Structure**: Pipeline files reference task.yml files instead of defining tasks inline.
-4. **Documentation**: The CI directory includes comprehensive documentation about its structure and usage.
+1. **Kustomize Template**: A complete reference for kustomize-based projects
+   - Located at `/reference/templates/kustomize/`
+   - Features a fully tested `fly.sh` script with all commands implemented
+   - Includes a test framework for CI scripts
 
-To view the implementation, check out the `feature/standardize-ci-structure` branch of the ns-mgmt repository.
+2. **Helm Template**: A reference for helm-based projects
+   - Located at `/reference/templates/helm/`
+
+The ns-mgmt repository serves as a real-world implementation of the standardized CI/CD structure. Key aspects of this implementation include:
+
+1. **Task Organization**: Tasks are categorized into common, k8s, tkgi, and testing directories
+2. **Task Definition**: Each task has both a task.yml (definition) and task.sh (implementation) file
+3. **Pipeline Structure**: Pipeline files reference task.yml files instead of defining tasks inline
+4. **Documentation**: The CI directory includes comprehensive documentation about its structure and usage
+5. **Standardized fly.sh**: Implements the full command interface as specified in this guide
