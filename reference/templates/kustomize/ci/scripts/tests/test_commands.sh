@@ -34,15 +34,15 @@ function error() {
 function test_command() {
   local command="$1"
   local expected="$2"
-  
+
   echo_color "$YELLOW" "Testing '$command' command..."
-  
+
   # Run command in dry-run and test mode
   local output
   output=$("$FLY_SCRIPT" -f "test-foundation" "$command" "main" --dry-run --test-mode 2>&1) || {
     error "Command '$command' failed to execute"
   }
-  
+
   # Check for expected output
   if echo "$output" | grep -q "$expected"; then
     success "Command '$command' works correctly"

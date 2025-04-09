@@ -204,16 +204,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/test_framework.sh"
 # Define test functions
 function test_command_execution() {
   start_test "Command execution"
-  
+
   # Mock command
   mock_command "expected_args"
-  
+
   # Execute script
   "../my_script.sh" -f test_arg
-  
+
   # Assert expectations
   assert_contains "$(get_last_command)" "expected_args"
-  
+
   test_pass "Command execution test"
 }
 

@@ -60,15 +60,15 @@ function test_command() {
   local command="$1"
   local expected="$2"
   local args="$3"
-  
+
   echo "Testing command: ${command}"
-  
+
   # Reset log
   rm -f "${TEST_DIR}/fly_command.log"
-  
+
   # Run command
   ./fly.sh ${args} -f "test-foundation" -t "test" ${command} main >/dev/null 2>&1 || true
-  
+
   # Check if command was executed
   if [[ -f "${TEST_DIR}/fly_command.log" ]]; then
     local output=$(cat "${TEST_DIR}/fly_command.log")

@@ -27,11 +27,11 @@ fi
 # Check command-line parsing
 echo "Testing command parsing..."
 output=$("${SCRIPT_PATH}" -h 2>&1 || true)
-if echo "$output" | grep -q "Commands:" && 
-   echo "$output" | grep -q "set" && 
-   echo "$output" | grep -q "unpause" && 
-   echo "$output" | grep -q "destroy" && 
-   echo "$output" | grep -q "validate" && 
+if echo "$output" | grep -q "Commands:" &&
+   echo "$output" | grep -q "set" &&
+   echo "$output" | grep -q "unpause" &&
+   echo "$output" | grep -q "destroy" &&
+   echo "$output" | grep -q "validate" &&
    echo "$output" | grep -q "release"; then
   echo "✓ All commands are listed in help"
 else
