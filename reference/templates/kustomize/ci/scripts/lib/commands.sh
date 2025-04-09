@@ -209,10 +209,12 @@ function cmd_destroy_pipeline() {
 
   # Confirm destruction
   if [[ -z "$confirmation" ]]; then
-    read -p "Are you sure you want to destroy pipeline '${pipeline_name}'? (yes/no): " confirmation
+    echo "!!! this will remove all data for pipeline '${pipeline_name}'"
+    echo
+    read -p "are you sure? [yN]: " confirmation
   fi
 
-  if [[ "${confirmation}" != "yes" ]]; then
+  if [[ "${confirmation}" != "y" && "${confirmation}" != "Y" && "${confirmation}" != "yes" ]]; then
     info "Pipeline destruction cancelled"
     return 0
   fi
