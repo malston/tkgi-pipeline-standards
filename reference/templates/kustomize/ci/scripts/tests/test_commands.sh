@@ -110,7 +110,7 @@ test_command "release" "release"
 
 # Test destroy command (more complex due to confirmation)
 echo_color "$YELLOW" "Testing 'destroy' command..."
-output=$(echo "yes" | "$FLY_SCRIPT" -f "test-foundation" -t "test-target" "destroy" --pipeline "main" --dry-run --test-mode 2>&1) || {
+output=$(echo "y" | "$FLY_SCRIPT" -f "test-foundation" -t "test-target" "destroy" --pipeline "main" --dry-run --test-mode 2>&1) || {
   echo "Command failed with output:"
   echo "$output"
   error "Command 'destroy' failed to execute"
