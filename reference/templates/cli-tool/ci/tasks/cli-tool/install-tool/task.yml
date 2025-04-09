@@ -1,0 +1,24 @@
+---
+platform: linux
+
+inputs:
+  - name: repo           # Repository containing task scripts and CLI tool
+  - name: config-repo    # Configuration repository
+  - name: cli-tool-bin   # Directory containing the CLI tool binaries
+  - name: pks-config     # PKS/TKGi configuration from previous task
+
+run:
+  path: repo/ci/tasks/cli-tool/install-tool/task.sh
+
+params:
+  # Required parameters
+  FOUNDATION: ((foundation))              # Foundation name (e.g., cml-k8s-n-01)
+  TOOL_NAME: ((tool_name))                # Name of the CLI tool (e.g., tridentctl)
+  TOOL_VERSION: ((tool_version))          # Version of the CLI tool
+  
+  # Optional parameters
+  NAMESPACE: ((namespace))                # Namespace to install the tool into
+  HARBOR_HOSTNAME: ((harbor_hostname))    # Harbor registry hostname
+  INSTALL_OPTIONS: ((install_options))    # Additional installation options
+  TOOL_CMD: ((tool_command))              # Command to run (default: install)
+  VERBOSE: ((verbose))                    # Enable verbose output

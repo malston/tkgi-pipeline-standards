@@ -1,0 +1,17 @@
+---
+platform: linux
+
+inputs:
+  - name: repo           # Repository containing task scripts
+  - name: pks-config     # PKS/TKGi configuration
+  - name: config         # Configuration repository
+
+run:
+  path: repo/ci/tasks/testing/run-tests/task.sh
+
+params:
+  # Required parameters
+  FOUNDATION: ((foundation))        # Foundation name (e.g., cml-k8s-n-01)
+  
+  # Optional parameters
+  VERBOSE: ((verbose))              # Enable verbose output

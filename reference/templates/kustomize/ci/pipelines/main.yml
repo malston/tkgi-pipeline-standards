@@ -1,0 +1,140 @@
+---
+# Main Pipeline for Kustomize-based Repository
+# This pipeline demonstrates how to use the standardized task structure
+
+groups:
+  - name: overview
+    jobs: 
+      - validate
+      - build-and-deploy
+  - name: utils
+    jobs:
+      - update-pipeline
+
+resource_types:
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: teliaoss/github-pr-resource
+
+resources:
+  - name: repo
+    type: git
+    icon: github
+    source:
+      uri: ((github_uri))
+      branch: ((branch))
+      private_key: ((github_private_key))
+
+  - name: config
+    type: git
+    icon: github
+    source:
+      uri: ((config_github_uri))
+      branch: ((config_branch))
+      private_key: ((github_private_key))
+
+  - name: pull-requests
+    type: pull-request
+    icon: source-pull
+    source:
+      repository: ((github_repo))
+      access_token: ((github_access_token))
+      base_branch: develop
+
+  - name: timer
+    type: time
+    icon: clock-outline
+    source:
+      interval: 24h
+
+jobs:
+  - name: update-pipeline
+    plan:
+      - get: repo
+        trigger: true
+      - get: config
+      - task: set-pipeline
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: concourse/concourse-pipeline-resource
+          inputs:
+            - name: repo
+            - name: config
+          run:
+            path: repo/ci/scripts/fly.sh
+            args:
+              - ((foundation))
+              - update-self
+        params:
+          FLY_TARGET: ((fly_target))
+          PIPELINE_NAME: ((pipeline_name))
+
+  - name: validate
+    plan:
+      - in_parallel:
+        - get: repo
+          trigger: true
+        - get: config
+          trigger: true
+        - get: pull-requests
+          trigger: true
+          version: every
+      
+      # Login to TKGi cluster
+      - task: tkgi-login
+        file: repo/ci/tasks/tkgi/tkgi-login/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+      
+      # Run tests
+      - task: run-tests
+        file: repo/ci/tasks/testing/run-tests/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          VERBOSE: true
+
+  - name: build-and-deploy
+    plan:
+      - in_parallel:
+        - get: repo
+          trigger: true
+          passed: [validate]
+        - get: config
+          trigger: true
+          passed: [validate]
+        - get: timer
+          trigger: true
+      
+      # Login to TKGi cluster
+      - task: tkgi-login
+        file: repo/ci/tasks/tkgi/tkgi-login/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+      
+      # Build kustomize manifests
+      - task: build-manifests
+        file: repo/ci/tasks/common/kustomize/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          FOUNDATION_PATH: ((foundation_path))
+          VERBOSE: ((verbose))
+      
+      # Apply manifests to cluster
+      - task: apply-manifests
+        file: repo/ci/tasks/common/kubectl-apply/task.yml
+        params:
+          FOUNDATION: ((foundation))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+          KINDS: "namespace,configmap,secret,serviceaccount"
+          NAMESPACE_LIMIT: 0
+          VERBOSE: ((verbose))
