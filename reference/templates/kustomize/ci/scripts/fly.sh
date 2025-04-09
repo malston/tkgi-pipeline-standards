@@ -60,38 +60,59 @@ fi
 
 # Main execution flow
 main() {
-  # Process help flags first
-  check_help_flags "$@"
+  # Simple argument processing with our new comprehensive function
+  process_args "$@"
 
-  # Process arguments in stages
-  local processed_args=()
-  preprocess_args processed_args "$@"
-
-  # Replace the original arguments with our processed ones
-  set -- "${processed_args[@]}"
-
-  # Process any short-form args
-  process_short_args "$@"
-
+  # Handle legacy behavior
+  if [[ "${CREATE_RELEASE}" == "true" ]]; then
+    COMMAND="release"
+  fi
+  
+  if [[ "${SET_RELEASE_PIPELINE}" == "true" ]]; then
+    PIPELINE="${RELEASE_PIPELINE_NAME}"
+  fi
+  
   # Try to get version if available and not already set
   if [[ -z "$VERSION" ]] && type get_latest_version &>/dev/null; then
     VERSION="$(get_latest_version)"
   fi
 
-  # Find command and pipeline name - explicitly pass globals by reference
-  detect_command_and_pipeline COMMAND PIPELINE DRY_RUN VERBOSE ENABLE_VALIDATION_TESTING TEST_MODE CREATE_RELEASE SET_RELEASE_PIPELINE "$@"
+  # Validate required parameters
+  if [[ -z "${FOUNDATION}" ]]; then
+    error "Foundation not specified. Use -f or --foundation option."
+    show_usage 1
+  fi
 
-  # Handle legacy behavior flags - explicitly pass globals by reference
-  handle_legacy_behavior CREATE_RELEASE SET_RELEASE_PIPELINE COMMAND PIPELINE RELEASE_PIPELINE_NAME
+  # Set default target if not provided
+  if [[ -z "${TARGET}" ]]; then
+    TARGET="${FOUNDATION}"
+  fi
 
+  # Set default environment if not provided
+  if [[ -z "${ENVIRONMENT}" ]]; then
+    ENVIRONMENT=$(determine_environment "${FOUNDATION}")
+  fi
+
+  # Set default branch based on environment if not provided
+  if [[ -z "${BRANCH}" ]]; then
+    if [[ "${ENVIRONMENT}" == "lab" ]]; then
+      BRANCH="develop"
+    else
+      BRANCH="main"
+    fi
+  fi
+
+  # Validate environment
+  if [[ ! "${ENVIRONMENT}" =~ ^(lab|nonprod|prod)$ ]]; then
+    error "Invalid environment: ${ENVIRONMENT}. Must be one of: lab, nonprod, prod"
+    show_usage 1
+  fi
+  
   # Determine datacenter from foundation name
   DATACENTER=$(get_datacenter "${FOUNDATION}")
 
   # Determine datacenter type from foundation name
   DATACENTER_TYPE=$(get_datacenter_type "${FOUNDATION}")
-
-  # Validate required parameters and set defaults - explicitly pass globals by reference
-  validate_and_set_defaults FOUNDATION TARGET ENVIRONMENT BRANCH
 
   # Enable verbose output if requested
   if [[ "${VERBOSE}" == "true" ]]; then

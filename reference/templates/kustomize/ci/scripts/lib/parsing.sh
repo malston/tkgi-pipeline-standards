@@ -44,200 +44,227 @@ function check_help_flags() {
   done
 }
 
-# Function to preprocess arguments
+# Function to preprocess arguments and handle both long-form and short-form flags
 function preprocess_args() {
-  local -n processed_args_var=$1
-  local -n orig_args=$2
-
-  # Process long-form arguments with values in format --option=value
-  for arg in "${orig_args[@]}"; do
-    # Convert --option=value style to --option value for getopts
-    if [[ "$arg" == "--foundation="* ]]; then
-      FOUNDATION="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--target="* ]]; then
-      TARGET="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--environment="* ]]; then
-      ENVIRONMENT="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--branch="* ]]; then
-      BRANCH="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--config-branch="* ]]; then
-      CONFIG_GIT_BRANCH="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--params-branch="* ]]; then
-      PARAMS_GIT_BRANCH="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--pipeline="* ]]; then
-      PIPELINE="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--github-org="* ]]; then
-      GITHUB_ORG="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--version="* ]]; then
-      VERSION="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--timer="* ]]; then
-      TIMER_DURATION="${arg#*=}"
-      continue
-    elif [[ "$arg" == "--release" ]]; then
-      CREATE_RELEASE=true
-      continue
-    elif [[ "$arg" == "--set-release-pipeline" ]]; then
-      SET_RELEASE_PIPELINE=true
-      continue
-    elif [[ "$arg" == "--dry-run" ]]; then
-      DRY_RUN=true
-      continue
-    elif [[ "$arg" == "--verbose" ]]; then
-      VERBOSE=true
-      continue
-    elif [[ "$arg" == "--enable-validation-testing" ]]; then
-      ENABLE_VALIDATION_TESTING=true
-      continue
-    elif [[ "$arg" == "--test-mode" ]]; then
-      TEST_MODE=true
-      continue
-    fi
-    
-    # Pass through all other arguments
-    processed_args_var+=("$arg")
-  done
+  # This function just passes through all arguments exactly as is
+  # We'll handle all flag processing in the main process_args function
+  processed_args=("$@")
 }
 
-# Function to process short form args that weren't handled during preprocessing
-function process_short_args() {
-  # Process the passed arguments directly
+# Comprehensive function to process all command line arguments
+function process_args() {
+  # Array to hold the non-flag arguments
+  local non_flags=()
   
-  # Process short-form arguments and their values
-  local i=1
-  while [[ $i -le $# ]]; do
-    local current="${!i}"
-    
-    case "$current" in
-      -h)
-        # Standalone -h with no command specified
-        next_idx=$((i+1))
-        if [[ $next_idx -le $# ]]; then
-          next_arg="${!next_idx}"
-          if [[ "$next_arg" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
-            # Already handled by the help flag checker above
-            i=$((i+2))
-            continue
-          fi
-        fi
+  # Process flags until we run out of arguments
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      # Help flags
+      -h|--help)
         show_general_usage 0
         ;;
-      -f)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          FOUNDATION="${!next}"
-          i=$((i+2))
-        else
-          error "Option -f requires an argument"
+      
+      # Foundation flag (required)
+      -f|--foundation)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        FOUNDATION="$2"
+        shift 2
         ;;
-      -t)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          TARGET="${!next}"
-          i=$((i+2))
-        else
-          error "Option -t requires an argument"
+      --foundation=*)
+        FOUNDATION="${1#*=}"
+        shift
+        ;;
+      
+      # Target flag
+      -t|--target)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        TARGET="$2"
+        shift 2
         ;;
-      -e)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          ENVIRONMENT="${!next}"
-          i=$((i+2))
-        else
-          error "Option -e requires an argument"
+      --target=*)
+        TARGET="${1#*=}"
+        shift
+        ;;
+      
+      # Environment flag
+      -e|--environment)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        ENVIRONMENT="$2"
+        shift 2
         ;;
-      -b)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          BRANCH="${!next}"
-          i=$((i+2))
-        else
-          error "Option -b requires an argument"
+      --environment=*)
+        ENVIRONMENT="${1#*=}"
+        shift
+        ;;
+      
+      # Branch flag
+      -b|--branch)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        BRANCH="$2"
+        shift 2
         ;;
-      -c)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          CONFIG_GIT_BRANCH="${!next}"
-          i=$((i+2))
-        else
-          error "Option -c requires an argument"
+      --branch=*)
+        BRANCH="${1#*=}"
+        shift
+        ;;
+      
+      # Config branch flag
+      -c|--config-branch)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        CONFIG_GIT_BRANCH="$2"
+        shift 2
         ;;
-      -d)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          PARAMS_GIT_BRANCH="${!next}"
-          i=$((i+2))
-        else
-          error "Option -d requires an argument"
+      --config-branch=*)
+        CONFIG_GIT_BRANCH="${1#*=}"
+        shift
+        ;;
+      
+      # Params branch flag
+      -d|--params-branch)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        PARAMS_GIT_BRANCH="$2"
+        shift 2
         ;;
-      -p)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          PIPELINE="${!next}"
-          i=$((i+2))
-        else
-          error "Option -p requires an argument"
+      --params-branch=*)
+        PARAMS_GIT_BRANCH="${1#*=}"
+        shift
+        ;;
+      
+      # Pipeline flag
+      -p|--pipeline)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        PIPELINE="$2"
+        shift 2
         ;;
-      -o)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          GITHUB_ORG="${!next}"
-          i=$((i+2))
-        else
-          error "Option -o requires an argument"
+      --pipeline=*)
+        PIPELINE="${1#*=}"
+        shift
+        ;;
+      
+      # GitHub org flag
+      -o|--github-org)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        GITHUB_ORG="$2"
+        shift 2
         ;;
-      -v)
-        next=$((i+1))
-        if [[ $next -le $# ]]; then
-          VERSION="${!next}"
-          i=$((i+2))
-        else
-          error "Option -v requires an argument"
+      --github-org=*)
+        GITHUB_ORG="${1#*=}"
+        shift
+        ;;
+      
+      # Version flag
+      -v|--version)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
           show_usage 1
         fi
+        VERSION="$2"
+        shift 2
         ;;
-      -r)
+      --version=*)
+        VERSION="${1#*=}"
+        shift
+        ;;
+      
+      # Timer flag
+      --timer)
+        if [[ -z "$2" || "$2" == -* ]]; then
+          error "Option $1 requires an argument"
+          show_usage 1
+        fi
+        TIMER_DURATION="$2"
+        shift 2
+        ;;
+      --timer=*)
+        TIMER_DURATION="${1#*=}"
+        shift
+        ;;
+      
+      # Boolean flags
+      -r|--release)
         CREATE_RELEASE=true
-        i=$((i+1))
+        shift
         ;;
-      -s)
+      -s|--set-release-pipeline)
         SET_RELEASE_PIPELINE=true
-        i=$((i+1))
+        shift
         ;;
-      -*)
-        # Handle other short options not already processed
-        i=$((i+1))
+      --dry-run)
+        DRY_RUN=true
+        shift
         ;;
+      --verbose)
+        VERBOSE=true
+        shift
+        ;;
+      --enable-validation-testing)
+        ENABLE_VALIDATION_TESTING=true
+        shift
+        ;;
+      --test-mode)
+        TEST_MODE=true
+        shift
+        ;;
+      
+      # End of options marker
+      --)
+        shift
+        non_flags+=("$@")
+        break
+        ;;
+      
+      # Commands and non-flag arguments
       *)
-        # This might be a command or pipeline name, will be handled below
-        i=$((i+1))
+        if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
+          COMMAND="$1"
+        elif [[ ! "$1" =~ ^- ]]; then
+          # Assume this is a pipeline name
+          non_flags+=("$1")
+        else
+          error "Unknown option: $1"
+          show_usage 1
+        fi
+        shift
         ;;
     esac
   done
+  
+  # If we have non-flag arguments, and no command is set yet,
+  # assume the first one is a command and the second is a pipeline
+  if [[ ${#non_flags[@]} -gt 0 && "$COMMAND" == "set" ]]; then
+    COMMAND="${non_flags[0]}"
+    if [[ ${#non_flags[@]} -gt 1 ]]; then
+      PIPELINE="${non_flags[1]}"
+    fi
+  elif [[ ${#non_flags[@]} -gt 0 ]]; then
+    # If we have non-flag arguments and command is already set,
+    # assume the first one is the pipeline
+    PIPELINE="${non_flags[0]}"
+  fi
 }
 
 # Function to detect command and pipeline arguments
