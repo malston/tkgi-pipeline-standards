@@ -129,7 +129,7 @@ function cmd_set_pipeline() {
 
     success "Pipeline '${pipeline_name}' set successfully"
   fi
-  
+
   return 0
 }
 
@@ -152,14 +152,15 @@ function cmd_unpause_pipeline() {
   local target="$3"
   local environment="$4"
   local datacenter="$5"
-  local branch="$6"
-  local timer_duration="$7"
-  local version="$8"
-  local dry_run="$9"
-  local verbose="${10}"
+  local datacenter_type="$6"
+  local branch="$7"
+  local timer_duration="$8"
+  local version="$9"
+  local dry_run="${10}"
+  local verbose="${11}"
 
   # First set the pipeline
-  cmd_set_pipeline "$pipeline" "$foundation" "$target" "$environment" "$datacenter" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
+  cmd_set_pipeline "$pipeline" "$foundation" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
 
   local pipeline_name="${pipeline}-${foundation}"
 
@@ -172,7 +173,7 @@ function cmd_unpause_pipeline() {
     fly -t "$target" unpause-pipeline -p "${pipeline_name}"
     success "Pipeline '${pipeline_name}' unpaused successfully"
   fi
-  
+
   return 0
 }
 
@@ -188,7 +189,7 @@ function cmd_destroy_pipeline() {
   local foundation="$2"
   local target="$3"
   local dry_run="$4"
-  
+
   # If we're calling from the main script, pass by reference
   if [[ "$#" -ge 10 ]]; then
     check_fly TARGET TEST_MODE
@@ -220,7 +221,7 @@ function cmd_destroy_pipeline() {
     fly -t "$target" destroy-pipeline -p "${pipeline_name}"
     success "Pipeline '${pipeline_name}' destroyed successfully"
   fi
-  
+
   return 0
 }
 
@@ -232,7 +233,7 @@ function cmd_validate_pipeline() {
   # Parse parameters
   local pipeline="$1"
   local dry_run="$2"
-  
+
   # Determine pipeline file
   local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
 
@@ -280,7 +281,7 @@ function cmd_validate_pipeline() {
 
     success "Pipeline validated successfully: ${pipeline}"
   fi
-  
+
   return 0
 }
 
@@ -301,14 +302,15 @@ function cmd_release_pipeline() {
   local target="$2"
   local environment="$3"
   local datacenter="$4"
-  local branch="$5"
-  local timer_duration="$6"
-  local version="$7"
-  local dry_run="$8"
-  local verbose="$9"
+  local datacenter_type="$5"
+  local branch="$6"
+  local timer_duration="$7"
+  local version="$8"
+  local dry_run="$9"
+  local verbose="${10}"
 
   # Set the pipeline using the release pipeline
-  cmd_set_pipeline "release" "$foundation" "$target" "$environment" "$datacenter" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
-  
+  cmd_set_pipeline "release" "$foundation" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
+
   return 0
 }

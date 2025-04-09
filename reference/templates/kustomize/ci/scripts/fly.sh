@@ -85,7 +85,10 @@ main() {
   handle_legacy_behavior CREATE_RELEASE SET_RELEASE_PIPELINE COMMAND PIPELINE RELEASE_PIPELINE_NAME
 
   # Determine datacenter from foundation name
-  DATACENTER=$(determine_datacenter "${FOUNDATION}")
+  DATACENTER=$(get_datacenter "${FOUNDATION}")
+
+  # Determine datacenter type from foundation name
+  DATACENTER_TYPE=$(get_datacenter_type "${FOUNDATION}")
 
   # Validate required parameters and set defaults - explicitly pass globals by reference
   validate_and_set_defaults FOUNDATION TARGET ENVIRONMENT BRANCH
@@ -98,10 +101,10 @@ main() {
   # Execute the requested command with parameters instead of global variables
   case "${COMMAND}" in
   set)
-    cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   unpause)
-    cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   destroy)
     cmd_destroy_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${DRY_RUN}"
@@ -110,7 +113,7 @@ main() {
     cmd_validate_pipeline "${PIPELINE}" "${DRY_RUN}"
     ;;
   release)
-    cmd_release_pipeline "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_release_pipeline "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   *)
     error "Unknown command: ${COMMAND}"

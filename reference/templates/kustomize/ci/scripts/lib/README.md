@@ -14,7 +14,7 @@ The script is divided into several logical modules:
 2. **utils.sh**: Contains utility functions used throughout the script
    - `info()`, `error()`, `success()`: Logging functions
    - `determine_environment()`: Determines environment from foundation name
-   - `determine_datacenter()`: Determines datacenter from foundation name
+   - `get_datacenter()`: Determines datacenter from foundation name
    - `check_fly()`: Verifies the fly command is available
    - `validate_file_exists()`: Checks if a file exists
 

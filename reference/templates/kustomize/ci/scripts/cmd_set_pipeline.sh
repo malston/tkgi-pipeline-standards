@@ -10,6 +10,7 @@ Set or update a pipeline in Concourse.
 Options:
   -p, --pipeline  PIPELINE      Pipeline name (required)
   -d, --datacenter DATACENTER   Datacenter (cml, cic)
+  -D, --datacenter-type DC_TYPE Datacenter type (k8s, vxrail)
   -f, --foundation FOUNDATION   Foundation name (e.g., cml-k8s-n-01, cic-vxrail-n-02)
   -P, --params-repo REPO_PATH   Path to params repository (required if not set in config)
   -n, --non-interactive         Non-interactive mode
@@ -29,6 +30,7 @@ function cmd_set_pipeline() {
 
   local pipeline=""
   local datacenter=""
+  local datacenter_type=""
   local foundation=""
   local params_repo=""
   local non_interactive=false
@@ -43,6 +45,10 @@ function cmd_set_pipeline() {
       ;;
     -d | --datacenter)
       datacenter="$2"
+      shift 2
+      ;;
+    -D | --datacenter-type)
+      datacenter_type="$2"
       shift 2
       ;;
     -f | --foundation)
@@ -137,25 +143,30 @@ function cmd_set_pipeline() {
     cmd_set_pipeline_usage
   fi
 
+  if [[ -z "$datacenter_type" ]]; then
+    error "Datacenter type not specified. Use -D or --datacenter-type option."
+    cmd_set_pipeline_usage
+  fi
+
   if [[ -z "$foundation" ]]; then
     error "Foundation not specified. Use -f or --foundation option."
     cmd_set_pipeline_usage
   fi
 
-  # Validate datacenter is valid
-  if [[ ! "$datacenter" =~ ^(cml|cic)$ ]]; then
-    error "Invalid datacenter: $datacenter. Must be one of: cml, cic"
-    cmd_set_pipeline_usage
-  fi
+  # # Validate datacenter is valid
+  # if [[ ! "$datacenter" =~ ^(cml|cic)$ ]]; then
+  #   error "Invalid datacenter: $datacenter. Must be one of: cml, cic"
+  #   cmd_set_pipeline_usage
+  # fi
 
-  # Validate foundation follows naming convention
-  if [[ "$datacenter" == "cml" && ! "$foundation" =~ ^cml-k8s-n-[0-9]{2}$ ]]; then
-    error "Invalid CML foundation name: $foundation. Must follow pattern: cml-k8s-n-XX"
-    cmd_set_pipeline_usage
-  elif [[ "$datacenter" == "cic" && ! "$foundation" =~ ^cic-vxrail-n-[0-9]{2}$ ]]; then
-    error "Invalid CIC foundation name: $foundation. Must follow pattern: cic-vxrail-n-XX"
-    cmd_set_pipeline_usage
-  fi
+  # # Validate foundation follows naming convention
+  # if [[ "$datacenter" == "cml" && ! "$foundation" =~ ^cml-k8s-n-[0-9]{2}$ ]]; then
+  #   error "Invalid CML foundation name: $foundation. Must follow pattern: cml-k8s-n-XX"
+  #   cmd_set_pipeline_usage
+  # elif [[ "$datacenter" == "cic" && ! "$foundation" =~ ^cic-vxrail-n-[0-9]{2}$ ]]; then
+  #   error "Invalid CIC foundation name: $foundation. Must follow pattern: cic-vxrail-n-XX"
+  #   cmd_set_pipeline_usage
+  # fi
 
   # Get component name from repo directory
   local component=$(basename "$REPO_ROOT")
@@ -171,9 +182,9 @@ function cmd_set_pipeline() {
   # Build the list of vars files in the correct hierarchy
   local vars_files=(
     "-l" "${params_repo}/global.yml"
-    "-l" "${params_repo}/k8s-global.yml"
-    "-l" "${params_repo}/global-lab.yml"
+    "-l" "${params_repo}/${datacenter_type}-global.yml"
     "-l" "${params_repo}/${datacenter}/${datacenter}.yml"
+    "-l" "${params_repo}/${datacenter}/${datacenter}-${datacenter_type}.yml"
     "-l" "${params_repo}/${datacenter}/${foundation}.yml"
   )
 
@@ -205,15 +216,16 @@ function cmd_set_pipeline() {
 
   if [[ "${DRY_RUN}" == "true" ]]; then
     info "DRY RUN: Would execute:"
-    info "fly -t \"$TARGET\" set-pipeline -p \"${pipeline_name}\" -c \"${pipeline_file}\" ${vars_files[@]} -v \"foundation=${foundation}\" -v \"datacenter=${datacenter}\" -v \"component=${component}\" ${non_interactive:+-n}"
+    info "fly -t \"$TARGET\" set-pipeline -p \"${pipeline_name}\" -c \"${pipeline_file}\" ${vars_files[@]} -v \"foundation=${foundation}\" -v \"dc=${datacenter}\" -v \"dc_type=${datacenter_type}\" -v \"component=${component}\" ${non_interactive:+-n}"
   else
     fly -t "$TARGET" set-pipeline \
       -p "${pipeline_name}" \
       -c "${pipeline_file}" \
       "${vars_files[@]}" \
-      -v "foundation=${foundation}" \
-      -v "datacenter=${datacenter}" \
       -v "component=${component}" \
+      -v "dc=${datacenter}" \
+      -v "dc_type=${datacenter_type}" \
+      -v "foundation=${foundation}" \
       ${non_interactive:+-n}
 
     success "Pipeline '${pipeline_name}' set successfully"

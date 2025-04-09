@@ -40,9 +40,12 @@ function determine_environment() {
   fi
 }
 
-# Function to determine datacenter from foundation name
-function determine_datacenter() {
+# Function to get datacenter from foundation name
+function get_datacenter() {
   local foundation="$1"
+
+  # DC=$(echo "$foundation" | awk -F- '{print $1}')
+  # DCTYPE=$(echo "$foundation" | awk -F- '{print $2}')
 
   if [[ "${foundation}" == *"cml"* ]]; then
     echo "cml"
@@ -51,6 +54,13 @@ function determine_datacenter() {
   else
     echo "${foundation}" | cut -d"-" -f1
   fi
+}
+
+# Function to get datacenter type from foundation name
+function get_datacenter_type() {
+  local foundation="$1"
+
+  echo "${foundation}" | cut -d"-" -f2
 }
 
 # Function to check if fly is installed and accessible
@@ -67,7 +77,7 @@ function check_fly() {
     local target="$1"
     local _test_mode="${TEST_MODE}"
   fi
-  
+
   # In test mode, skip these checks
   if [[ "${_test_mode}" == "true" ]]; then
     return 0
