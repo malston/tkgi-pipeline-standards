@@ -19,6 +19,8 @@ build:
 test:
 	@echo "Testing script..."
 	@cd $(TEST_DIR) && ./run_tests.sh || true
+	@echo "Running simple test..."
+	@cd $(TEST_DIR) && ./simple_test.sh
 	@echo "Running simple integration test..."
 	@cd $(TEST_DIR) && ./simple_integration_test.sh
 

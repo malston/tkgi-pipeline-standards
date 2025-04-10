@@ -15,7 +15,7 @@ source "${LIB_DIR}/environment.sh"
 source "${LIB_DIR}/version.sh"
 source "${LIB_DIR}/foundation.sh"
 
-# Colors 
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -23,27 +23,27 @@ NC='\033[0m' # No Color
 
 # Mock get_latest_version
 function get_latest_version() {
-  echo "1.0.0"
+     echo "1.0.0"
 }
 export -f get_latest_version
 
 # Function to run a test and display result
 run_test() {
-  local test_name="$1"
-  local actual="$2"
-  local expected="$3"
-  
-  printf "Running test: %s\n" "$test_name"
-  
-  if [ "$actual" == "$expected" ]; then
-    printf "PASS: %s\n" "$test_name"
-    return 0
-  else
-    printf "FAIL: %s\n" "$test_name"
-    printf "  Expected: '%s'\n" "$expected"
-    printf "  Got:      '%s'\n" "$actual"
-    return 1
-  fi
+     local test_name="$1"
+     local actual="$2"
+     local expected="$3"
+
+     printf "Running test: %s\n" "$test_name"
+
+     if [ "$actual" == "$expected" ]; then
+          printf "PASS: %s\n" "$test_name"
+          return 0
+     else
+          printf "FAIL: %s\n" "$test_name"
+          printf "  Expected: '%s'\n" "$expected"
+          printf "  Got:      '%s'\n" "$actual"
+          return 1
+     fi
 }
 
 # Test counters
@@ -52,12 +52,12 @@ FAIL_COUNT=0
 
 # Test wrapper to count results
 test() {
-  if run_test "$1" "$2" "$3"; then
-    ((PASS_COUNT++))
-  else
-    ((FAIL_COUNT++))
-  fi
-  echo ""
+     if run_test "$1" "$2" "$3"; then
+          ((PASS_COUNT++)) || true
+     else
+          ((FAIL_COUNT++)) || true
+     fi
+     echo ""
 }
 
 # Environment helper tests
@@ -105,7 +105,7 @@ test "determine_foundation_environment cic" \
 
 test "determine_foundation_environment temr" \
      "$(determine_foundation_environment "temr" "" "" "")" \
-     "nonprod:Utilities-tkgiops:config-nonprod" 
+     "nonprod:Utilities-tkgiops:config-nonprod"
 
 test "determine_foundation_environment tmpe" \
      "$(determine_foundation_environment "tmpe" "" "" "")" \
@@ -131,10 +131,10 @@ CONFIG_REPO_NAME=""
 GIT_RELEASE_TAG=""
 
 FOUNDATION_RESULT=$(determine_foundation_environment "$DC" "$ENVIRONMENT" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
-IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<< "$FOUNDATION_RESULT"
+IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<<"$FOUNDATION_RESULT"
 
 ENV_RESULT=$(configure_environment "$ENVIRONMENT" "$GIT_RELEASE_TAG" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
-IFS=':' read -r GIT_RELEASE_TAG GITHUB_ORG CONFIG_REPO_NAME <<< "$ENV_RESULT"
+IFS=':' read -r GIT_RELEASE_TAG GITHUB_ORG CONFIG_REPO_NAME <<<"$ENV_RESULT"
 
 test "Integration - environment" "$ENVIRONMENT" "lab"
 test "Integration - branch" "$GIT_RELEASE_TAG" "develop"
@@ -151,9 +151,9 @@ printf "========================================\n"
 
 # Report overall status
 if [ "$FAIL_COUNT" -gt 0 ]; then
-  printf "SOME TESTS FAILED\n"
-  exit 1
+     printf "SOME TESTS FAILED\n"
+     exit 1
 else
-  printf "ALL TESTS PASSED\n"
-  exit 0
+     printf "ALL TESTS PASSED\n"
+     exit 0
 fi
