@@ -20,15 +20,18 @@ function cmd_set_pipeline() {
   # Parse parameters
   local pipeline="$1"
   local foundation="$2"
-  local target="$3"
-  local environment="$4"
-  local datacenter="$5"
-  local datacenter_type="$6"
-  local branch="$7"
-  local timer_duration="$8"
-  local version="$9"
-  local dry_run="${10}"
-  local verbose="${11}"
+  local repo="$3"
+  local target="$4"
+  local environment="$5"
+  local datacenter="$6"
+  local datacenter_type="$7"
+  local branch="$8"
+  local git_release_branch="${9:-release}"
+  local version_file="${10:-version}"
+  local timer_duration="${11}"
+  local version="${12}"
+  local dry_run="${13}"
+  local verbose="${14}"
 
   # If we're calling from the main script, pass by reference
   if [[ "$#" -ge 10 ]]; then
@@ -57,11 +60,24 @@ function cmd_set_pipeline() {
   # Params directory path - check if it exists
   local params_path="${REPO_ROOT}/../params"
 
+  # release_body
+  # worker_tags
+  # git_uri
+  # owner
+  # concourse_s3_access_key_id
+  # concourse-s3-bucket
+  # concourse-s3-endpoint
+  # cflinux_current_image
+  # cflinux_current_image
+  # concourse_s3_secret_access_key
+
   # Build variables array
   local vars=(
     "-v" "foundation=${foundation}"
     "-v" "environment=${environment}"
     "-v" "branch=${branch}"
+    "-v" "git_release_branch=${git_release_branch}"
+    "-v" "version_file=${version_file}"
     "-v" "timer_duration=${timer_duration}"
     "-v" "verbose=${verbose}"
   )
@@ -70,15 +86,24 @@ function cmd_set_pipeline() {
   if [[ -n "${version}" ]]; then
     vars+=("-v" "version=${version}")
   fi
-
   # Add datacenter if available
   if [[ -n "${datacenter}" ]]; then
-    vars+=("-v" "datacenter=${datacenter}")
+    vars+=("-v" "dc=${datacenter}")
+  fi
+
+  # Add datacenter type if available
+  if [[ -n "${datacenter_type}" ]]; then
+    vars+=("-v" "dc_type=${datacenter_type}")
   fi
 
   # Add foundation path
   if [[ -n "${datacenter}" ]]; then
     vars+=("-v" "foundation_path=${datacenter}/${foundation}")
+  fi
+
+  # Add foundation path
+  if [[ -n "${repo}" ]]; then
+    vars+=("-v" "repository=${repo}")
   fi
 
   # Build vars files array if params directory exists
@@ -98,6 +123,10 @@ function cmd_set_pipeline() {
     if [[ -d "${params_path}/${datacenter}" ]]; then
       if [[ -f "${params_path}/${datacenter}/${datacenter}.yml" ]]; then
         vars_files+=("-l" "${params_path}/${datacenter}/${datacenter}.yml")
+      fi
+
+      if [[ -f "${params_path}/${datacenter}/${datacenter}-${datacenter_type}.yml" ]]; then
+        vars_files+=("-l" "${params_path}/${datacenter}/${datacenter}-${datacenter_type}.yml")
       fi
 
       if [[ -f "${params_path}/${datacenter}/${foundation}.yml" ]]; then
@@ -307,18 +336,25 @@ function cmd_validate_pipeline() {
 function cmd_release_pipeline() {
   # Parse parameters - all except pipeline
   local foundation="$1"
-  local target="$2"
-  local environment="$3"
-  local datacenter="$4"
-  local datacenter_type="$5"
-  local branch="$6"
-  local timer_duration="$7"
-  local version="$8"
-  local dry_run="$9"
-  local verbose="${10}"
+  local repo="$2"
+  local target="$3"
+  local environment="$4"
+  local datacenter="$5"
+  local datacenter_type="$6"
+  local branch="$7"
+  local git_release_branch="$8"
+  local version_file="$9"
+  local timer_duration="${10}"
+  local version="${11}"
+  local dry_run="${12}"
+  local verbose="${13}"
+
+  # Get repo name from repo directory
+  local repo
+  repo=$(basename "$REPO_ROOT")
 
   # Set the pipeline using the release pipeline
-  cmd_set_pipeline "release" "$foundation" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$timer_duration" "$version" "$dry_run" "$verbose"
+  cmd_set_pipeline "release" "$foundation" "$repo" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$git_release_branch" "$version_file" "$timer_duration" "$version" "$dry_run" "$verbose"
 
   return 0
 }

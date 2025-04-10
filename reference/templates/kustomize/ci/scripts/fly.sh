@@ -34,10 +34,10 @@ DEBUG=false
 PIPELINE="main"
 RELEASE_PIPELINE_NAME="release"
 GITHUB_ORG="Utilities-tkgieng"
-# Removed unused variable: GIT_RELEASE_BRANCH
+GIT_RELEASE_BRANCH="release"
 CONFIG_GIT_BRANCH="master"
 PARAMS_GIT_BRANCH="master"
-# Removed unused variable: VERSION_FILE
+VERSION_FILE=version
 VERSION=""
 CREATE_RELEASE=false
 SET_RELEASE_PIPELINE=false
@@ -65,7 +65,7 @@ fi
 main() {
   # Process help flags first
   check_help_flags "$@"
-  
+
   # Simple argument processing with our new comprehensive function
   process_args "$@"
 
@@ -73,11 +73,11 @@ main() {
   if [[ "${CREATE_RELEASE}" == "true" ]]; then
     COMMAND="release"
   fi
-  
+
   if [[ "${SET_RELEASE_PIPELINE}" == "true" ]]; then
     PIPELINE="${RELEASE_PIPELINE_NAME}"
   fi
-  
+
   # Try to get version if available and not already set
   if [[ -z "$VERSION" ]] && type get_latest_version &>/dev/null; then
     VERSION="$(get_latest_version)"
@@ -113,7 +113,7 @@ main() {
     error "Invalid environment: ${ENVIRONMENT}. Must be one of: lab, nonprod, prod"
     show_usage 1
   fi
-  
+
   # Determine datacenter from foundation name
   DATACENTER=$(get_datacenter "${FOUNDATION}")
 
@@ -128,7 +128,7 @@ main() {
   # Execute the requested command with parameters instead of global variables
   case "${COMMAND}" in
   set)
-    cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   unpause)
     cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
@@ -140,7 +140,7 @@ main() {
     cmd_validate_pipeline "${PIPELINE}" "${DRY_RUN}"
     ;;
   release)
-    cmd_release_pipeline "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_release_pipeline "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
     ;;
   *)
     error "Unknown command: ${COMMAND}"

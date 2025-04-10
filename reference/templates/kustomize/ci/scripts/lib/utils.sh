@@ -70,16 +70,7 @@ function determine_environment() {
 function get_datacenter() {
   local foundation="$1"
 
-  # DC=$(echo "$foundation" | awk -F- '{print $1}')
-  # DCTYPE=$(echo "$foundation" | awk -F- '{print $2}')
-
-  if [[ "${foundation}" == *"cml"* ]]; then
-    echo "cml"
-  elif [[ "${foundation}" == *"cic"* ]]; then
-    echo "cic"
-  else
-    echo "${foundation}" | cut -d"-" -f1
-  fi
+  echo "${foundation}" | cut -d"-" -f1
 }
 
 # Function to get datacenter type from foundation name

@@ -13,8 +13,7 @@ repository-root/
 │   │   ├── release.yml         # Release pipeline
 │   │   └── set-pipeline.yml    # Pipeline management pipeline
 │   ├── scripts/
-│   │   ├── fly.sh              # Advanced pipeline management script
-│   │   └── cmd_set_pipeline.sh # Command implementations
+│   │   └── fly.sh              # Advanced pipeline management script
 │   ├── tasks/
 │   │   ├── common/             # Common/shared tasks
 │   │   │   ├── kustomize/
