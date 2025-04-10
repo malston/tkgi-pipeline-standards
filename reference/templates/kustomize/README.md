@@ -13,8 +13,7 @@ repository-root/
 │   │   ├── release.yml         # Release pipeline
 │   │   └── set-pipeline.yml    # Pipeline management pipeline
 │   ├── scripts/
-│   │   ├── fly.sh              # Advanced pipeline management script
-│   │   └── cmd_set_pipeline.sh # Command implementations
+│   │   └── fly.sh              # Advanced pipeline management script
 │   ├── tasks/
 │   │   ├── common/             # Common/shared tasks
 │   │   │   ├── kustomize/
@@ -256,7 +255,7 @@ This template includes a comprehensive test suite for validating script function
 ci/scripts/tests/
 ├── README.md                  # Test documentation
 ├── run_tests.sh               # Script to run all tests
-├── test_framework.sh          # Test utilities and assertions
+├── test-framework.sh          # Test utilities and assertions
 └── test_fly.sh                # Tests for fly.sh
 ```
 

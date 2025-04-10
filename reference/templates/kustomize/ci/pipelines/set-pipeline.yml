@@ -1,0 +1,109 @@
+resources:
+  - name: s3-container-image
+    type: s3
+    icon: cloud-download-outline
+    source:
+      access_key_id: ((concourse_s3_access_key_id))
+      secret_access_key: ((concourse_s3_secret_access_key))
+      bucket: ((concourse-s3-bucket))
+      endpoint: ((concourse-s3-endpoint))
+      regexp: ((cflinux_current_image))/((cflinux_current_image))-(.*).tgz
+    tags:
+      - ((worker_tags))
+
+  - name: params
+    type: git
+    icon: github
+    source:
+      branch: ((params_git_branch))
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+      uri: ((params_git_uri))
+    tags:
+      - ((worker_tags))
+
+jobs:
+  - name: set-release-pipeline
+    plan:
+      - get: params
+        tags:
+          - ((worker_tags))
+      - get: s3-container-image
+        params:
+          unpack: true
+        tags:
+          - ((worker_tags))
+
+      - task: get-pipeline
+        config:
+          platform: linux
+          inputs:
+            - name: params
+          outputs:
+            - name: pipelines
+          run:
+            path: bash
+            args:
+              - -ec
+              - |
+                if [[ -z $ENVIRONMENT ]]; then
+                  echo "Must set a value for ENVIRONMENT variable"
+                  exit 1
+                fi
+                if [[ -z $GITHUB_TOKEN ]]; then
+                  echo "Must set a value for GITHUB_TOKEN variable"
+                  exit 1
+                fi
+                if [[ $(yq4 .git_release_tag $PARAMS_PATH) == "null" ]]; then
+                  echo "Must set a value for git_release_tag in $PARAMS_PATH"
+                  exit 1
+                fi
+                RELEASE_TAG=$(yq4 .git_release_tag $PARAMS_PATH)
+                VERSION="${RELEASE_TAG##*-v}"
+                ASSET_NAME=pipeline-${ENVIRONMENT}-v${VERSION}.yml
+                echo "Downloading $ASSET_NAME"
+                RELEASE_ID=$(curl -sL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://github.com/api/v3/repos/$OWNER/ns-mgmt/releases | \
+                  jq --arg release_tag "$RELEASE_TAG" -r '.[] | select(.tag_name==$release_tag) | .id')
+                if [ -z $RELEASE_ID ]; then
+                  echo "Failed to download pipeline $ASSET_NAME; release not found: $ASSET_NAME, RELEASE_TAG: $RELEASE_TAG, URL: https://github.com/api/v3/repos/$OWNER/ns-mgmt/releases"
+                  exit 1
+                fi
+                ASSET_ID=$(curl -sL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://github.com/api/v3/repos/$OWNER/ns-mgmt/releases | \
+                  jq --arg asset "$ASSET_NAME" --arg release_tag "$RELEASE_TAG" -r '.[] | select(.tag_name==$release_tag) | .assets[] | select(.name==$asset) | .id')
+                if [ -z $ASSET_ID ]; then
+                  ASSET_NAME="pipeline-v${VERSION}.yml"
+                  ASSET_ID=$(curl -sL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://github.com/api/v3/repos/$OWNER/ns-mgmt/releases | \
+                    jq --arg asset "$ASSET_NAME" --arg release_tag "$RELEASE_TAG" -r '.[] | select(.tag_name==$release_tag) | .assets[] | select(.name==$asset) | .id')
+                  if [ -z $ASSET_ID ]; then
+                    echo "Failed to download pipeline $ASSET_NAME; asset not found: $ASSET_NAME, RELEASE_TAG: $RELEASE_TAG, URL: https://github.com/api/v3/repos/$OWNER/ns-mgmt/releases"
+                    exit 1
+                  fi
+                fi
+                curl -H "Authorization: Bearer $GITHUB_TOKEN" -sLk "https://github.com/storage/releases/$RELEASE_ID/files/$ASSET_ID" -o "$ASSET_NAME"
+                if [[ ! -s "$ASSET_NAME" ]]; then
+                  echo "Failed to download pipeline: $ASSET_NAME"
+                  exit 1
+                fi
+                echo "Validating $ASSET_NAME"
+                fly validate-pipeline -c "$ASSET_NAME" -o >"pipelines/pipeline.yml"
+                cat "pipelines/pipeline.yml"
+          params:
+            OWNER: ((owner))
+            GITHUB_TOKEN: ((ns_mgmt_github_token))
+            ENVIRONMENT: ((environment))
+            PARAMS_PATH: params/((dc))/((dc))-((dc_type))-((pipeline)).yml
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
+
+      - set_pipeline: ((release_pipeline_name))
+        file: pipelines/pipeline.yml
+        var_files:
+          - params/((dc))/((dc))-((dc_type))-((pipeline)).yml
+          - params/((dc))/((foundation)).yml
+          - params/((dc))/((dc))-((dc_type)).yml
+          - params/((dc))/((dc)).yml
+          - params/k8s-global.yml
+          - params/global.yml
+        vars:
+          foundation: ((foundation))
+

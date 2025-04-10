@@ -98,9 +98,22 @@ All repositories should use a standardized `fly.sh` script with a consistent int
 - `validate`: Validate pipeline YAML without setting
 - `release`: Create a release pipeline
 
+### Command-Specific Help
+
+The `fly.sh` script provides detailed help for each specific command. You can get command-specific help using any of these formats:
+
+```sh
+./fly.sh --help [command]     # Example: ./fly.sh --help set
+./fly.sh -h [command]         # Example: ./fly.sh -h unpause
+./fly.sh [command] --help     # Example: ./fly.sh destroy --help
+./fly.sh [command] -h         # Example: ./fly.sh validate -h
+```
+
+This provides more detailed usage information specific to each command, rather than the general usage help.
+
 ### Standard Options
 
-```
+```sh
 -f, --foundation NAME      Foundation name (required)
 -t, --target TARGET        Concourse target (default: <foundation>)
 -e, --environment ENV      Environment type (lab|nonprod|prod)
@@ -117,6 +130,7 @@ All repositories should use a standardized `fly.sh` script with a consistent int
 --timer DURATION           Set timer trigger duration
 --enable-validation-testing Enable validation testing
 -h, --help                 Show help message
+--help [command]           Show help for specific command (e.g., --help set)
 ```
 
 ## 3. Task Organization
@@ -132,6 +146,7 @@ Tasks are organized by functional category with consistent structure:
 ### Common Tasks
 Place reusable utility tasks and general-purpose operations:
 - `common/kapply/`: Kubernetes resource application task
+- `common/kubectl-apply/`: Kubernetes resource application task (kustomize template)
 - `common/kustomize/`: Kustomize resource generation task
 - `common/make-git-commit/`: Git commit creation task
 - `common/prepare-kustomize/`: Kustomize preparation task
@@ -145,6 +160,8 @@ Place Kubernetes-specific operational tasks:
 - `k8s/create-namespaces/`: Namespace creation task
 - `k8s/delete-namespaces/`: Namespace deletion task
 - `k8s/validate-namespaces/`: Namespace validation task
+- `k8s/create-resources/`: Creates Kubernetes resources (kustomize template)
+- `k8s/validate-resources/`: Validates Kubernetes resources (kustomize template)
 
 ### TKGi Tasks
 Place TKGi-specific operations:
@@ -154,6 +171,7 @@ Place TKGi-specific operations:
 Place testing tasks:
 - `testing/run-unit-tests/`: Execute unit tests
 - `testing/run-integration-tests/`: Execute integration tests
+- `testing/run-tests/`: Execute tests (kustomize template)
 
 ## 4. Task YAML Standards
 
@@ -220,7 +238,7 @@ All scripts should follow these standards:
 All critical scripts should be tested using the included test framework:
 
 1. **Test Directory**: Each scripts directory should include a `tests/` subdirectory
-2. **Test Framework**: Use the common test framework provided in `test_framework.sh`
+2. **Test Framework**: Use the common test framework provided in `test-framework.sh`
 3. **Test Runner**: Include a `run_tests.sh` script to execute all tests
 4. **Test Coverage**: Each script should have corresponding test cases
 5. **Mock Functions**: Use mock functions to simulate dependencies
@@ -230,7 +248,7 @@ Example test framework usage:
 
 ```bash
 # Source test framework
-source "$(dirname "${BASH_SOURCE[0]}")/test_framework.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/test-framework.sh"
 
 # Define test functions
 function test_command_execution() {
@@ -566,8 +584,17 @@ The tkgi-pipeline-standards repository contains reference implementations for se
 
 1. **Kustomize Template**: A complete reference for kustomize-based projects
    - Located at `/reference/templates/kustomize/`
-   - Features a fully tested `fly.sh` script with all commands implemented
-   - Includes a test framework for CI scripts
+   - Features a hybrid approach with two fly.sh scripts:
+     - Simple version in `ci/fly.sh` (similar to ns-mgmt)
+     - Advanced version in `ci/scripts/fly.sh` with modular architecture
+   - Includes a sophisticated modular architecture in `ci/scripts/lib/` with dedicated files:
+     - `commands.sh`: Command implementations
+     - `help.sh`: Help text and documentation
+     - `parsing.sh`: Argument parsing functions
+     - `pipelines.sh`: Pipeline management functions
+     - `utils.sh`: Utility and helper functions
+   - Comprehensive test framework in `ci/scripts/tests/` for CI scripts
+   - Makefile in `ci/scripts/` for build and test automation
 
 2. **Helm Template**: A reference for helm-based projects
    - Located at `/reference/templates/helm/`
@@ -591,6 +618,8 @@ To use these reference templates for a new project:
    - Update pipeline files to reference your repositories
    - Configure foundation-specific parameters
 4. **Test the implementation**: Run the included tests to validate your setup
+   - For kustomize template, use `cd ci/scripts/tests && ./run_tests.sh`
+   - These tests validate command handling, option parsing, environment determination, and flag behavior
 5. **Deploy pipelines**: Use the provided `fly.sh` script to deploy your pipelines
 
 The reference templates are designed to be used with minimal modifications while providing a

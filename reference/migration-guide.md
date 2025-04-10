@@ -64,7 +64,7 @@ If you already have pipeline files, move them to the standard location:
 ```bash
 # Move existing pipeline files if they are in a different location
 # Example:
-mv pipeline.yml ci/pipelines/component-main.yml
+mv pipeline.yml ci/pipelines/main.yml
 ```
 
 ### Phase 2: Task Migration
@@ -210,7 +210,7 @@ For details on all options, run:
 
 ## Pipelines
 
-- `component-main.yml`: Main component management pipeline
+- `main.yml`: Main component management pipeline
 - `release.yml`: Release pipeline
 - `set-pipeline.yml`: Pipeline setup pipeline
 ```

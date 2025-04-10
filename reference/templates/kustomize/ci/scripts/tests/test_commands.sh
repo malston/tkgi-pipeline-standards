@@ -23,13 +23,25 @@ function echo_color() {
 }
 
 function success() {
-  echo_color "$GREEN" "✓ $1"
+  echo_color "$GREEN" "✅ $1"
 }
 
 function error() {
-  echo_color "$RED" "✗ $1"
+  echo_color "$RED" "❌ $1"
   exit 1
 }
+
+# Set up pipeline directories for tests
+mkdir -p "${SCRIPT_DIR}/../pipelines"
+if [[ ! -f "${SCRIPT_DIR}/../pipelines/main.yml" ]]; then
+  touch "${SCRIPT_DIR}/../pipelines/main.yml"
+fi
+if [[ ! -f "${SCRIPT_DIR}/../pipelines/release.yml" ]]; then
+  touch "${SCRIPT_DIR}/../pipelines/release.yml"
+fi
+
+# Ensure we have a TEST_MODE flag to avoid real fly invocations
+export TEST_MODE=true
 
 function test_command() {
   local command="$1"
@@ -39,7 +51,9 @@ function test_command() {
 
   # Run command in dry-run and test mode
   local output
-  output=$("$FLY_SCRIPT" -f "test-foundation" "$command" "main" --dry-run --test-mode 2>&1) || {
+  output=$("$FLY_SCRIPT" -f "test-foundation" -t "test-target" "$command" --pipeline "main" --dry-run --test-mode 2>&1) || {
+    echo "Command failed with output:"
+    echo "$output"
     error "Command '$command' failed to execute"
   }
 
@@ -53,6 +67,31 @@ function test_command() {
     echo "$output"
   fi
 }
+
+# Create a minimal mock for fly command
+function setup_mock() {
+  # Create temp directory for mocks
+  MOCK_DIR=$(mktemp -d)
+
+  # Create mock fly
+  cat >"${MOCK_DIR}/fly" <<'EOF'
+#!/usr/bin/env bash
+echo "FLY: $@"
+if [[ "$1" == "targets" ]]; then
+  echo "name            url                   team  expiry"
+  echo "----            ---                   ----  -----"
+  echo "test-target     https://example.com   main  n/a"
+fi
+exit 0
+EOF
+  chmod +x "${MOCK_DIR}/fly"
+
+  # Add to PATH
+  export PATH="${MOCK_DIR}:${PATH}"
+}
+
+# Set up the mock
+setup_mock
 
 # Main tests
 echo "Testing all fly.sh commands..."
@@ -71,7 +110,9 @@ test_command "release" "release"
 
 # Test destroy command (more complex due to confirmation)
 echo_color "$YELLOW" "Testing 'destroy' command..."
-output=$(echo "yes" | "$FLY_SCRIPT" -f "test-foundation" "destroy" "main" --dry-run --test-mode 2>&1) || {
+output=$(echo "y" | "$FLY_SCRIPT" -f "test-foundation" -t "test-target" "destroy" --pipeline "main" --dry-run --test-mode 2>&1) || {
+  echo "Command failed with output:"
+  echo "$output"
   error "Command 'destroy' failed to execute"
 }
 

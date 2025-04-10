@@ -8,7 +8,7 @@ This template is designed for components that use Helm charts for deployment and
 helm-component-template/
 ├── ci/
 │   ├── pipelines/
-│   │   ├── component-main.yml      # Uses helm tasks
+│   │   ├── main.yml      # Uses helm tasks
 │   │   ├── release.yml
 │   │   └── set-pipeline.yml
 │   ├── scripts/

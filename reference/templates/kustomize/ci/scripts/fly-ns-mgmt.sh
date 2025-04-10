@@ -4,8 +4,15 @@ set -o errexit
 
 __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# Source the helpers.sh file
-source "$__DIR/helpers.sh"
+# Get lib directory for relative paths
+LIB_DIR="${__DIR}/lib"
+
+# Source module files
+source "${LIB_DIR}/utils.sh"
+source "${LIB_DIR}/help.sh"
+source "${LIB_DIR}/parsing.sh"
+source "${LIB_DIR}/commands.sh"
+source "${LIB_DIR}/pipelines.sh"
 
 PIPELINE="tkgi-ns-mgmt"
 RELEASE_PIPELINE_NAME="$PIPELINE-release"

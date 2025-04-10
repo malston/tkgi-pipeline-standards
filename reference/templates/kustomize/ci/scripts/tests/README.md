@@ -4,7 +4,7 @@ This directory contains tests for the CI scripts in the kustomize template. The 
 
 ## Test Structure
 
-- `test_framework.sh`: Core testing utilities and helpers
+- `test-framework.sh`: Core testing utilities and helpers
 - `test_fly.sh`: Tests for the fly.sh script
 - `run_tests.sh`: Script to run all tests
 
