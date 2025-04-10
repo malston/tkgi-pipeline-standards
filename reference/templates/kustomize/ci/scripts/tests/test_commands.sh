@@ -42,6 +42,7 @@ fi
 
 # Ensure we have a TEST_MODE flag to avoid real fly invocations
 export TEST_MODE=true
+export ENVIRONMENT=lab  # Explicitly set an environment for tests
 
 function test_command() {
   local command="$1"
@@ -51,7 +52,7 @@ function test_command() {
 
   # Run command in dry-run and test mode
   local output
-  output=$("$FLY_SCRIPT" -f "test-foundation" -t "test-target" "$command" --pipeline "main" --dry-run --test-mode 2>&1) || {
+  output=$("$FLY_SCRIPT" -f "test-foundation" -t "test-target" -e "lab" "$command" --pipeline "main" --dry-run --test-mode 2>&1) || {
     echo "Command failed with output:"
     echo "$output"
     error "Command '$command' failed to execute"
@@ -110,7 +111,7 @@ test_command "release" "release"
 
 # Test destroy command (more complex due to confirmation)
 echo_color "$YELLOW" "Testing 'destroy' command..."
-output=$(echo "y" | "$FLY_SCRIPT" -f "test-foundation" -t "test-target" "destroy" --pipeline "main" --dry-run --test-mode 2>&1) || {
+output=$(echo "y" | "$FLY_SCRIPT" -f "test-foundation" -t "test-target" -e "lab" "destroy" --pipeline "main" --dry-run --test-mode 2>&1) || {
   echo "Command failed with output:"
   echo "$output"
   error "Command 'destroy' failed to execute"

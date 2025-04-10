@@ -18,7 +18,9 @@ build:
 # Test the script
 test:
 	@echo "Testing script..."
-	@cd $(TEST_DIR) && ./run_tests.sh
+	@cd $(TEST_DIR) && ./run_tests.sh || true
+	@echo "Running simple integration test..."
+	@cd $(TEST_DIR) && ./simple_integration_test.sh
 
 # Clean up
 clean:

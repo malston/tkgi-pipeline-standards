@@ -33,15 +33,15 @@ run_test() {
   local actual="$2"
   local expected="$3"
   
-  echo -e "${YELLOW}Running test: ${test_name}${NC}"
+  printf "Running test: %s\n" "$test_name"
   
   if [ "$actual" == "$expected" ]; then
-    echo -e "${GREEN}PASS:${NC} $test_name"
+    printf "PASS: %s\n" "$test_name"
     return 0
   else
-    echo -e "${RED}FAIL:${NC} $test_name"
-    echo "  Expected: '$expected'"
-    echo "  Got:      '$actual'"
+    printf "FAIL: %s\n" "$test_name"
+    printf "  Expected: '%s'\n" "$expected"
+    printf "  Got:      '%s'\n" "$actual"
     return 1
   fi
 }
@@ -142,16 +142,18 @@ test "Integration - github org" "$GITHUB_ORG" "Utilities-tkgieng"
 test "Integration - config repo" "$CONFIG_REPO_NAME" "config-lab"
 
 # Print summary
-echo "========================================"
-echo "SUMMARY:"
-echo "Passed: $PASS_COUNT"
-echo "Failed: $FAIL_COUNT"
-echo "Total:  $((PASS_COUNT + FAIL_COUNT))"
-echo "========================================"
+printf "========================================\n"
+printf "SUMMARY:\n"
+printf "Passed: %d\n" $PASS_COUNT
+printf "Failed: %d\n" $FAIL_COUNT
+printf "Total:  %d\n" $((PASS_COUNT + FAIL_COUNT))
+printf "========================================\n"
 
-# Return non-zero exit code if any tests failed
+# Report overall status
 if [ "$FAIL_COUNT" -gt 0 ]; then
+  printf "SOME TESTS FAILED\n"
   exit 1
 else
+  printf "ALL TESTS PASSED\n"
   exit 0
 fi
