@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/test-framework.sh"
 source "${__SCRIPTS_DIR}/lib/environment.sh"
 source "${__SCRIPTS_DIR}/lib/version.sh"
 source "${__SCRIPTS_DIR}/lib/foundation.sh"
-source "${__SCRIPTS_DIR}/lib/utils.sh"  # for get_latest_version
+source "${__SCRIPTS_DIR}/lib/utils.sh" # for get_latest_version
 
 # Mock get_latest_version if not available
 if ! type get_latest_version &>/dev/null; then
@@ -74,7 +74,7 @@ function test_version_normalizer() {
 
   start_test "normalize_version with 'latest'"
   result=$(normalize_version "latest")
-  expected="1.0.0"  # This is what our mock returns
+  expected="1.0.0" # This is what our mock returns
   assert_equals "$expected" "$result" "Should resolve 'latest' to actual version"
   test_pass "normalize_version with 'latest'"
 }
@@ -82,7 +82,8 @@ function test_version_normalizer() {
 # Test the foundation environment helper
 function test_foundation_helper() {
   start_test "determine_foundation_environment for cml datacenter"
-  local result=$(determine_foundation_environment "cml" "" "" "")
+  local result
+  result=$(determine_foundation_environment "cml" "" "" "")
   local expected="lab:Utilities-tkgieng:config-lab"
   assert_equals "$expected" "$result" "CML datacenter should map to lab environment"
   test_pass "determine_foundation_environment for cml datacenter"
@@ -133,27 +134,27 @@ function test_foundation_helper() {
 # Test integration of environment helpers with fly.sh
 function test_environment_integration() {
   start_test "Integration of environment helpers"
-  
+
   # Setup test variables
   local DC="cml"
   local ENVIRONMENT=""
   local GITHUB_ORG=""
   local CONFIG_REPO_NAME=""
   local GIT_RELEASE_TAG=""
-  
+
   # Use the helpers as they are used in fly.sh
   local FOUNDATION_RESULT=$(determine_foundation_environment "$DC" "$ENVIRONMENT" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
-  IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<< "$FOUNDATION_RESULT"
-  
+  IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<<"$FOUNDATION_RESULT"
+
   local ENV_RESULT=$(configure_environment "$ENVIRONMENT" "$GIT_RELEASE_TAG" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
-  IFS=':' read -r GIT_RELEASE_TAG GITHUB_ORG CONFIG_REPO_NAME <<< "$ENV_RESULT"
-  
+  IFS=':' read -r GIT_RELEASE_TAG GITHUB_ORG CONFIG_REPO_NAME <<<"$ENV_RESULT"
+
   # Check results
   assert_equals "lab" "$ENVIRONMENT" "Environment should be 'lab' for CML datacenter"
   assert_equals "develop" "$GIT_RELEASE_TAG" "Git branch should be 'develop' for lab environment"
   assert_equals "Utilities-tkgieng" "$GITHUB_ORG" "GitHub org should be 'Utilities-tkgieng' for lab environment"
   assert_equals "config-lab" "$CONFIG_REPO_NAME" "Config repo should be 'config-lab' for lab environment"
-  
+
   test_pass "Integration of environment helpers"
 }
 
