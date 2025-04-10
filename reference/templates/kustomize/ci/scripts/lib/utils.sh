@@ -52,7 +52,7 @@ function success() {
 }
 
 # Function to determine environment based on foundation name
-function determine_environment() {
+function get_environment() {
   local foundation="$1"
 
   if [[ "$foundation" == *"-lab-"* || "$foundation" == *"-n-"* ]]; then

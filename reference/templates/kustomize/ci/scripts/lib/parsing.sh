@@ -27,7 +27,7 @@ function check_help_flags() {
       # If we get here, no valid command was specified, show general help
       show_general_usage 0
     fi
-    
+
     # Check for command followed by help flag format: command --help or command -h
     if [[ "${!i}" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
       # Check if the next argument is a help flag
@@ -44,219 +44,212 @@ function check_help_flags() {
   done
 }
 
-# Function to preprocess arguments and handle both long-form and short-form flags
-function preprocess_args() {
-  # This function just passes through all arguments exactly as is
-  # We'll handle all flag processing in the main process_args function
-  processed_args=("$@")
-}
-
 # Comprehensive function to process all command line arguments
 function process_args() {
   # Array to hold the non-flag arguments
   local non_flags=()
-  
+
   # Process flags until we run out of arguments
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      # Help flags
-      -h|--help)
-        show_general_usage 0
-        ;;
-      
-      # Foundation flag (required)
-      -f|--foundation)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        FOUNDATION="$2"
-        shift 2
-        ;;
-      --foundation=*)
-        FOUNDATION="${1#*=}"
-        shift
-        ;;
-      
-      # Target flag
-      -t|--target)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        TARGET="$2"
-        shift 2
-        ;;
-      --target=*)
-        TARGET="${1#*=}"
-        shift
-        ;;
-      
-      # Environment flag
-      -e|--environment)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        ENVIRONMENT="$2"
-        shift 2
-        ;;
-      --environment=*)
-        ENVIRONMENT="${1#*=}"
-        shift
-        ;;
-      
-      # Branch flag
-      -b|--branch)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        BRANCH="$2"
-        shift 2
-        ;;
-      --branch=*)
-        BRANCH="${1#*=}"
-        shift
-        ;;
-      
-      # Config branch flag
-      -c|--config-branch)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        CONFIG_GIT_BRANCH="$2"
-        shift 2
-        ;;
-      --config-branch=*)
-        CONFIG_GIT_BRANCH="${1#*=}"
-        shift
-        ;;
-      
-      # Params branch flag
-      -d|--params-branch)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        PARAMS_GIT_BRANCH="$2"
-        shift 2
-        ;;
-      --params-branch=*)
-        PARAMS_GIT_BRANCH="${1#*=}"
-        shift
-        ;;
-      
-      # Pipeline flag
-      -p|--pipeline)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        PIPELINE="$2"
-        shift 2
-        ;;
-      --pipeline=*)
-        PIPELINE="${1#*=}"
-        shift
-        ;;
-      
-      # GitHub org flag
-      -o|--github-org)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        GITHUB_ORG="$2"
-        shift 2
-        ;;
-      --github-org=*)
-        GITHUB_ORG="${1#*=}"
-        shift
-        ;;
-      
-      # Version flag
-      -v|--version)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        VERSION="$2"
-        shift 2
-        ;;
-      --version=*)
-        VERSION="${1#*=}"
-        shift
-        ;;
-      
-      # Timer flag
-      --timer)
-        if [[ -z "$2" || "$2" == -* ]]; then
-          error "Option $1 requires an argument"
-          show_usage 1
-        fi
-        TIMER_DURATION="$2"
-        shift 2
-        ;;
-      --timer=*)
-        TIMER_DURATION="${1#*=}"
-        shift
-        ;;
-      
-      # Boolean flags
-      -r|--release)
-        CREATE_RELEASE=true
-        shift
-        ;;
-      -s|--set-release-pipeline)
-        SET_RELEASE_PIPELINE=true
-        shift
-        ;;
-      --dry-run)
-        DRY_RUN=true
-        shift
-        ;;
-      --verbose)
-        VERBOSE=true
-        shift
-        ;;
-      --enable-validation-testing)
-        ENABLE_VALIDATION_TESTING=true
-        shift
-        ;;
-      --test-mode)
-        TEST_MODE=true
-        shift
-        ;;
-      --debug)
-        DEBUG=true
-        shift
-        ;;
-      
-      # End of options marker
-      --)
-        shift
-        non_flags+=("$@")
-        break
-        ;;
-      
-      # Commands and non-flag arguments
-      *)
-        if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
-          COMMAND="$1"
-        elif [[ ! "$1" =~ ^- ]]; then
-          # Assume this is a pipeline name
-          non_flags+=("$1")
-        else
-          error "Unknown option: $1"
-          show_usage 1
-        fi
-        shift
-        ;;
+    # Help flags
+    -h | --help)
+      show_general_usage 0
+      ;;
+
+    # Foundation flag (required)
+    -f | --foundation)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      FOUNDATION="$2"
+      shift 2
+      ;;
+    --foundation=*)
+      FOUNDATION="${1#*=}"
+      shift
+      ;;
+
+    # Target flag
+    -t | --target)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      TARGET="$2"
+      shift 2
+      ;;
+    --target=*)
+      TARGET="${1#*=}"
+      shift
+      ;;
+
+    # Environment flag
+    -e | --environment)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      ENVIRONMENT="$2"
+      shift 2
+      ;;
+    --environment=*)
+      ENVIRONMENT="${1#*=}"
+      shift
+      ;;
+
+    # Branch flag
+    -b | --branch)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      BRANCH="$2"
+      shift 2
+      ;;
+    --branch=*)
+      BRANCH="${1#*=}"
+      shift
+      ;;
+
+    # Config branch flag
+    -c | --config-branch)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      CONFIG_GIT_BRANCH="$2"
+      shift 2
+      ;;
+    --config-branch=*)
+      CONFIG_GIT_BRANCH="${1#*=}"
+      shift
+      ;;
+
+    # Params branch flag
+    -d | --params-branch)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      PARAMS_GIT_BRANCH="$2"
+      shift 2
+      ;;
+    --params-branch=*)
+      PARAMS_GIT_BRANCH="${1#*=}"
+      shift
+      ;;
+
+    # Pipeline flag
+    -p | --pipeline)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      PIPELINE="$2"
+      shift 2
+      ;;
+    --pipeline=*)
+      PIPELINE="${1#*=}"
+      shift
+      ;;
+
+    # GitHub org flag
+    -o | --github-org)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      GITHUB_ORG="$2"
+      shift 2
+      ;;
+    --github-org=*)
+      GITHUB_ORG="${1#*=}"
+      shift
+      ;;
+
+    # Version flag
+    -v | --version)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      VERSION="$2"
+      shift 2
+      ;;
+    --version=*)
+      VERSION="${1#*=}"
+      shift
+      ;;
+
+    # Timer flag
+    --timer)
+      if [[ -z "$2" || "$2" == -* ]]; then
+        error "Option $1 requires an argument"
+        show_usage 1
+      fi
+      TIMER_DURATION="$2"
+      shift 2
+      ;;
+    --timer=*)
+      TIMER_DURATION="${1#*=}"
+      shift
+      ;;
+
+    # Boolean flags
+    -r | --release)
+      CREATE_RELEASE=true
+      shift
+      ;;
+    -s | --set-release-pipeline)
+      SET_RELEASE_PIPELINE=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    --enable-validation-testing)
+      ENABLE_VALIDATION_TESTING=true
+      shift
+      ;;
+    --test-mode)
+      TEST_MODE=true
+      shift
+      ;;
+    --debug)
+      DEBUG=true
+      shift
+      ;;
+
+    # End of options marker
+    --)
+      shift
+      non_flags+=("$@")
+      break
+      ;;
+
+    # Commands and non-flag arguments
+    *)
+      if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
+        COMMAND="$1"
+      elif [[ ! "$1" =~ ^- ]]; then
+        # Assume this is a pipeline name
+        non_flags+=("$1")
+      else
+        error "Unknown option: $1"
+        show_usage 1
+      fi
+      shift
+      ;;
     esac
   done
-  
+
   # If we have non-flag arguments, and no command is set yet,
   # assume the first one is a command and the second is a pipeline
   if [[ ${#non_flags[@]} -gt 0 && "$COMMAND" == "set" ]]; then
@@ -268,94 +261,6 @@ function process_args() {
     # If we have non-flag arguments and command is already set,
     # assume the first one is the pipeline
     PIPELINE="${non_flags[0]}"
-  fi
-}
-
-# Function to detect command and pipeline arguments
-# Takes variable references to allow explicit modification of globals
-# @param command_ref Reference to COMMAND variable
-# @param pipeline_ref Reference to PIPELINE variable
-# @param dry_run_ref Reference to DRY_RUN variable
-# @param verbose_ref Reference to VERBOSE variable
-# @param validation_ref Reference to ENABLE_VALIDATION_TESTING variable
-# @param test_mode_ref Reference to TEST_MODE variable
-# @param create_release_ref Reference to CREATE_RELEASE variable
-# @param set_pipeline_ref Reference to SET_RELEASE_PIPELINE variable
-# @param args The command line arguments to process
-function detect_command_and_pipeline() {
-  # Get references to variables
-  local -n _command="$1"
-  local -n _pipeline="$2"
-  local -n _dry_run="$3"
-  local -n _verbose="$4"
-  local -n _validation="$5"
-  local -n _test_mode="$6"
-  local -n _create_release="$7"
-  local -n _set_pipeline="$8"
-  
-  # Shift to get to the original arguments
-  shift 8
-  
-  # Check for command and pipeline arguments
-  if [[ $# -gt 0 ]]; then
-    if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
-      _command="$1"
-      shift
-    fi
-    
-    if [[ $# -gt 0 ]]; then
-      _pipeline="$1"
-      shift
-    fi
-  fi
-  
-  # Handle any remaining flags that were not captured by processing
-  for arg in "$@"; do
-    case "$arg" in
-    --dry-run)
-      _dry_run=true
-      ;;
-    --verbose)
-      _verbose=true
-      ;;
-    --enable-validation-testing)
-      _validation=true
-      ;;
-    --test-mode)
-      _test_mode=true
-      ;;
-    --release)
-      _create_release=true
-      ;;
-    --set-release-pipeline)
-      _set_pipeline=true
-      ;;
-    esac
-  done
-}
-
-# Function to handle legacy behavior conversion to new command format
-# Takes variable references to allow explicit modification of globals
-# @param create_release_ref Reference to CREATE_RELEASE variable
-# @param set_pipeline_ref Reference to SET_RELEASE_PIPELINE variable
-# @param command_ref Reference to COMMAND variable
-# @param pipeline_ref Reference to PIPELINE variable
-# @param release_pipeline_name The name of the release pipeline
-function handle_legacy_behavior() {
-  # Get references to variables
-  local -n _create_release="$1"
-  local -n _set_pipeline="$2"
-  local -n _command="$3"
-  local -n _pipeline="$4"
-  local _release_pipeline_name="$5"
-
-  # Apply legacy behavior rules
-  if [[ "${_create_release}" == "true" ]]; then
-    _command="release"
-  fi
-
-  if [[ "${_set_pipeline}" == "true" ]]; then
-    _pipeline="${_release_pipeline_name}"
   fi
 }
 
@@ -385,7 +290,7 @@ function validate_and_set_defaults() {
 
   # Set default environment if not provided
   if [[ -z "${_environment}" ]]; then
-    _environment=$(determine_environment "${_foundation}")
+    _environment=$(get_environment "${_foundation}")
   fi
 
   # Set default branch based on environment if not provided

@@ -13,8 +13,9 @@ The script is divided into several logical modules:
 
 2. **utils.sh**: Contains utility functions used throughout the script
    - `info()`, `error()`, `success()`: Logging functions
-   - `determine_environment()`: Determines environment from foundation name
+   - `get_environment()`: Determines environment from foundation name
    - `get_datacenter()`: Determines datacenter from foundation name
+   - `get_datacenter_type()`: Determines datacenter type from foundation name
    - `check_fly()`: Verifies the fly command is available
    - `validate_file_exists()`: Checks if a file exists
 
@@ -27,16 +28,24 @@ The script is divided into several logical modules:
 
 4. **parsing.sh**: Contains argument parsing logic
    - `check_help_flags()`: Handles help flags in different formats
-   - `preprocess_args()`: Preprocesses arguments (especially --option=value format)
-   - `process_short_args()`: Processes short-form arguments (-f value)
-   - `detect_command_and_pipeline()`: Identifies command and pipeline arguments
-   - `handle_legacy_behavior()`: Handles legacy flag options
    - `validate_and_set_defaults()`: Validates required parameters and sets defaults
 
 5. **pipelines.sh**: Contains pipeline-specific helper functions
    - `get_latest_version()`: Gets the latest version from git tags
    - `pipeline_pause_check()`: Checks if a pipeline is paused and offers to unpause it
    - `generate_pipeline_config()`: Generates pipeline configuration using ytt
+
+6. **environment.sh**: Contains environment configuration logic
+   - `configure_environment()`: Sets up configuration based on the environment type (lab, nonprod, prod)
+   - Configures branch strategy, GitHub org, and config repo for different environments
+   
+7. **version.sh**: Contains version handling functions
+   - `normalize_version()`: Standardizes version format, stripping prefixes like 'v' or 'release-v'
+   - Handles special version labels like 'latest'
+   
+8. **foundation.sh**: Contains foundation-specific configuration
+   - `determine_foundation_environment()`: Determines environment type based on datacenter (DC) prefix
+   - Maps foundations to their appropriate environment, GitHub org, and config repos
 
 ## How It Works
 
