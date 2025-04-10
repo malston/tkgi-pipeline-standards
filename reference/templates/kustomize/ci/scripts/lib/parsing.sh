@@ -3,9 +3,30 @@
 # Argument parsing for fly.sh
 # Contains functions for parsing and processing command line arguments
 #
+# To use this module effectively, pass the command pattern as the first argument
+# to check_help_flags and process_args functions. For example:
+#
+# ```bash
+# # Define supported commands for this script
+# SUPPORTED_COMMANDS="set|unpause|destroy|validate|release|custom1|custom2"
+#
+# # Call the parsing functions with the command pattern
+# check_help_flags "${SUPPORTED_COMMANDS}" "$@"
+# process_args "${SUPPORTED_COMMANDS}" "$@"
+# ```
+#
+# If no command pattern is provided, a default value of "set|unpause|destroy|validate|release"
+# will be used.
+#
 
 # Function to check for help flags
+# @param cmd_pattern A regex pattern of supported commands (e.g., "set|unpause|destroy")
+# @param ... The rest of the arguments passed to the script
 function check_help_flags() {
+  # First argument is the command pattern
+  local cmd_pattern="${1:-set|unpause|destroy|validate|release}"
+  shift
+
   # Check for help flag first and handle both formats:
   # 1. --help command
   # 2. -h command
@@ -18,7 +39,7 @@ function check_help_flags() {
       next_idx=$((i + 1))
       if [[ $next_idx -le $# ]]; then
         next_arg="${!next_idx}"
-        if [[ "$next_arg" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
+        if [[ "$next_arg" =~ ^(${cmd_pattern})$ ]]; then
           # Show help for specific command
           show_command_usage "$next_arg"
           exit 0
@@ -29,7 +50,7 @@ function check_help_flags() {
     fi
 
     # Check for command followed by help flag format: command --help or command -h
-    if [[ "${!i}" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
+    if [[ "${!i}" =~ ^(${cmd_pattern})$ ]]; then
       # Check if the next argument is a help flag
       next_idx=$((i + 1))
       if [[ $next_idx -le $# ]]; then
@@ -45,7 +66,13 @@ function check_help_flags() {
 }
 
 # Comprehensive function to process all command line arguments
+# @param cmd_pattern A regex pattern of supported commands (e.g., "set|unpause|destroy")
+# @param ... The rest of the arguments passed to the script
 function process_args() {
+  # First argument is the command pattern
+  local cmd_pattern="${1:-set|unpause|destroy|validate|release}"
+  shift
+
   # Array to hold the non-flag arguments
   local non_flags=()
 
@@ -236,7 +263,7 @@ function process_args() {
 
     # Commands and non-flag arguments
     *)
-      if [[ "$1" =~ ^(set|unpause|destroy|validate|release)$ ]]; then
+      if [[ "$1" =~ ^(${cmd_pattern})$ ]]; then
         COMMAND="$1"
       elif [[ ! "$1" =~ ^- ]]; then
         # Assume this is a pipeline name
@@ -250,12 +277,19 @@ function process_args() {
     esac
   done
 
+  # Use the cmd_pattern passed as parameter (already handled in function signature)
+
   # If we have non-flag arguments, and no command is set yet,
   # assume the first one is a command and the second is a pipeline
   if [[ ${#non_flags[@]} -gt 0 && "$COMMAND" == "set" ]]; then
-    COMMAND="${non_flags[0]}"
-    if [[ ${#non_flags[@]} -gt 1 ]]; then
-      PIPELINE="${non_flags[1]}"
+    if [[ "${non_flags[0]}" =~ ^(${cmd_pattern})$ ]]; then
+      COMMAND="${non_flags[0]}"
+      if [[ ${#non_flags[@]} -gt 1 ]]; then
+        PIPELINE="${non_flags[1]}"
+      fi
+    else
+      # If the first non-flag arg isn't a valid command, treat it as a pipeline name
+      PIPELINE="${non_flags[0]}"
     fi
   elif [[ ${#non_flags[@]} -gt 0 ]]; then
     # If we have non-flag arguments and command is already set,

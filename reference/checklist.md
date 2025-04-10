@@ -50,7 +50,7 @@ Use this checklist when implementing the standardized CI/CD structure in a repos
 
 ## fly.sh Script
 
-- [ ] Implement standardized fly.sh script:
+- [ ] Implement standardized `fly.sh` script:
   - [ ] Support for all standard commands
   - [ ] Support for special commands (release, set-pipeline)
   - [ ] Standard options for foundation, environment, etc.

@@ -27,7 +27,8 @@ The script is divided into several logical modules:
    - `cmd_release_pipeline()`: Creates a release pipeline
 
 4. **parsing.sh**: Contains argument parsing logic
-   - `check_help_flags()`: Handles help flags in different formats
+   - `check_help_flags()`: Handles help flags in different formats (accepts command pattern as parameter)
+   - `process_args()`: Comprehensive argument processing function (accepts command pattern as parameter)
    - `validate_and_set_defaults()`: Validates required parameters and sets defaults
 
 5. **pipelines.sh**: Contains pipeline-specific helper functions
@@ -38,11 +39,11 @@ The script is divided into several logical modules:
 6. **environment.sh**: Contains environment configuration logic
    - `configure_environment()`: Sets up configuration based on the environment type (lab, nonprod, prod)
    - Configures branch strategy, GitHub org, and config repo for different environments
-   
+
 7. **version.sh**: Contains version handling functions
    - `normalize_version()`: Standardizes version format, stripping prefixes like 'v' or 'release-v'
    - Handles special version labels like 'latest'
-   
+
 8. **foundation.sh**: Contains foundation-specific configuration
    - `determine_foundation_environment()`: Determines environment type based on datacenter (DC) prefix
    - Maps foundations to their appropriate environment, GitHub org, and config repos
@@ -53,8 +54,9 @@ The main fly.sh script sources these modules and orchestrates their execution:
 
 1. First, it initializes default values for all variables
 2. Then it sources the module files to load all required functions
-3. In the `main()` function, it:
-   - Checks for help flags
+3. Defines SUPPORTED_COMMANDS for the script's supported commands
+4. In the `main()` function, it:
+   - Passes the SUPPORTED_COMMANDS to check_help_flags and process_args
    - Processes and normalizes arguments
    - Detects command and pipeline arguments
    - Handles legacy behavior conversion

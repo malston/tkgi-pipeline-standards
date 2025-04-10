@@ -81,6 +81,7 @@ grep -r "path:" ci/pipelines/ | grep "\.sh" | awk -F: '{print $2}' | sort -u
 2. **Categorize Tasks**
 
 Categorize each task based on its function:
+
 - Common tasks (git operations, release info)
 - K8s tasks (namespace operations)
 - Deployment tasks (kustomize, helm, cli-tool)

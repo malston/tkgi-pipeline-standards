@@ -64,13 +64,17 @@ if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
   source "${SCRIPT_DIR}/helpers.sh"
 fi
 
+# Define supported commands for this script
+# This can be customized by different scripts that use the parsing module
+export SUPPORTED_COMMANDS="set|unpause|destroy|validate|release"
+
 # Main execution flow
 main() {
   # Process help flags first
-  check_help_flags "$@"
+  check_help_flags "${SUPPORTED_COMMANDS}" "$@"
 
   # Simple argument processing with our new comprehensive function
-  process_args "$@"
+  process_args "${SUPPORTED_COMMANDS}" "$@"
 
   # Handle legacy behavior
   if [[ "${CREATE_RELEASE}" == "true" ]]; then
@@ -107,10 +111,10 @@ main() {
 
   # Determine datacenter type from foundation name
   DATACENTER_TYPE=$(get_datacenter_type "${FOUNDATION}")
-  
+
   # Set foundation path
   FOUNDATION_PATH="foundations/$FOUNDATION"
-  
+
   # Determine environment and config repo from foundation
   FOUNDATION_RESULT=$(determine_foundation_environment "$DATACENTER" "$ENVIRONMENT" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
   IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<< "$FOUNDATION_RESULT"
@@ -122,7 +126,7 @@ main() {
   # Set git URIs based on environment settings
   GIT_URI="git@github.com:$GITHUB_ORG/$REPO_NAME.git"
   CONFIG_GIT_URI="git@github.com:$GITHUB_ORG/$CONFIG_REPO_NAME.git"
-  
+
   # Validate environment
   if [[ ! "${ENVIRONMENT}" =~ ^(lab|nonprod|prod)$ ]]; then
     error "Invalid environment: ${ENVIRONMENT}. Must be one of: lab, nonprod, prod"
