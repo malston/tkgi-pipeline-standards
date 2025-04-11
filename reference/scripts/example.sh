@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
 # Script: example.sh
-# Description: Enhanced script template that follows our standards
+# Description: Example script that follows our standards
 #
-# Usage: ./example.sh [options] [command] [argument]
+# Usage: ./example.sh [options] [command] [arguments...]
 #
 # Commands:
 #   command1    First command description
@@ -14,14 +14,12 @@
 #   -f, --flag1 VALUE    First flag description (required)
 #   -o, --flag2 VALUE    Second flag description
 #   --option1            Boolean option description
-#   --dry-run            Simulate without making changes
-#   --verbose            Increase output verbosity
 #   -h, --help           Show this help message
 #
 # Examples:
 #   ./example.sh command1 -f VALUE --option1
 #   ./example.sh command2 -f VALUE --verbose
-#   ./example.sh command3 -o VALUE1 -f VALUE2 --option1 --dry-run
+#   ./example.sh command3 -o VALUE1 -f VALUE2 --option1
 
 # Enable strict mode
 set -o errexit
@@ -37,14 +35,13 @@ fi
 
 # Default values
 COMMAND="command1"
-DRY_RUN=false
-VERBOSE=false
+OPTION1=false
 
 # Function to display usage
 function show_usage() {
     cat <<USAGE
 Script: example.sh
-Description: Enhanced script template that follows our standards
+Description: Example script that follows our standards
 
 Usage: $0 [options] [command] [argument]
 
@@ -57,14 +54,12 @@ Options:
   -f, --flag1 VALUE    First flag description (required)
   -o, --flag2 VALUE    Second flag description
   --option1            Boolean option description
-  --dry-run            Simulate without making changes
-  --verbose            Increase output verbosity
   -h, --help           Show this help message
 
 Examples:
-  $0 -f VALUE command1 -o ARGUMENT --dry-run
-  $0 -f VALUE --verbose command2
-  $0 -o VALUE1 -f VALUE2 command3 --option1 --dry-run
+  $0 -f VALUE command1 -o VALUE
+  $0 -f VALUE command2 -f VALUE
+  $0 -f VALUE command3 -f VALUE -o VALUE
 USAGE
 }
 
@@ -95,67 +90,49 @@ if [ $# -eq 0 ]; then
 fi
 
 # Global options
-while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
-    case $1 in
-    -f | --flag1)
-        shift
-        FLAG1=$1
-        ;;
-    --dry-run)
-        DRY_RUN=true
-        ;;
-    --verbose)
-        VERBOSE=true
-        ;;
+while [[ $# -gt 0 ]]; do
+    case "$1" in
     -h | --help)
         show_usage
         exit 0
         ;;
+    -f | --flag1)
+        if [[ -z "$2" || "$2" == -* ]]; then
+            error "Option $1 requires an argument"
+            show_usage 1
+        fi
+        FLAG1="$2"
+        shift 2
+        ;;
+    -o | --flag2)
+        FLAG2="$2"
+        shift 2
+        ;;
+    --option1)
+        OPTION1=true
+        shift
+        ;;
+    --)
+        shift
+        non_flags+=("$@")
+        break
+        ;;
+    # Commands and non-flag arguments
+    *)
+        if [[ "$1" =~ ^(command1|command2|command3)$ ]]; then
+            COMMAND="$1"
+        elif [[ ! "$1" =~ ^- ]]; then
+            # Assume this is a pipeline name
+            non_flags+=("$1")
+        else
+            error "Unknown option: $1"
+            show_usage 1
+        fi
+        shift
+        ;;
     esac
     shift
 done
-if [[ "$1" == '--' ]]; then shift; fi
-
-# Check for additional arguments (command and argument)
-if [[ $# -gt 0 ]]; then
-    if [[ "$1" =~ ^(command1|command2|command3)$ ]]; then
-        COMMAND="$1"
-        shift
-    fi
-
-    # Command options
-    while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
-        case $1 in
-        -o | --flag2)
-            shift
-            ARGUMENT=$1
-            ;;
-        --option1)
-            OPTION1=true
-            ;;
-        --dry-run)
-            DRY_RUN=true
-            ;;
-        --verbose)
-            VERBOSE=true
-            ;;
-        esac
-        shift
-    done
-    if [[ "$1" == '--' ]]; then shift; fi
-fi
-
-# Enable verbose output if requested
-if [[ "${VERBOSE}" == "true" ]]; then
-    set -x
-fi
-
-# Validate required parameters
-if [[ -z "${FLAG1}" ]]; then
-    error "Flag1 not specified. Use -f or --flag1 option."
-    show_usage
-    exit 1
-fi
 
 # Implementation of command1
 function cmd_command1() {
