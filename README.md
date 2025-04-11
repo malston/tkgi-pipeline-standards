@@ -487,7 +487,7 @@ For a more advanced example see [here](./reference/scripts/advanced-example.sh).
 Follow this process for standardizing each repository:
 
 1. **Assessment**: Review current structure and identify changes needed
-2. **Planning**: Create a detailed migration plan
+2. **Planning**: Create a detailed [migration plan](reference/migration-plans/README.md)
 3. **Testing**: Test changes in a branch before merging
 4. **Gradual Migration**: Implement changes in phases to minimize disruption
 5. **Documentation**: Update documentation to reflect the new structure
