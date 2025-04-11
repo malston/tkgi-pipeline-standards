@@ -18,8 +18,9 @@
 #
 # Examples:
 #   ./example.sh command1 -f VALUE --option1
-#   ./example.sh command2 -f VALUE --verbose
+#   ./example.sh command2 -f VALUE
 #   ./example.sh command3 -o VALUE1 -f VALUE2 --option1
+#   ./example.sh -f VALUE1 --option1 command1 -o VALUE2
 
 # Enable strict mode
 set -o errexit
@@ -57,9 +58,10 @@ Options:
   -h, --help           Show this help message
 
 Examples:
-  $0 -f VALUE command1 -o VALUE
-  $0 -f VALUE command2 -f VALUE
-  $0 -f VALUE command3 -f VALUE -o VALUE
+  $0 command1 -f VALUE --option1
+  $0 command2 -f VALUE
+  $0 command3 -o VALUE1 -f VALUE2 --option1
+  $0 -f VALUE1 --option1 command1 -o VALUE2
 USAGE
 }
 
@@ -131,55 +133,63 @@ while [[ $# -gt 0 ]]; do
         shift
         ;;
     esac
-    shift
 done
 
 # Implementation of command1
 function cmd_command1() {
-    info "Executing command1 with flag1='${FLAG1}' and argument='${ARGUMENT}' and option1='$OPTION1'"
+    local flag1=$1
+    local flag2=$2
+    local option="${3:-false}"
 
-    if [[ "${DRY_RUN}" == "true" ]]; then
-        info "DRY RUN: Would execute command1 here"
-    else
-        # Actual command implementation
-        success "Command1 executed successfully"
+    info "Executing command1 with flag1='${flag1}' and flag2='${flag2}' and option='${option}'"
+
+    if [[ "${option}" == "true" ]]; then
+        info "Would execute option1 here"
     fi
+    # Actual command implementation
+    success "Command1 executed successfully"
 }
 
 # Implementation of command2
 function cmd_command2() {
-    info "Executing command2 with flag1='${FLAG1}'"
+    local flag1=$1
+    local flag2=$2
+    local option="${3:-false}"
 
-    if [[ "${DRY_RUN}" == "true" ]]; then
-        info "DRY RUN: Would execute command2 here"
-    else
-        # Actual command implementation
-        success "Command2 executed successfully"
+    info "Executing command2 with flag1='${flag1}' and flag2='${flag2}' and option='${option}'"
+
+    if [[ "${option}" == "true" ]]; then
+        info "Would execute option1 here"
     fi
+    # Actual command implementation
+    success "Command2 executed successfully"
 }
 
 # Implementation of command3
 function cmd_command3() {
-    info "Executing command3 with flag1='${FLAG1}'"
+    local flag1=$1
+    local flag2=$2
+    local option="${3:-false}"
 
-    if [[ "${DRY_RUN}" == "true" ]]; then
-        info "DRY RUN: Would execute command3 here"
-    else
-        # Actual command implementation
-        success "Command3 executed successfully"
+    info "Executing command3 with flag1='${flag1}' and flag2='${flag2}' and option='${option}'"
+
+    if [[ "${option}" == "true" ]]; then
+        info "Would execute option1 here"
     fi
+    # Actual command implementation
+    success "Command3 executed successfully"
 }
 
 # Execute the requested command
 case "${COMMAND}" in
 command1)
-    cmd_command1
+    cmd_command1 "${FLAG1}" "${FLAG2}" "${OPTION1}"
     ;;
 command2)
-    cmd_command2
+    cmd_command2 "${FLAG1}" "${FLAG2}" "${OPTION1}"
     ;;
 command3)
-    cmd_command3
+    cmd_command3 "${FLAG1}" "${FLAG2}" "${OPTION1}"
     ;;
 *)
     error "Unknown command: ${COMMAND}"
