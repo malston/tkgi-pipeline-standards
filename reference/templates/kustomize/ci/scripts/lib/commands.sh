@@ -115,16 +115,16 @@ function cmd_set_pipeline() {
   if [[ -n "${repo}" ]]; then
     vars+=("-v" "repository=${repo}")
   fi
-  
+
   # Add git URIs if available
   if [[ -n "${git_uri}" ]]; then
     vars+=("-v" "git_uri=${git_uri}")
   fi
-  
+
   if [[ -n "${config_git_uri}" ]]; then
     vars+=("-v" "config_git_uri=${config_git_uri}")
   fi
-  
+
   if [[ -n "${config_git_branch}" ]]; then
     vars+=("-v" "config_git_branch=${config_git_branch}")
   fi

@@ -14,7 +14,7 @@
 #
 # Returns:
 #   A colon-separated string with GIT_RELEASE_TAG:GITHUB_ORG:CONFIG_REPO_NAME
-configure_environment() {
+function configure_environment() {
     local ENVIRONMENT=$1
     local GIT_RELEASE_TAG=$2
     local GITHUB_ORG=$3
