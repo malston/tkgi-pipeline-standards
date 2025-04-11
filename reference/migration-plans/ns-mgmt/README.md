@@ -189,12 +189,12 @@ Created comprehensive documentation in ci/README.md to explain the new structure
 ```markdown
 # CI Directory Structure
 
-This directory contains all CI/CD pipeline configurations and scripts for the ns-mgmt repository.
+This directory contains all CI/CD pipeline configurations and scripts for the `ns-mgmt` repository.
 
 ## Structure
 
 - `pipelines/`: Contains all pipeline definition YAML files
-  - `ns-mgmt.yml`: Main namespace management pipeline
+  - `main.yml`: Main namespace management pipeline
   - `release.yml`: Release pipeline for creating GitHub releases
   - `set-pipeline.yml`: Pipeline for setting other pipelines
 

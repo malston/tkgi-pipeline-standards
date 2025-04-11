@@ -33,7 +33,7 @@ ci/
 ci/
 ├── fly.sh
 ├── pipelines/
-│   ├── ns-mgmt.yml
+│   ├── main.yml
 │   ├── release.yml
 │   └── set-pipeline.yml
 └── tasks/
