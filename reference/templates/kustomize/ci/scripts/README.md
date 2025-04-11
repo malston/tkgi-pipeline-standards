@@ -6,7 +6,7 @@ This directory contains scripts for managing Concourse pipelines, with a focus o
 
 The main entry point is `fly.sh`, which provides a robust interface for interacting with Concourse pipelines:
 
-```
+```sh
 ./fly.sh [options] [command] [pipeline_name]
 ```
 
@@ -20,7 +20,7 @@ The main entry point is `fly.sh`, which provides a robust interface for interact
 
 ### Options
 
-```
+```sh
 -f, --foundation NAME      Foundation name (required)
 -t, --target TARGET        Concourse target (default: <foundation>)
 -e, --environment ENV      Environment type (lab|nonprod|prod)
@@ -43,7 +43,7 @@ The main entry point is `fly.sh`, which provides a robust interface for interact
 
 For detailed help on specific commands, use any of these formats:
 
-```
+```sh
 ./fly.sh --help [command]   # Example: ./fly.sh --help set
 ./fly.sh -h [command]       # Example: ./fly.sh -h unpause
 ./fly.sh [command] --help   # Example: ./fly.sh destroy --help
@@ -54,7 +54,7 @@ For detailed help on specific commands, use any of these formats:
 
 The script follows a modular architecture:
 
-```
+```sh
 .
 ├── fly.sh               # Main script - the entry point
 ├── helpers.sh           # Optional repository-specific helpers
@@ -71,38 +71,13 @@ The script follows a modular architecture:
 
 ### Modules
 
-1. **help.sh**: Contains functions for displaying help information
-   - `show_command_usage()`: Displays help for a specific command
-   - `show_general_usage()`: Displays general help
-   - `show_usage()`: Compatibility wrapper for general help
-
-2. **utils.sh**: Contains utility functions used throughout the script
-   - `info()`, `error()`, `success()`: Logging functions
-   - `determine_environment()`: Determines environment from foundation name
-   - `get_datacenter()`: Determines datacenter from foundation name
-   - `check_fly()`: Verifies the fly command is available
-   - `validate_file_exists()`: Checks if a file exists
-
-3. **commands.sh**: Contains command implementations
-   - `cmd_set_pipeline()`: Sets a Concourse pipeline
-   - `cmd_unpause_pipeline()`: Sets and unpauses a pipeline
-   - `cmd_destroy_pipeline()`: Destroys a pipeline
-   - `cmd_validate_pipeline()`: Validates a pipeline
-   - `cmd_release_pipeline()`: Creates a release pipeline
-
-4. **parsing.sh**: Contains argument parsing logic
-   - `check_help_flags()`: Handles help flags in different formats
-   - `preprocess_args()`: Preprocesses arguments (especially --option=value format)
-   - `process_short_args()`: Processes short-form arguments (-f value)
-   - `detect_command_and_pipeline()`: Identifies command and pipeline arguments
-   - `handle_legacy_behavior()`: Handles legacy flag options
-   - `validate_and_set_defaults()`: Validates required parameters and sets defaults
+Documented [here](./lib/README.md#modules).
 
 ## Building and Testing
 
 Use the included Makefile for building and testing:
 
-```
+```sh
 # Build the script (ensure executable permissions are set)
 make build
 

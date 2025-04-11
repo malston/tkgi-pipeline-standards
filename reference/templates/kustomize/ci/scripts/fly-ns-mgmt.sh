@@ -13,6 +13,9 @@ source "${LIB_DIR}/help.sh"
 source "${LIB_DIR}/parsing.sh"
 source "${LIB_DIR}/commands.sh"
 source "${LIB_DIR}/pipelines.sh"
+source "${LIB_DIR}/environment.sh"
+source "${LIB_DIR}/version.sh"
+source "${LIB_DIR}/foundation.sh"
 
 PIPELINE="tkgi-ns-mgmt"
 RELEASE_PIPELINE_NAME="$PIPELINE-release"
@@ -197,63 +200,16 @@ DCTYPE=$(echo "$FOUNDATION" | awk -F- '{print $2}')
 FOUNDATION_PATH="foundations/$FOUNDATION"
 
 if [[ -n $VERSION ]]; then
-    if [[ $VERSION =~ release-v* ]]; then
-        VERSION="${VERSION##*release-v}"
-    elif [[ $VERSION = v* ]]; then
-        VERSION="${VERSION##*v}"
-    fi
-
-    if [[ $VERSION = "latest" ]]; then
-        VERSION="$(get_latest_version)"
-    fi
+    VERSION=$(normalize_version "$VERSION")
 fi
 
-if [ -z "$ENVIRONMENT" ]; then
-    case $DC in
-    cic | cml)
-        ENVIRONMENT="lab"
-        CONFIG_REPO_NAME=config-lab
-        ;;
-    temr | tmpe)
-        ENVIRONMENT="nonprod"
-        if [ -z "$GITHUB_ORG" ]; then
-            GITHUB_ORG="Utilities-tkgiops"
-        fi
-        if [ -z "$CONFIG_REPO_NAME" ]; then
-            CONFIG_REPO_NAME=config-nonprod
-        fi
-        ;;
-    oxdc | svdc)
-        ENVIRONMENT="prod"
-        GITHUB_ORG="Utilities-tkgiops"
-        CONFIG_REPO_NAME=config-prod
-        ;;
-    esac
-fi
+# Use the helper function to determine environment and config repo based on foundation
+FOUNDATION_RESULT=$(determine_foundation_environment "$DC" "$ENVIRONMENT" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
+IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<<"$FOUNDATION_RESULT"
 
-case $ENVIRONMENT in
-lab)
-    GIT_RELEASE_TAG=${GIT_RELEASE_TAG:-develop}
-    ;;
-nonprod)
-    GIT_RELEASE_TAG=${GIT_RELEASE_TAG:-master}
-    if [ -z "$GITHUB_ORG" ]; then
-        GITHUB_ORG="Utilities-tkgiops"
-    fi
-    if [ -z "$CONFIG_REPO_NAME" ]; then
-        CONFIG_REPO_NAME=config-nonprod
-    fi
-    ;;
-prod)
-    GIT_RELEASE_TAG=${GIT_RELEASE_TAG:-master}
-    if [ -z "$GITHUB_ORG" ]; then
-        GITHUB_ORG="Utilities-tkgiops"
-    fi
-    if [ -z "$CONFIG_REPO_NAME" ]; then
-        CONFIG_REPO_NAME=config-prod
-    fi
-    ;;
-esac
+# Use the helper function to configure environment settings
+ENV_RESULT=$(configure_environment "$ENVIRONMENT" "$GIT_RELEASE_TAG" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
+IFS=':' read -r GIT_RELEASE_TAG GITHUB_ORG CONFIG_REPO_NAME <<<"$ENV_RESULT"
 
 GIT_URI="git@github.com:$GITHUB_ORG/ns-mgmt.git"
 CONFIG_GIT_URI="git@github.com:$GITHUB_ORG/$CONFIG_REPO_NAME.git"

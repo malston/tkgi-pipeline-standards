@@ -54,6 +54,9 @@ source "${LIB_DIR}/help.sh"
 source "${LIB_DIR}/parsing.sh"
 source "${LIB_DIR}/commands.sh"
 source "${LIB_DIR}/pipelines.sh"
+source "${LIB_DIR}/environment.sh"
+source "${LIB_DIR}/version.sh"
+source "${LIB_DIR}/foundation.sh"
 
 # Source additional helper functions if available
 # This is for backward compatibility, but should be empty now
@@ -61,13 +64,17 @@ if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
   source "${SCRIPT_DIR}/helpers.sh"
 fi
 
+# Define supported commands for this script
+# This can be customized by different scripts that use the parsing module
+export SUPPORTED_COMMANDS="set|unpause|destroy|validate|release"
+
 # Main execution flow
 main() {
   # Process help flags first
-  check_help_flags "$@"
+  check_help_flags "${SUPPORTED_COMMANDS}" "$@"
 
   # Simple argument processing with our new comprehensive function
-  process_args "$@"
+  process_args "${SUPPORTED_COMMANDS}" "$@"
 
   # Handle legacy behavior
   if [[ "${CREATE_RELEASE}" == "true" ]]; then
@@ -83,6 +90,11 @@ main() {
     VERSION="$(get_latest_version)"
   fi
 
+  # Normalize version format if specified
+  if [[ -n $VERSION ]]; then
+    VERSION=$(normalize_version "$VERSION")
+  fi
+
   # Validate required parameters
   if [[ -z "${FOUNDATION}" ]]; then
     error "Foundation not specified. Use -f or --foundation option."
@@ -94,31 +106,32 @@ main() {
     TARGET="${FOUNDATION}"
   fi
 
-  # Set default environment if not provided
-  if [[ -z "${ENVIRONMENT}" ]]; then
-    ENVIRONMENT=$(determine_environment "${FOUNDATION}")
-  fi
+  # Determine datacenter from foundation name
+  DATACENTER=$(get_datacenter "${FOUNDATION}")
 
-  # Set default branch based on environment if not provided
-  if [[ -z "${BRANCH}" ]]; then
-    if [[ "${ENVIRONMENT}" == "lab" ]]; then
-      BRANCH="develop"
-    else
-      BRANCH="main"
-    fi
-  fi
+  # Determine datacenter type from foundation name
+  DATACENTER_TYPE=$(get_datacenter_type "${FOUNDATION}")
+
+  # Set foundation path
+  FOUNDATION_PATH="foundations/$FOUNDATION"
+
+  # Determine environment and config repo from foundation
+  FOUNDATION_RESULT=$(determine_foundation_environment "$DATACENTER" "$ENVIRONMENT" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
+  IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<< "$FOUNDATION_RESULT"
+
+  # Configure environment specific settings
+  ENV_RESULT=$(configure_environment "$ENVIRONMENT" "$BRANCH" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
+  IFS=':' read -r BRANCH GITHUB_ORG CONFIG_REPO_NAME <<< "$ENV_RESULT"
+
+  # Set git URIs based on environment settings
+  GIT_URI="git@github.com:$GITHUB_ORG/$REPO_NAME.git"
+  CONFIG_GIT_URI="git@github.com:$GITHUB_ORG/$CONFIG_REPO_NAME.git"
 
   # Validate environment
   if [[ ! "${ENVIRONMENT}" =~ ^(lab|nonprod|prod)$ ]]; then
     error "Invalid environment: ${ENVIRONMENT}. Must be one of: lab, nonprod, prod"
     show_usage 1
   fi
-
-  # Determine datacenter from foundation name
-  DATACENTER=$(get_datacenter "${FOUNDATION}")
-
-  # Determine datacenter type from foundation name
-  DATACENTER_TYPE=$(get_datacenter_type "${FOUNDATION}")
 
   # Enable verbose output if requested
   if [[ "${VERBOSE}" == "true" ]]; then
@@ -128,10 +141,10 @@ main() {
   # Execute the requested command with parameters instead of global variables
   case "${COMMAND}" in
   set)
-    cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
     ;;
   unpause)
-    cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
     ;;
   destroy)
     cmd_destroy_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${DRY_RUN}"
@@ -140,7 +153,7 @@ main() {
     cmd_validate_pipeline "${PIPELINE}" "${DRY_RUN}"
     ;;
   release)
-    cmd_release_pipeline "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}"
+    cmd_release_pipeline "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
     ;;
   *)
     error "Unknown command: ${COMMAND}"

@@ -1,6 +1,6 @@
 # Migration Plan for ns-mgmt Repository
 
-Based on a thorough analysis of your current pipeline structure, task scripts, and their interactions, this plan provides a detailed approach to standardize the CI folder structure while ensuring minimal disruption to your existing workflows.
+Based on a thorough analysis of the current pipeline structure, task scripts, and the interactions, this plan provides a detailed approach to standardize the CI folder structure while ensuring minimal disruption to existing workflows.
 
 ## Current Structure
 

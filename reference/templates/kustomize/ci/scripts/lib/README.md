@@ -13,8 +13,9 @@ The script is divided into several logical modules:
 
 2. **utils.sh**: Contains utility functions used throughout the script
    - `info()`, `error()`, `success()`: Logging functions
-   - `determine_environment()`: Determines environment from foundation name
+   - `get_environment()`: Determines environment from foundation name
    - `get_datacenter()`: Determines datacenter from foundation name
+   - `get_datacenter_type()`: Determines datacenter type from foundation name
    - `check_fly()`: Verifies the fly command is available
    - `validate_file_exists()`: Checks if a file exists
 
@@ -26,11 +27,8 @@ The script is divided into several logical modules:
    - `cmd_release_pipeline()`: Creates a release pipeline
 
 4. **parsing.sh**: Contains argument parsing logic
-   - `check_help_flags()`: Handles help flags in different formats
-   - `preprocess_args()`: Preprocesses arguments (especially --option=value format)
-   - `process_short_args()`: Processes short-form arguments (-f value)
-   - `detect_command_and_pipeline()`: Identifies command and pipeline arguments
-   - `handle_legacy_behavior()`: Handles legacy flag options
+   - `check_help_flags()`: Handles help flags in different formats (accepts command pattern as parameter)
+   - `process_args()`: Comprehensive argument processing function (accepts command pattern as parameter)
    - `validate_and_set_defaults()`: Validates required parameters and sets defaults
 
 5. **pipelines.sh**: Contains pipeline-specific helper functions
@@ -38,14 +36,27 @@ The script is divided into several logical modules:
    - `pipeline_pause_check()`: Checks if a pipeline is paused and offers to unpause it
    - `generate_pipeline_config()`: Generates pipeline configuration using ytt
 
+6. **environment.sh**: Contains environment configuration logic
+   - `configure_environment()`: Sets up configuration based on the environment type (lab, nonprod, prod)
+   - Configures branch strategy, GitHub org, and config repo for different environments
+
+7. **version.sh**: Contains version handling functions
+   - `normalize_version()`: Standardizes version format, stripping prefixes like 'v' or 'release-v'
+   - Handles special version labels like 'latest'
+
+8. **foundation.sh**: Contains foundation-specific configuration
+   - `determine_foundation_environment()`: Determines environment type based on datacenter (DC) prefix
+   - Maps foundations to their appropriate environment, GitHub org, and config repos
+
 ## How It Works
 
 The main fly.sh script sources these modules and orchestrates their execution:
 
 1. First, it initializes default values for all variables
 2. Then it sources the module files to load all required functions
-3. In the `main()` function, it:
-   - Checks for help flags
+3. Defines SUPPORTED_COMMANDS for the script's supported commands
+4. In the `main()` function, it:
+   - Passes the SUPPORTED_COMMANDS to check_help_flags and process_args
    - Processes and normalizes arguments
    - Detects command and pipeline arguments
    - Handles legacy behavior conversion

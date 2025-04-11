@@ -27,7 +27,7 @@ This repository uses symlinks to reference related repositories:
 
 For this symlink to work correctly, the `params` repository should be cloned at the same level as this repository:
 
-```
+```sh
 git-root/
 ├── tkgi-pipeline-standards/
 └── params/
@@ -92,11 +92,12 @@ All repositories should use a standardized `fly.sh` script with a consistent int
 
 ### Standard Commands
 
-- `set`: Set pipeline (default)
+- `set`: Set the [main](./reference/templates/kustomize/ci/pipelines/main.yml) pipeline (default)
 - `unpause`: Set and unpause pipeline
 - `destroy`: Destroy specified pipeline
 - `validate`: Validate pipeline YAML without setting
-- `release`: Create a release pipeline
+- `release`: Create a [release](./reference/templates/kustomize/ci/pipelines/release.yml) pipeline
+- `set-pipeline`: Create the [set-pipeline](./reference/templates/kustomize/ci/pipelines/set-pipeline.yml) pipeline that `set` the [main](./reference/templates/kustomize/ci/pipelines/main.yml) with a given `release` tag.
 
 ### Command-Specific Help
 
@@ -117,18 +118,17 @@ This provides more detailed usage information specific to each command, rather t
 -f, --foundation NAME      Foundation name (required)
 -t, --target TARGET        Concourse target (default: <foundation>)
 -e, --environment ENV      Environment type (lab|nonprod|prod)
--b, --branch BRANCH        Git branch for pipeline repository
--c, --config-branch BRANCH Git branch for config repository
+-b, --branch BRANCH        Git branch for pipeline repository (default: develop)
+-c, --config-branch BRANCH Git branch for config repository (default: master)
 -d, --params-branch BRANCH Params git branch (default: master)
--p, --pipeline NAME        Custom pipeline name prefix
--o, --github-org ORG       GitHub organization
+-p, --pipeline NAME        Custom pipeline name
+-o, --github-org ORG       GitHub organization or Owner
 -v, --version VERSION      Pipeline version
 --release                  Create a release pipeline
 --set-release-pipeline     Set the release pipeline
 --dry-run                  Simulate without making changes
 --verbose                  Increase output verbosity
 --timer DURATION           Set timer trigger duration
---enable-validation-testing Enable validation testing
 -h, --help                 Show help message
 --help [command]           Show help for specific command (e.g., --help set)
 ```
@@ -210,6 +210,7 @@ params:
    - Reference task YAML files rather than defining tasks inline
    - Example: `file: repo-name/ci/tasks/common/kustomize/task.yml`
    - For inline tasks that still need to be converted, use paths relative to the repository root:
+
      ```yaml
      task: kustomize
      config:
@@ -294,6 +295,10 @@ report_results
 #   --verbose            Increase output verbosity
 #   -h, --help           Show this help message
 #
+# Examples:
+#   ./example.sh command1 -f VALUE --option1
+#   ./example.sh command2 -f VALUE --verbose
+#   ./example.sh command3 -o VALUE1 -f VALUE2 --option1 --dry-run
 
 # Enable strict mode
 set -o errexit
@@ -333,7 +338,6 @@ Options:
   --verbose            Increase output verbosity
   -h, --help           Show this help message
 USAGE
-  exit 1
 }
 
 # Function to log info messages
@@ -357,18 +361,9 @@ function success() {
   echo "[SUCCESS] [${timestamp}] $1"
 }
 
-# Parse arguments - supporting both getopt and traditional argument parsing
-SUPPORTED_OPTIONS="f:o:h"
-SUPPORTED_LONG_OPTIONS="flag1:,flag2:,option1,dry-run,verbose,help"
-
-# Try to use getopt for enhanced option parsing
-if getopt -T &>/dev/null && [[ $? -eq 4 ]]; then
-  # Enhanced getopt is available
-  TEMP=$(getopt -o "$SUPPORTED_OPTIONS" --long "$SUPPORTED_LONG_OPTIONS" -n "$0" -- "$@" 2>/dev/null)
-  if [[ $? -eq 0 ]]; then
-    eval set -- "$TEMP"
-    # Parse using getopt
-    while true; do
+# For enhanced option parsing
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+    case $1 in
       case "$1" in
         -f|--flag1)
           FLAG1="$2"
@@ -392,79 +387,24 @@ if getopt -T &>/dev/null && [[ $? -eq 4 ]]; then
           ;;
         -h|--help)
           show_usage
+          exit 0
           ;;
-        --)
-          shift
-          break
-          ;;
-      esac
-    done
+    esac
+    shift
+done
+if [[ "$1" == '--' ]]; then shift; fi
     
-    # Check for additional arguments (command and argument)
-    if [[ $# -gt 0 ]]; then
-      if [[ "$1" =~ ^(command1|command2|command3)$ ]]; then
+# Check for additional arguments (command and argument)
+if [[ $# -gt 0 ]]; then
+    if [[ "$1" =~ ^(command1|command2|command3)$ ]]; then
         COMMAND="$1"
         shift
-      fi
-      
-      if [[ $# -gt 0 ]]; then
-        ARGUMENT="$1"
-        shift
-      fi
-    fi
-  fi
-else
-  # Fall back to traditional option parsing
-  while getopts ":f:o:h" opt; do
-    case ${opt} in
-      f)
-        FLAG1=$OPTARG
-        ;;
-      o)
-        FLAG2=$OPTARG
-        ;;
-      h)
-        show_usage
-        ;;
-      \?)
-        error "Invalid option: $OPTARG"
-        show_usage
-        ;;
-      :)
-        error "Invalid option: $OPTARG requires an argument"
-        show_usage
-        ;;
-    esac
-  done
-  shift $((OPTIND - 1))
-  
-  # Check for command and argument
-  if [[ $# -gt 0 ]]; then
-    if [[ "$1" =~ ^(command1|command2|command3)$ ]]; then
-      COMMAND="$1"
-      shift
     fi
     
     if [[ $# -gt 0 ]]; then
-      ARGUMENT="$1"
-      shift
+        ARGUMENT="$1"
+        shift
     fi
-  fi
-  
-  # Handle legacy flags that would otherwise be dropped
-  for arg in "$@"; do
-    case "$arg" in
-      --option1)
-        OPTION1=true
-        ;;
-      --dry-run)
-        DRY_RUN=true
-        ;;
-      --verbose)
-        VERBOSE=true
-        ;;
-    esac
-  done
 fi
 
 # Enable verbose output if requested
@@ -476,6 +416,7 @@ fi
 if [[ -z "${FLAG1}" ]]; then
   error "Flag1 not specified. Use -f or --flag1 option."
   show_usage
+  exit 1
 fi
 
 # Implementation of command1
@@ -528,6 +469,7 @@ case "${COMMAND}" in
   *)
     error "Unknown command: ${COMMAND}"
     show_usage
+    exit 1
     ;;
 esac
 ```

@@ -98,159 +98,37 @@ function process_args() {
       shift
       ;;
 
-    # Target flag
-    -t | --target)
+    # flag1 flag (required)
+    -a | --flag1)
       if [[ -z "$2" || "$2" == -* ]]; then
         error "Option $1 requires an argument"
         show_usage 1
       fi
-      TARGET="$2"
+      FLAG1="$2"
       shift 2
       ;;
-    --target=*)
-      TARGET="${1#*=}"
+    --flag1=*)
+      FLAG1="${1#*=}"
       shift
       ;;
 
-    # Environment flag
-    -e | --environment)
+    # flag2 flag
+    -b | --flag2)
       if [[ -z "$2" || "$2" == -* ]]; then
         error "Option $1 requires an argument"
         show_usage 1
       fi
-      ENVIRONMENT="$2"
+      FLAG2="$2"
       shift 2
       ;;
-    --environment=*)
-      ENVIRONMENT="${1#*=}"
-      shift
-      ;;
-
-    # Branch flag
-    -b | --branch)
-      if [[ -z "$2" || "$2" == -* ]]; then
-        error "Option $1 requires an argument"
-        show_usage 1
-      fi
-      BRANCH="$2"
-      shift 2
-      ;;
-    --branch=*)
-      BRANCH="${1#*=}"
-      shift
-      ;;
-
-    # Config branch flag
-    -c | --config-branch)
-      if [[ -z "$2" || "$2" == -* ]]; then
-        error "Option $1 requires an argument"
-        show_usage 1
-      fi
-      CONFIG_GIT_BRANCH="$2"
-      shift 2
-      ;;
-    --config-branch=*)
-      CONFIG_GIT_BRANCH="${1#*=}"
-      shift
-      ;;
-
-    # Params branch flag
-    -d | --params-branch)
-      if [[ -z "$2" || "$2" == -* ]]; then
-        error "Option $1 requires an argument"
-        show_usage 1
-      fi
-      PARAMS_GIT_BRANCH="$2"
-      shift 2
-      ;;
-    --params-branch=*)
-      PARAMS_GIT_BRANCH="${1#*=}"
-      shift
-      ;;
-
-    # Pipeline flag
-    -p | --pipeline)
-      if [[ -z "$2" || "$2" == -* ]]; then
-        error "Option $1 requires an argument"
-        show_usage 1
-      fi
-      PIPELINE="$2"
-      shift 2
-      ;;
-    --pipeline=*)
-      PIPELINE="${1#*=}"
-      shift
-      ;;
-
-    # GitHub org flag
-    -o | --github-org)
-      if [[ -z "$2" || "$2" == -* ]]; then
-        error "Option $1 requires an argument"
-        show_usage 1
-      fi
-      GITHUB_ORG="$2"
-      shift 2
-      ;;
-    --github-org=*)
-      GITHUB_ORG="${1#*=}"
-      shift
-      ;;
-
-    # Version flag
-    -v | --version)
-      if [[ -z "$2" || "$2" == -* ]]; then
-        error "Option $1 requires an argument"
-        show_usage 1
-      fi
-      VERSION="$2"
-      shift 2
-      ;;
-    --version=*)
-      VERSION="${1#*=}"
-      shift
-      ;;
-
-    # Timer flag
-    --timer)
-      if [[ -z "$2" || "$2" == -* ]]; then
-        error "Option $1 requires an argument"
-        show_usage 1
-      fi
-      TIMER_DURATION="$2"
-      shift 2
-      ;;
-    --timer=*)
-      TIMER_DURATION="${1#*=}"
+    --flag2=*)
+      FLAG2="${1#*=}"
       shift
       ;;
 
     # Boolean flags
-    -r | --release)
-      CREATE_RELEASE=true
-      shift
-      ;;
-    -s | --set-release-pipeline)
-      SET_RELEASE_PIPELINE=true
-      shift
-      ;;
-    --dry-run)
-      DRY_RUN=true
-      shift
-      ;;
-    --verbose)
-      VERBOSE=true
-      shift
-      ;;
-    --enable-validation-testing)
-      ENABLE_VALIDATION_TESTING=true
-      shift
-      ;;
-    --test-mode)
-      TEST_MODE=true
-      shift
-      ;;
-    --debug)
-      DEBUG=true
+    --option1)
+      OPTION1=true
       shift
       ;;
 
@@ -280,21 +158,25 @@ function process_args() {
   # Use the cmd_pattern passed as parameter (already handled in function signature)
 
   # If we have non-flag arguments, and no command is set yet,
-  # assume the first one is a command and the second is a pipeline
-  if [[ ${#non_flags[@]} -gt 0 && "$COMMAND" == "set" ]]; then
+  # assume the first one is a command and the second is a argument1
+
+  if [[ ${#non_flags[@]} -gt 0 && "$COMMAND" == "command1" ]]; then
     if [[ "${non_flags[0]}" =~ ^(${cmd_pattern})$ ]]; then
       COMMAND="${non_flags[0]}"
       if [[ ${#non_flags[@]} -gt 1 ]]; then
-        PIPELINE="${non_flags[1]}"
+        ARGUMENT1="${non_flags[1]}"
+        ARGUMENT2="${non_flags[1]}"
       fi
     else
-      # If the first non-flag arg isn't a valid command, treat it as a pipeline name
-      PIPELINE="${non_flags[0]}"
+      # If the first non-flag arg isn't a valid command, treat it as argument1
+      ARGUMENT1="${non_flags[0]}"
+      ARGUMENT2="${non_flags[1]}"
     fi
   elif [[ ${#non_flags[@]} -gt 0 ]]; then
     # If we have non-flag arguments and command is already set,
-    # assume the first one is the pipeline
-    PIPELINE="${non_flags[0]}"
+    # assume the first one is the argument1
+    ARGUMENT1="${non_flags[0]}"
+    ARGUMENT2="${non_flags[1]}"
   fi
 }
 

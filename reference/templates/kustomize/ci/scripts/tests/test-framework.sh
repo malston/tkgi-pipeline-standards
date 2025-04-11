@@ -45,13 +45,13 @@ function start_test() {
   local test_name="$1"
   echo
   echo_color "$YELLOW" "=== Running test: $test_name ==="
-  ((TESTS_TOTAL++))
+  ((TESTS_TOTAL++)) || return 0
 }
 
 function test_pass() {
   local test_name="$1"
   success "Test passed: $test_name"
-  ((TESTS_PASSED++))
+  ((TESTS_PASSED++)) || return 0
 }
 
 function test_fail() {
@@ -59,7 +59,7 @@ function test_fail() {
   local message="$2"
   error "Test failed: $test_name"
   error "Reason: $message"
-  ((TESTS_FAILED++))
+  ((TESTS_FAILED++)) || return 0
 }
 
 function assert_equals() {
@@ -124,7 +124,7 @@ function mock_fly() {
   local exit_code="${3:-0}"
 
   # Create a temporary mock script
-  cat > "${__TEST_DIR}/.fly_mock" <<EOF
+  cat >"${__TEST_DIR}/.fly_mock" <<EOF
 #!/usr/bin/env bash
 # This is a temporary mock for fly
 

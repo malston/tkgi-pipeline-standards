@@ -16,6 +16,10 @@
 # @param version The pipeline version (optional)
 # @param dry_run Whether to perform a dry run (true/false)
 # @param verbose Whether to be verbose (true/false)
+# @param foundation_path The path to foundation in the config repo
+# @param git_uri The git URI for the main repository
+# @param config_git_uri The git URI for the configuration repository
+# @param config_git_branch The git branch for the configuration repository
 function cmd_set_pipeline() {
   # Parse parameters
   local pipeline="$1"
@@ -32,6 +36,10 @@ function cmd_set_pipeline() {
   local version="${12}"
   local dry_run="${13}"
   local verbose="${14}"
+  local foundation_path="${15}"
+  local git_uri="${16}"
+  local config_git_uri="${17}"
+  local config_git_branch="${18:-master}"
 
   # If we're calling from the main script, pass by reference
   if [[ "$#" -ge 10 ]]; then
@@ -97,13 +105,28 @@ function cmd_set_pipeline() {
   fi
 
   # Add foundation path
-  if [[ -n "${datacenter}" ]]; then
+  if [[ -n "${foundation_path}" ]]; then
+    vars+=("-v" "foundation_path=${foundation_path}")
+  elif [[ -n "${datacenter}" ]]; then
     vars+=("-v" "foundation_path=${datacenter}/${foundation}")
   fi
 
-  # Add foundation path
+  # Add repo
   if [[ -n "${repo}" ]]; then
     vars+=("-v" "repository=${repo}")
+  fi
+
+  # Add git URIs if available
+  if [[ -n "${git_uri}" ]]; then
+    vars+=("-v" "git_uri=${git_uri}")
+  fi
+
+  if [[ -n "${config_git_uri}" ]]; then
+    vars+=("-v" "config_git_uri=${config_git_uri}")
+  fi
+
+  if [[ -n "${config_git_branch}" ]]; then
+    vars+=("-v" "config_git_branch=${config_git_branch}")
   fi
 
   # Build vars files array if params directory exists
@@ -175,6 +198,10 @@ function cmd_set_pipeline() {
 # @param version The pipeline version (optional)
 # @param dry_run Whether to perform a dry run (true/false)
 # @param verbose Whether to be verbose (true/false)
+# @param foundation_path The path to foundation in the config repo
+# @param git_uri The git URI for the main repository
+# @param config_git_uri The git URI for the configuration repository
+# @param config_git_branch The git branch for the configuration repository
 function cmd_unpause_pipeline() {
   # Parse parameters
   local pipeline="$1"
@@ -188,6 +215,10 @@ function cmd_unpause_pipeline() {
   local version="$9"
   local dry_run="${10}"
   local verbose="${11}"
+  local foundation_path="${12}"
+  local git_uri="${13}"
+  local config_git_uri="${14}"
+  local config_git_branch="${15:-master}"
 
   # Check if fly is installed and the target exists
   if [[ "$#" -ge 10 ]]; then
@@ -333,6 +364,10 @@ function cmd_validate_pipeline() {
 # @param version The pipeline version (optional)
 # @param dry_run Whether to perform a dry run (true/false)
 # @param verbose Whether to be verbose (true/false)
+# @param foundation_path The path to foundation in the config repo
+# @param git_uri The git URI for the main repository
+# @param config_git_uri The git URI for the configuration repository
+# @param config_git_branch The git branch for the configuration repository
 function cmd_release_pipeline() {
   # Parse parameters - all except pipeline
   local foundation="$1"
@@ -348,13 +383,18 @@ function cmd_release_pipeline() {
   local version="${11}"
   local dry_run="${12}"
   local verbose="${13}"
+  local foundation_path="${14}"
+  local git_uri="${15}"
+  local config_git_uri="${16}"
+  local config_git_branch="${17:-master}"
 
-  # Get repo name from repo directory
-  local repo
-  repo=$(basename "$REPO_ROOT")
+  # Get repo name from repo directory if not provided
+  if [[ -z "$repo" ]]; then
+    repo=$(basename "$REPO_ROOT")
+  fi
 
   # Set the pipeline using the release pipeline
-  cmd_set_pipeline "release" "$foundation" "$repo" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$git_release_branch" "$version_file" "$timer_duration" "$version" "$dry_run" "$verbose"
+  cmd_set_pipeline "release" "$foundation" "$repo" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$git_release_branch" "$version_file" "$timer_duration" "$version" "$dry_run" "$verbose" "$foundation_path" "$git_uri" "$config_git_uri" "$config_git_branch"
 
   return 0
 }
