@@ -38,7 +38,7 @@ WARNINGS=0
 PASSED=0
 
 # Function to check if a path exists
-check_path() {
+function check_path() {
   local path="$1"
   local required="$2"
   local description="$3"
@@ -60,7 +60,7 @@ check_path() {
 }
 
 # Function to check if any file matches a pattern
-check_files_exist() {
+function check_files_exist() {
   local pattern="$1"
   local required="$2"
   local description="$3"
@@ -82,7 +82,7 @@ check_files_exist() {
 }
 
 # Function to check if a script file has execute permissions
-check_executable() {
+function check_executable() {
   local path="$1"
   local required="$2"
   local description="$3"
@@ -104,7 +104,7 @@ check_executable() {
 }
 
 # Function to check if a script contains a particular string/pattern
-check_script_content() {
+function check_script_content() {
   local path="$1"
   local pattern="$2"
   local description="$3"
@@ -121,7 +121,7 @@ check_script_content() {
 }
 
 # Function to check directory structure
-check_directory_structure() {
+function check_directory_structure() {
   echo -e "\n${BLUE}Checking directory structure:${NC}"
   
   # Required directories
@@ -143,7 +143,7 @@ check_directory_structure() {
 }
 
 # Function to check key files
-check_key_files() {
+function check_key_files() {
   echo -e "\n${BLUE}Checking key files:${NC}"
   
   # Required files
@@ -160,7 +160,7 @@ check_key_files() {
 }
 
 # Function to check script permissions
-check_script_permissions() {
+function check_script_permissions() {
   echo -e "\n${BLUE}Checking script permissions:${NC}"
   
   if check_path "$REPO_PATH/ci/fly.sh" "false" "Fly script"; then
@@ -185,7 +185,7 @@ check_script_permissions() {
 }
 
 # Function to check pipeline configurations
-check_pipelines() {
+function check_pipelines() {
   echo -e "\n${BLUE}Checking pipeline configurations:${NC}"
   
   # Check pipeline files exist
@@ -225,7 +225,7 @@ check_pipelines() {
 }
 
 # Function to check fly script functionality
-check_fly_script() {
+function check_fly_script() {
   echo -e "\n${BLUE}Checking fly.sh functionality:${NC}"
   
   if [[ -f "$REPO_PATH/ci/fly.sh" ]]; then
@@ -270,7 +270,7 @@ check_fly_script() {
 }
 
 # Function to check utility scripts
-check_utility_scripts() {
+function check_utility_scripts() {
   echo -e "\n${BLUE}Checking utility scripts:${NC}"
   
   # Check for common utility scripts
@@ -305,7 +305,7 @@ check_utility_scripts() {
 }
 
 # Function to check parameter file compatibility
-check_params_compatibility() {
+function check_params_compatibility() {
   echo -e "\n${BLUE}Checking parameter compatibility:${NC}"
   
   # Check set_pipeline.sh for params repo handling
