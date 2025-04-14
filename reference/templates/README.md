@@ -31,7 +31,7 @@ To use these templates:
 
 All templates follow this common structure for CI components:
 
-```
+```sh
 ci/
 ├── pipelines/           # Pipeline YAML definitions
 ├── scripts/             # Pipeline management scripts

@@ -15,17 +15,17 @@ fi
 PIPELINE="main"
 FOUNDATION=""
 PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params")"
+PARAMS_GIT_BRANCH="master"
 BRANCH="develop"
-VERBOSE="false"
 
 usage() {
-  echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-d PARAMS_REPO] [-v]"
-  echo "  -f FOUNDATION   Foundation to use (cml-k8s-n-01, etc.)"
-  echo "  -p PIPELINE     Pipeline to set (main or release)"
-  echo "  -t TARGET       Concourse target to use"
-  echo "  -d PARAMS_REPO  Path to config repository (default: $PARAMS_REPO)"
-  echo "  -p BRANCH       Branch to use (default: $BRANCH)"
-  echo "  -v              Verbose output"
+  echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-P PARAMS_REPO] [-d PARAMS_BRANCH]"
+  echo "  -f FOUNDATION    Foundation to use (cml-k8s-n-01, etc.)"
+  echo "  -p PIPELINE      Pipeline to set (main or release)"
+  echo "  -t TARGET        Concourse target to use"
+  echo "  -P PARAMS_REPO   Path to params repository (default: $PARAMS_REPO)"
+  echo "  -d PARAMS_BRANCH Params git branch to use (default: $PARAMS_GIT_BRANCH)"
+  echo "  -b BRANCH        Branch to use (default: $BRANCH)"
   echo ""
   echo "Note: For more advanced options, use ci/scripts/fly.sh which provides:"
   echo "  - Command support (set, unpause, destroy, validate, release)"
@@ -42,7 +42,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 # Parse command line arguments
-while getopts ":ht:b:p:f:d:v" opt; do
+while getopts ":ht:b:p:f:P:d:" opt; do
   case ${opt} in
   t)
     TARGET=$OPTARG
@@ -56,11 +56,11 @@ while getopts ":ht:b:p:f:d:v" opt; do
   b)
     BRANCH=$OPTARG
     ;;
-  d)
+  P)
     PARAMS_REPO=$OPTARG
     ;;
-  v)
-    VERBOSE="true"
+  d)
+    PARAMS_GIT_BRANCH=$OPTARG
     ;;
   h)
     usage
@@ -100,6 +100,6 @@ fly -t "${TARGET}" set-pipeline \
   -v "branch=${BRANCH}" \
   -v foundation="${FOUNDATION}" \
   -v foundation_path="${DC}/${FOUNDATION}" \
-  -v verbose="${VERBOSE}"
+  -v params_git_branch="${PARAMS_GIT_BRANCH}"
 
 echo "Pipeline ${PIPELINE}-${FOUNDATION} set successfully."

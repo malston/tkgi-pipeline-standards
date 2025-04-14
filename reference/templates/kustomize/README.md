@@ -4,7 +4,7 @@ This template provides a standardized structure for repositories that use Kustom
 
 ## Repository Structure
 
-```
+```sh
 repository-root/
 ├── ci/
 │   ├── fly.sh                  # Simple pipeline management script (ns-mgmt style)

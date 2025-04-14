@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Simplified fly.sh script for ${repo_name}
+# This is a wrapper around the more advanced scripts/fly.sh
+# Use this for basic pipeline operations
 
 set -e
 
@@ -12,25 +16,20 @@ if [[ -f "${REPO_ROOT}/scripts/helpers.sh" ]]; then
 fi
 
 # Default values
-PIPELINE="main"
+PIPELINE="${default_pipeline}"
 FOUNDATION=""
-# Use realpath only if not in TEST_MODE
-if [[ "${TEST_MODE}" != "true" ]]; then
-    PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "/path/to/params")"
-else
-    PARAMS_REPO="/test/path/to/params"
-fi
-PARAMS_GIT_BRANCH="master"
-BRANCH="develop"
+PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "/path/to/params")"
+BRANCH="${default_branch}"
+VERBOSE="false"
 
 usage() {
-    echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-P PARAMS_REPO] [-d PARAMS_BRANCH]"
-    echo "  -f FOUNDATION    Foundation to use (cml-k8s-n-01, etc.)"
-    echo "  -p PIPELINE      Pipeline to set (main or release)"
-    echo "  -t TARGET        Concourse target to use"
-    echo "  -P PARAMS_REPO   Path to params repository (default: $PARAMS_REPO)"
-    echo "  -d PARAMS_BRANCH Params git branch to use (default: $PARAMS_GIT_BRANCH)"
-    echo "  -b BRANCH        Branch to use (default: $BRANCH)"
+    echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-d PARAMS_REPO] [-b BRANCH] [-v]"
+    echo "  -f FOUNDATION   Foundation to use (${default_foundation}, etc.)"
+    echo "  -p PIPELINE     Pipeline to set (main or release)"
+    echo "  -t TARGET       Concourse target to use"
+    echo "  -d PARAMS_REPO  Path to config repository (default: $PARAMS_REPO)"
+    echo "  -b BRANCH       Branch to use (default: $BRANCH)"
+    echo "  -v              Verbose output"
     echo ""
     echo "Note: For more advanced options, use ci/scripts/fly.sh which provides:"
     echo "  - Command support (set, unpause, destroy, validate, release)"
@@ -47,7 +46,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 # Parse command line arguments
-while getopts ":ht:b:p:f:P:d:" opt; do
+while getopts ":ht:b:p:f:d:v" opt; do
     case ${opt} in
     t)
         TARGET=$OPTARG
@@ -61,11 +60,11 @@ while getopts ":ht:b:p:f:P:d:" opt; do
     b)
         BRANCH=$OPTARG
         ;;
-    P)
+    d)
         PARAMS_REPO=$OPTARG
         ;;
-    d)
-        PARAMS_GIT_BRANCH=$OPTARG
+    v)
+        VERBOSE="true"
         ;;
     h)
         usage
@@ -111,6 +110,6 @@ fly -t "${TARGET}" set-pipeline \
     -v "branch=${BRANCH}" \
     -v foundation="${FOUNDATION}" \
     -v foundation_path="${DC}/${FOUNDATION}" \
-    -v params_git_branch="${PARAMS_GIT_BRANCH}"
+    -v verbose="${VERBOSE}"
 
-echo "Helm pipeline ${PIPELINE}-${FOUNDATION} set successfully."
+echo "Pipeline ${PIPELINE}-${FOUNDATION} set successfully."

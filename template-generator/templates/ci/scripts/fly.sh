@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+#
+# Script: fly.sh
+# Description: Enhanced pipeline management script for CI/CD pipelines
+# Organization: ${org_name}
+# Repository: ${repo_name}
+#
+# Usage: ./fly.sh [options] [command] [pipeline_name]
+#
+# Commands:
+#   set          Set pipeline (default)
+#   unpause      Set and unpause pipeline
+#   destroy      Destroy specified pipeline
+#   validate     Validate pipeline YAML without setting
+#   release      Create a release pipeline
+#
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
+
+# Get script directory for relative paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+CI_DIR="$(cd "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
+REPO_ROOT="$(cd "${CI_DIR}/.." &>/dev/null && pwd)"
+REPO_NAME=$(basename "${REPO_ROOT}")
+LIB_DIR="${SCRIPT_DIR}/lib"
+
+# Test mode for automated testing (used in check_fly and other functions)
+TEST_MODE=${env_variables.TEST_MODE}
+
+# Debug mode for additional logging
+DEBUG=${env_variables.DEBUG}
+
+# Initialize default values
+PIPELINE="${default_pipeline}"
+RELEASE_PIPELINE_NAME="release"
+GITHUB_ORG="${org_name}"
+GIT_RELEASE_BRANCH="${release_branch}"
+CONFIG_GIT_BRANCH="master"
+PARAMS_GIT_BRANCH="master"
+VERSION_FILE=version
+VERSION=""
+CREATE_RELEASE=false
+SET_RELEASE_PIPELINE=false
+DRY_RUN=false
+VERBOSE=${env_variables.VERBOSE}
+ENABLE_VALIDATION_TESTING=false
+ENVIRONMENT="${default_environment}"
+TIMER_DURATION="${default_timer_duration}"
+COMMAND="set"
+
+# Source module files
+source "${LIB_DIR}/utils.sh"
+source "${LIB_DIR}/help.sh"
+source "${LIB_DIR}/parsing.sh"
+source "${LIB_DIR}/commands.sh"
+
+# Source additional helper functions if available
+if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
+    source "${SCRIPT_DIR}/helpers.sh"
+fi
+
+# Define supported commands for this script
+export SUPPORTED_COMMANDS="set|unpause|destroy|validate|release"
+
+# Main execution flow
+function main() {
+    # Process help flags first
+    check_help_flags "${SUPPORTED_COMMANDS}" "$@"
+
+    # Process arguments
+    process_args "${SUPPORTED_COMMANDS}" "$@"
+
+    # Handle legacy behavior
+    if [[ "${CREATE_RELEASE}" == "true" ]]; then
+        COMMAND="release"
+    fi
+
+    if [[ "${SET_RELEASE_PIPELINE}" == "true" ]]; then
+        PIPELINE="${RELEASE_PIPELINE_NAME}"
+    fi
+
+    # Validate required parameters
+    if [[ -z "${FOUNDATION}" ]]; then
+        error "Foundation not specified. Use -f or --foundation option."
+        show_usage 1
+    fi
+
+    # Set default target if not provided
+    if [[ -z "${TARGET}" ]]; then
+        TARGET="${FOUNDATION}"
+    fi
+
+    # Check if fly is available
+    if ! check_fly; then
+        error "Failed to validate fly is installed and working"
+        exit 1
+    fi
+
+    # Determine datacenter from foundation name
+    DATACENTER=$(get_datacenter "${FOUNDATION}")
+
+    # Determine datacenter type from foundation name
+    DATACENTER_TYPE=$(get_datacenter_type "${FOUNDATION}")
+
+    # Set foundation path
+    FOUNDATION_PATH="${DATACENTER}/${FOUNDATION}"
+
+    # Enable verbose output if requested
+    if [[ "${VERBOSE}" == "true" ]]; then
+        set -x
+    fi
+
+    # Execute the requested command with parameters
+    case "${COMMAND}" in
+    set)
+        cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
+        ;;
+    unpause)
+        cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
+        ;;
+    destroy)
+        cmd_destroy_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${DRY_RUN}"
+        ;;
+    validate)
+        cmd_validate_pipeline "${PIPELINE}" "${DRY_RUN}"
+        ;;
+    release)
+        cmd_release_pipeline "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
+        ;;
+    *)
+        error "Unknown command: ${COMMAND}"
+        show_usage 1
+        ;;
+    esac
+}
+
+# Run the main function
+main "$@"

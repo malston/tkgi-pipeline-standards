@@ -1,0 +1,112 @@
+# ${default_pipeline}.yml - Pipeline template for ${repo_name}
+# Organization: ${org_name}
+# Generated from reference template
+
+---
+resource_types:
+  - name: slack-notification
+    type: registry-image
+    source:
+      repository: cfcommunity/slack-notification-resource
+      tag: latest
+
+resources:
+  - name: repo
+    type: git
+    icon: github
+    source:
+      uri: git@${github_domain}:${org_name}/${repo_name}.git
+      branch: ((branch))
+      private_key: ((git_private_key))
+
+  - name: timer
+    type: time
+    icon: clock-outline
+    source:
+      interval: ((timer_duration))
+
+  - name: slack
+    type: slack-notification
+    icon: slack
+    source:
+      url: ((slack_webhook_url))
+
+jobs:
+  - name: validate
+    plan:
+      - get: repo
+        trigger: true
+      - get: timer
+        trigger: true
+      - task: validate-code
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: golang
+              tag: latest
+          inputs:
+            - name: repo
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                cd repo
+                echo "Running validation for ${repo_name}"
+                # Add your validation steps here
+                echo "Validation complete"
+        on_success:
+          put: slack
+          params:
+            channel: ((slack_channel))
+            text: |
+              :white_check_mark: *${repo_name}* validation successful for foundation ((foundation))
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+        on_failure:
+          put: slack
+          params:
+            channel: ((slack_channel))
+            text: |
+              :x: *${repo_name}* validation FAILED for foundation ((foundation))
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+
+  - name: deploy
+    plan:
+      - get: repo
+        trigger: true
+        passed: [validate]
+      - task: deploy
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: pivotalcfreleng/tkgi-ci
+              tag: latest
+          inputs:
+            - name: repo
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                cd repo
+                echo "Deploying ${repo_name} to ((foundation))"
+                # Add your deployment steps here
+                echo "Deployment complete"
+        on_success:
+          put: slack
+          params:
+            channel: ((slack_channel))
+            text: |
+              :rocket: *${repo_name}* successfully deployed to ((foundation))
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+        on_failure:
+          put: slack
+          params:
+            channel: ((slack_channel))
+            text: |
+              :boom: *${repo_name}* deployment FAILED on ((foundation))
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>

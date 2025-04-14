@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Simplified fly.sh script for reference-template
+# This is a wrapper around the more advanced scripts/fly.sh
+# Use this for basic pipeline operations
 
 set -e
 
@@ -14,17 +18,12 @@ fi
 # Default values
 PIPELINE="main"
 FOUNDATION=""
-# Use realpath only if not in TEST_MODE
-if [[ "${TEST_MODE}" != "true" ]]; then
-    PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "/path/to/params")"
-else
-    PARAMS_REPO="/test/path/to/params"
-fi
+PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "/path/to/params")"
 PARAMS_GIT_BRANCH="master"
 BRANCH="develop"
 
 usage() {
-    echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-P PARAMS_REPO] [-d PARAMS_BRANCH]"
+    echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-P PARAMS_REPO] [-d PARAMS_BRANCH] [-b BRANCH]"
     echo "  -f FOUNDATION    Foundation to use (cml-k8s-n-01, etc.)"
     echo "  -p PIPELINE      Pipeline to set (main or release)"
     echo "  -t TARGET        Concourse target to use"
@@ -113,4 +112,4 @@ fly -t "${TARGET}" set-pipeline \
     -v foundation_path="${DC}/${FOUNDATION}" \
     -v params_git_branch="${PARAMS_GIT_BRANCH}"
 
-echo "Helm pipeline ${PIPELINE}-${FOUNDATION} set successfully."
+echo "Pipeline ${PIPELINE}-${FOUNDATION} set successfully."
