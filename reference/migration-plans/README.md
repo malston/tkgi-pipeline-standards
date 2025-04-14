@@ -34,16 +34,16 @@ These migration plans can be used as:
 
 To add a new migration plan:
 
-1. Create a new directory under `migration-plans/` with the repository name
-2. Create a detailed README.md following the template structure
+1. Create a new directory under `migration-plans/` with the [repository name](../../migration-plans/ns-mgmt/)
+2. Create a detailed [README.md](../../migration-plans/ns-mgmt/README.md) following the template structure
 3. Include any supplementary materials (scripts, examples, etc.)
-4. Update this main README.md to include the new migration plan
+4. Update this main [README.md](README.md#available-migration-plans) to include the new migration plan
 
 ## Template Structure
 
-Use the ns-mgmt migration plan as a template for creating new migration plans. The standard structure includes:
+Use the `ns-mgmt` [migration plan](./ns-mgmt/README.md) as a template for creating new migration plans. The standard structure includes:
 
-```
+```sh
 migration-plans/
 └── repository-name/
     ├── README.md              # Detailed migration guide

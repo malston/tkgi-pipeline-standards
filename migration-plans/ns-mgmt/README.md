@@ -33,7 +33,7 @@ ci/
 ci/
 ├── fly.sh
 ├── pipelines/
-│   ├── ns-mgmt.yml
+│   ├── main.yml
 │   ├── release.yml
 │   └── set-pipeline.yml
 └── tasks/
@@ -84,7 +84,7 @@ ci/
 
 ## Implementation Status
 
-This migration plan has been **implemented** in the `feature/standardize-ci-structure` branch of the ns-mgmt repository. The implementation followed the approach outlined below.
+This migration plan has been **implemented** in the `feature/standardize-ci-structure` branch of the `ns-mgmt` repository. The implementation followed the approach outlined below.
 
 ### Key Implementation Details
 

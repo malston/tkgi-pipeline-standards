@@ -1,10 +1,10 @@
 # NS-MGMT: CI Structure Migration Guide
 
-This document serves as a comprehensive guide for migrating the ns-mgmt repository to the standardized CI/CD structure. It provides a detailed step-by-step approach that can be used as a reference for similar migrations in other repositories.
+This document serves as a comprehensive guide for migrating the `ns-mgmt` repository to the standardized CI/CD structure. It provides a detailed step-by-step approach that can be used as a reference for similar migrations in other repositories.
 
 ## Repository Overview
 
-The ns-mgmt repository manages Kubernetes namespace creation, configuration, and resource quotas across TKGi clusters. It uses Concourse pipelines to:
+The `ns-mgmt` repository manages Kubernetes namespace creation, configuration, and resource quotas across TKGi clusters. It uses Concourse pipelines to:
 
 - Create and configure namespaces
 - Apply resource limits and quotas
@@ -189,12 +189,12 @@ Created comprehensive documentation in ci/README.md to explain the new structure
 ```markdown
 # CI Directory Structure
 
-This directory contains all CI/CD pipeline configurations and scripts for the ns-mgmt repository.
+This directory contains all CI/CD pipeline configurations and scripts for the `ns-mgmt` repository.
 
 ## Structure
 
 - `pipelines/`: Contains all pipeline definition YAML files
-  - `ns-mgmt.yml`: Main namespace management pipeline
+  - `main.yml`: Main namespace management pipeline
   - `release.yml`: Release pipeline for creating GitHub releases
   - `set-pipeline.yml`: Pipeline for setting other pipelines
 
@@ -224,7 +224,7 @@ Each task directory contains both a `task.yml` file (the task definition) and a 
 
 ### 8. fly.sh Script Update
 
-Updated the fly.sh script to support the new structure:
+Updated the `fly.sh` script to support the new structure:
 
 ```bash
 #!/usr/bin/env bash
@@ -246,7 +246,8 @@ source "${SCRIPT_DIR}/../scripts/helpers.sh"
 
 **Challenge**: Task scripts referenced helper functions and other scripts using relative paths that needed to be updated for the new directory structure.
 
-**Solution**: 
+**Solution**:
+
 - Systematically updated all path references with the correct deeper path
 - Tested each script to ensure it could still find its dependencies
 - Used a consistent approach for path construction based on the `__DIR` variable
@@ -256,6 +257,7 @@ source "${SCRIPT_DIR}/../scripts/helpers.sh"
 **Challenge**: Updating pipeline YAML files to reference task.yml files instead of inline definitions.
 
 **Solution**:
+
 - Created temporary versions of pipeline files for testing
 - Verified each task reference was correctly pointing to the new structure
 - Ensured all parameters were properly passed from pipeline to task
@@ -266,6 +268,7 @@ source "${SCRIPT_DIR}/../scripts/helpers.sh"
 **Challenge**: Ensuring all tasks followed the same structural pattern and naming conventions.
 
 **Solution**:
+
 - Used a systematic approach for creating task directories and files
 - Applied a consistent naming convention across all task files
 - Organized tasks into logical categories based on their function
@@ -327,9 +330,9 @@ For repositories undertaking similar migrations, we recommend:
 
 7. **Gradual Integration**: Consider a phased approach for larger repositories to minimize disruption.
 
-## Reference Implementation 
+## Reference Implementation
 
-The ns-mgmt repository's `feature/standardize-ci-structure` branch serves as a reference implementation for standardizing CI structures. Key elements include:
+The `ns-mgmt` repository's `feature/standardize-ci-structure` branch serves as a reference implementation for standardizing CI structures. Key elements include:
 
 1. **Categorized Tasks**: Tasks organized by function (common, k8s, tkgi, testing)
 2. **Standardized Files**: Each task with task.yml and task.sh files
@@ -340,4 +343,4 @@ This reference implementation demonstrates how to successfully migrate to the st
 
 ## Conclusion
 
-The migration of the ns-mgmt repository to the standardized CI structure was successfully completed, providing a template for future migrations of other repositories. The new structure improves organization, maintainability, and consistency with the defined standards in the tkgi-pipeline-standards repository.
+The migration of the `ns-mgmt` repository to the standardized CI structure was successfully completed, providing a template for future migrations of other repositories. The new structure improves organization, maintainability, and consistency with the defined standards in the tkgi-pipeline-standards repository.
