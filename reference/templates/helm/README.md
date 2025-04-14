@@ -4,7 +4,7 @@ This template is designed for components that use Helm charts for deployment and
 
 ## Directory Structure
 
-```
+```sh
 helm-component-template/
 ├── ci/
 │   ├── pipelines/
