@@ -12,7 +12,7 @@
 #
 # Returns:
 #   A standardized version string
-normalize_version() {
+function normalize_version() {
     local VERSION=$1
     
     if [[ $VERSION =~ release-v* ]]; then
