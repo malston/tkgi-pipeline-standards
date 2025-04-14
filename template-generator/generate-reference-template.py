@@ -349,6 +349,7 @@ version: '1.0'
         # Generate sample pipeline files
         self._generate_template("ci/pipelines/main.yml")
         self._generate_template("ci/pipelines/release.yml")
+        self._generate_template("ci/pipelines/set-pipeline.yml")
         
         # Generate helper scripts
         self._generate_template("scripts/helpers.sh")
