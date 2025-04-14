@@ -7,7 +7,7 @@ resource_types:
   - name: email
     type: registry-image
     source:
-      repository: cfcommunity/email-resource
+      repository: pcfseceng/email-resource
       tag: latest
 
 resources:
