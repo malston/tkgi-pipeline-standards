@@ -110,7 +110,9 @@ class TemplateGenerator:
         pattern = r'\$\{([A-Za-z0-9_]+)\}'
         
         def replace_var(match):
-            var_name = match.group(1).lower()
+            var_name = match.group(1)
+            if not template_content.startswith('#!') or 'bash' not in template_content.splitlines()[0]:
+                var_name = var_name.lower()
             return str(self.config.get(var_name, f"${{{var_name}}}"))
         
         return re.sub(pattern, replace_var, template_content)
