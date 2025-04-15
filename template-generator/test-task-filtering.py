@@ -38,7 +38,7 @@ def check_task_directories(template_dir, template_type):
     
     # Template-specific tasks - note that some template-specific tasks are in the common directory
     template_specific_tasks = {
-        "kustomize": [],
+        "kustomize": ["k8s"],
         "helm": ["helm", "k8s"],
         "cli-tool": ["cli-tool"]
     }
@@ -64,15 +64,28 @@ def check_task_directories(template_dir, template_type):
         print(f"ERROR: Found unexpected task categories: {unexpected_categories}")
         return False
     
-    # Check for task directories from other template types
-    other_template_types = [t for t in template_specific_tasks.keys() if t != template_type]
-    other_template_tasks = []
-    for t in other_template_types:
-        other_template_tasks.extend(template_specific_tasks[t])
+    # Create a set of all template tasks that don't overlap
+    non_overlapping_tasks = {}
+    for t, tasks in template_specific_tasks.items():
+        for task in tasks:
+            if task not in non_overlapping_tasks:
+                non_overlapping_tasks[task] = []
+            non_overlapping_tasks[task].append(t)
     
-    wrong_template_categories = [c for c in task_categories if c in other_template_tasks]
+    # Find task categories that don't belong to this template type
+    wrong_template_categories = []
+    for c in task_categories:
+        # Skip common task categories
+        if c in common_tasks:
+            continue
+        # Check if category is in template_specific_tasks for this template
+        if c not in template_specific_tasks.get(template_type, []):
+            # Check if category exists but is exclusive to other template types
+            if c in non_overlapping_tasks and template_type not in non_overlapping_tasks[c]:
+                wrong_template_categories.append(c)
+    
     if wrong_template_categories:
-        print(f"ERROR: Found task categories from other template types: {wrong_template_categories}")
+        print(f"ERROR: Found task categories exclusive to other template types: {wrong_template_categories}")
         return False
     
     return True

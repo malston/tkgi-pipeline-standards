@@ -199,7 +199,7 @@ class TemplateGenerator:
 
         # Template-specific task directories
         template_type_tasks = {
-            "kustomize": [],  # kustomize uses tasks in the common directory
+            "kustomize": ["k8s"],  # kustomize uses tasks in the common directory and k8s
             "helm": ["helm", "k8s"],
             "cli-tool": ["cli-tool"]
         }
@@ -258,7 +258,7 @@ class TemplateGenerator:
         # Display which task categories will be included
         common_categories = ["common", "tkgi", "testing"]
         template_specific_tasks = {
-            "kustomize": [],  # kustomize uses tasks in the common directory
+            "kustomize": ["k8s"],  # kustomize uses tasks in the common directory and k8s
             "helm": ["helm", "k8s"],
             "cli-tool": ["cli-tool"]
         }

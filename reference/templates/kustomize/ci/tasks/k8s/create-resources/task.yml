@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: ${IMAGE_REPOSITORY:-harbor-pks.vmware.lab.pks.cloudsmiths.corp/utilities/pipeline-tools}
+    tag: ${IMAGE_TAG:-latest}
+
+inputs:
+  - name: ${REPO_NAME}
+  - name: manifests
+  - name: pks-config
+    optional: true
+
+params:
+  FOUNDATION:
+  NAMESPACE:
+  CLUSTER:
+  DEBUG: "false"
+  VERBOSE: "false"
+
+run:
+  path: ${REPO_NAME}/ci/tasks/k8s/create-resources/task.sh

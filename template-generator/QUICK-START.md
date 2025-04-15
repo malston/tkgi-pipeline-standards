@@ -99,7 +99,7 @@ python generate-reference-template.py --output-dir ./my-tool --template-type cli
 Each template type includes appropriate task definitions organized by category:
 
 - All templates include common categories: `common`, `tkgi`, and `testing` tasks
-- Kustomize templates use the common tasks (kustomize and kubectl tasks are in the common directory)
+- Kustomize templates include: k8s-specific tasks and common tasks
 - Helm templates include: helm and k8s-specific tasks
 - CLI tool templates include: cli-tool-specific tasks
 
