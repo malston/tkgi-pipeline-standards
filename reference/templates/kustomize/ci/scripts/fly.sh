@@ -59,7 +59,6 @@ source "${LIB_DIR}/version.sh"
 source "${LIB_DIR}/foundation.sh"
 
 # Source additional helper functions if available
-# This is for backward compatibility, but should be empty now
 if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
   source "${SCRIPT_DIR}/helpers.sh"
 fi
@@ -117,11 +116,11 @@ main() {
 
   # Determine environment and config repo from foundation
   FOUNDATION_RESULT=$(determine_foundation_environment "$DATACENTER" "$ENVIRONMENT" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
-  IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<< "$FOUNDATION_RESULT"
+  IFS=':' read -r ENVIRONMENT GITHUB_ORG CONFIG_REPO_NAME <<<"$FOUNDATION_RESULT"
 
   # Configure environment specific settings
   ENV_RESULT=$(configure_environment "$ENVIRONMENT" "$BRANCH" "$GITHUB_ORG" "$CONFIG_REPO_NAME")
-  IFS=':' read -r BRANCH GITHUB_ORG CONFIG_REPO_NAME <<< "$ENV_RESULT"
+  IFS=':' read -r BRANCH GITHUB_ORG CONFIG_REPO_NAME <<<"$ENV_RESULT"
 
   # Set git URIs based on environment settings
   GIT_URI="git@github.com:$GITHUB_ORG/$REPO_NAME.git"
