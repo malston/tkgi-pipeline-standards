@@ -58,7 +58,7 @@ TEMPLATE_STRUCTURES = {
         "script_patterns": {
             "shebang": r"^#!/usr/bin/env bash$",
             "strict_mode": r"set -o errexit.*set -o pipefail",
-            "script_dir": r"__DIR=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
+            "script_dir": r"[A-Za-z_]+(DIR|_DIR)=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
         }
     },
     "helm": {
@@ -96,7 +96,7 @@ TEMPLATE_STRUCTURES = {
         "script_patterns": {
             "shebang": r"^#!/usr/bin/env bash$",
             "strict_mode": r"set -o errexit.*set -o pipefail",
-            "script_dir": r"__DIR=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
+            "script_dir": r"[A-Za-z_]+(DIR|_DIR)=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
         }
     },
     "cli-tool": {
@@ -133,7 +133,7 @@ TEMPLATE_STRUCTURES = {
         "script_patterns": {
             "shebang": r"^#!/usr/bin/env bash$",
             "strict_mode": r"set -o errexit.*set -o pipefail",
-            "script_dir": r"__DIR=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
+            "script_dir": r"[A-Za-z_]+(DIR|_DIR)=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
         }
     }
 }
@@ -261,9 +261,10 @@ class TemplateValidator:
                 if not re.search(self.structure["script_patterns"]["strict_mode"], content, re.MULTILINE | re.DOTALL):
                     self.issues.append(f"Script {sh_file.relative_to(self.project_dir)} missing strict mode (set -o errexit and set -o pipefail)")
                     
-                # Check script directory definition
-                if not re.search(self.structure["script_patterns"]["script_dir"], content, re.MULTILINE):
-                    self.issues.append(f"Script {sh_file.relative_to(self.project_dir)} missing script directory definition (__DIR)")
+                # Check script directory definition - more flexible matching for various styles
+                script_dir_pattern = r'(DIR|[A-Za-z_]+DIR|[A-Za-z_]+_DIR|SCRIPT_DIR|CURRENT_DIR)\s*=.*\$\(cd.*dirname.*BASH_SOURCE.*pwd\)'
+                if not re.search(script_dir_pattern, content, re.MULTILINE | re.DOTALL):
+                    self.issues.append(f"Script {sh_file.relative_to(self.project_dir)} missing script directory definition")
             except Exception as e:
                 self.issues.append(f"Error reading script {sh_file.relative_to(self.project_dir)}: {str(e)}")
                 
