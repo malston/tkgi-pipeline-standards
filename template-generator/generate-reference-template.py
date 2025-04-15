@@ -109,10 +109,12 @@ class TemplateGenerator:
         # Replace ${VAR_NAME} style variables
         pattern = r'\$\{([A-Za-z0-9_]+)\}'
         
-        def replace_var(match):
+        def replace_var(match: re.Match) -> str:
             var_name = match.group(1)
-            if not template_content.startswith('#!') or 'bash' not in template_content.splitlines()[0]:
+            # Only lowercase the variable name for non-bash scripts
+            if not (template_content.startswith('#!') and 'bash' in template_content.splitlines()[0]):
                 var_name = var_name.lower()
+            # Use get with default to avoid KeyError
             return str(self.config.get(var_name, f"${{{var_name}}}"))
         
         return re.sub(pattern, replace_var, template_content)
@@ -131,13 +133,16 @@ class TemplateGenerator:
         
         print(f"Created directory structure in {self.output_dir}")
 
-    def _copy_template_file(self, template_path: str, output_path: str, executable: bool = False):
+    def _copy_template_file(self, template_path: str, output_path: str, executable: bool = False) -> bool:
         """Copy a template file from source to destination, with variable replacement
 
         Args:
             template_path: Path to the template file (relative to template_dir)
             output_path: Path where the file should be copied (relative to output_dir)
             executable: Whether the generated file should be executable
+
+        Returns:
+            Boolean indicating whether the copy was successful
         """
         source_file = self.template_dir / template_path
         if not source_file.exists():
@@ -162,7 +167,7 @@ class TemplateGenerator:
         print(f"Generated {output_file}")
         return True
 
-    def _generate_template(self, relative_path: str, executable: bool = False):
+    def _generate_template(self, relative_path: str, executable: bool = False) -> None:
         """Generate a template file or create from scratch if it doesn't exist
 
         Args:
@@ -174,7 +179,7 @@ class TemplateGenerator:
             # If copying fails, generate a new file
             self._generate_new_file(relative_path, executable)
 
-    def _generate_new_file(self, relative_path: str, executable: bool = False):
+    def _generate_new_file(self, relative_path: str, executable: bool = False) -> None:
         """Generate a new file based on its type
 
         Args:
@@ -233,11 +238,11 @@ class TemplateGenerator:
 set -e
 
 # Script variables
-SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+SCRIPT_DIR="${{SCRIPT_DIR_PLACEHOLDER}}"
 
 # Your script logic here
 
-"""
+""".replace("{{SCRIPT_DIR_PLACEHOLDER}}", "$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)")
 
     def _generate_python_template(self, filename: str) -> str:
         """Generate a Python script template
@@ -315,7 +320,7 @@ version: '1.0'
 # TODO: Add YAML content
 """
 
-    def generate_template(self):
+    def generate_template(self) -> None:
         """Generate the complete reference template"""
         print(f"Generating template with the following configuration:")
         for key, value in self.config.items():

@@ -26,5 +26,5 @@ env_variables:
 
 # Custom variables - these will be available as ${variable_name} in templates
 pipeline_prefix: "svc" # e.g. pipeline will be named svc-main-{foundation}
-foundation_team: "platform-engineering"
+foundation: "cml-k8s-n-01"
 custom_validation_command: "yamllint"
