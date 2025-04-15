@@ -18,19 +18,19 @@ fi
 # Default values
 PIPELINE="${default_pipeline}"
 FOUNDATION=""
-PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "/path/to/params")"
+PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "$HOME/git/params")"
+PARAMS_GIT_BRANCH="master"
 BRANCH="${default_branch}"
-VERBOSE="false"
 
 usage() {
     cat <<EOF
-Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-d PARAMS_REPO] [-b BRANCH] [-v]
-  -f FOUNDATION   Foundation to use (\${default_foundation}, etc.)
-  -p PIPELINE     Pipeline to set (main or release)
-  -t TARGET       Concourse target to use
-  -d PARAMS_REPO  Path to config repository (default: $PARAMS_REPO)
-  -b BRANCH       Branch to use (default: $BRANCH)
-  -v              Verbose output
+Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-P PARAMS_REPO] [-d PARAMS_BRANCH] [-b BRANCH]
+  -f FOUNDATION    Foundation to use (\${default_foundation}, etc.)
+  -p PIPELINE      Pipeline to set (main or release)
+  -t TARGET        Concourse target to use
+  -P PARAMS_REPO   Path to params repository (default: $PARAMS_REPO)
+  -d PARAMS_BRANCH Params git branch to use (default: $PARAMS_GIT_BRANCH)
+  -b BRANCH        Branch to use (default: $BRANCH)
 
 Note: For more advanced options, use ci/scripts/fly.sh which provides:
   - Command support (set, unpause, destroy, validate, release)
@@ -48,7 +48,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 # Parse command line arguments
-while getopts ":ht:b:p:f:d:v" opt; do
+while getopts ":ht:b:p:f:P:d:" opt; do
     case ${opt} in
     t)
         TARGET=$OPTARG
@@ -62,11 +62,11 @@ while getopts ":ht:b:p:f:d:v" opt; do
     b)
         BRANCH=$OPTARG
         ;;
-    d)
+    P)
         PARAMS_REPO=$OPTARG
         ;;
-    v)
-        VERBOSE="true"
+    d)
+        PARAMS_GIT_BRANCH=$OPTARG
         ;;
     h)
         usage
@@ -112,6 +112,6 @@ fly -t "${TARGET}" set-pipeline \
     -v "branch=${BRANCH}" \
     -v foundation="${FOUNDATION}" \
     -v foundation_path="${DC}/${FOUNDATION}" \
-    -v verbose="${VERBOSE}"
+    -v params_git_branch="${PARAMS_GIT_BRANCH}"
 
 echo "Pipeline ${PIPELINE}-${FOUNDATION} set successfully."
