@@ -2,13 +2,13 @@
 platform: linux
 
 inputs:
-  - name: gatekeeper-repo
+  - name: repo
 
 outputs:
   - name: pks-config
 
 run:
-  path: gatekeeper-repo/ci/tasks/tkgi/tkgi-login/task.sh
+  path: repo/ci/tasks/tkgi/tkgi-login/task.sh
 
 params:
   PKS_API_URL: ""

@@ -24,10 +24,22 @@ __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 REPO_ROOT="$(cd "${__DIR}/../../../../.." &>/dev/null && pwd)"
 
 # Validate required environment variables
-[[ -z "${FOUNDATION}" ]] && { echo "Error: FOUNDATION is required"; exit 1; }
-[[ -z "${PKS_API_URL}" ]] && { echo "Error: PKS_API_URL is required"; exit 1; }
-[[ -z "${PKS_USER}" ]] && { echo "Error: PKS_USER is required"; exit 1; }
-[[ -z "${PKS_PASSWORD}" ]] && { echo "Error: PKS_PASSWORD is required"; exit 1; }
+[[ -z "${FOUNDATION}" ]] && {
+  echo "Error: FOUNDATION is required"
+  exit 1
+}
+[[ -z "${PKS_API}" ]] && {
+  echo "Error: PKS_API is required"
+  exit 1
+}
+[[ -z "${PKS_USER}" ]] && {
+  echo "Error: PKS_USER is required"
+  exit 1
+}
+[[ -z "${PKS_PASSWORD}" ]] && {
+  echo "Error: PKS_PASSWORD is required"
+  exit 1
+}
 
 # Set defaults for optional variables
 VERBOSE="${VERBOSE:-false}"
@@ -38,25 +50,25 @@ if [[ "${VERBOSE}" == "true" ]]; then
 fi
 
 echo "Logging into PKS/TKGi for foundation: ${FOUNDATION}"
-echo "PKS/TKGi API URL: ${PKS_API_URL}"
+echo "PKS/TKGi API URL: ${PKS_API}"
 
 # Create output directory
 mkdir -p pks-config
 
 # Save PKS/TKGi credentials to output directory
-cat > pks-config/credentials <<EOF
-PKS_API_URL=${PKS_API_URL}
+cat >pks-config/credentials <<EOF
+PKS_API=${PKS_API}
 PKS_USER=${PKS_USER}
 PKS_PASSWORD=${PKS_PASSWORD}
 FOUNDATION=${FOUNDATION}
 EOF
 
 # Check if tkgi command exists (preferred)
-if command -v tkgi &> /dev/null; then
+if command -v tkgi &>/dev/null; then
   echo "Using tkgi command"
   TKGI_CMD="tkgi"
 # Check if pks command exists (legacy)
-elif command -v pks &> /dev/null; then
+elif command -v pks &>/dev/null; then
   echo "Using pks command"
   TKGI_CMD="pks"
 else
@@ -66,7 +78,7 @@ fi
 
 # Login to PKS/TKGi
 echo "Logging into PKS/TKGi API"
-${TKGI_CMD} login -a "${PKS_API_URL}" -u "${PKS_USER}" -p "${PKS_PASSWORD}" -k
+${TKGI_CMD} login -a "${PKS_API}" -u "${PKS_USER}" -p "${PKS_PASSWORD}" -k
 
 # Check login status
 if [[ $? -ne 0 ]]; then

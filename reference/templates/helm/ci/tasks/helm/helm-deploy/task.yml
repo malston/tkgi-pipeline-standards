@@ -2,12 +2,12 @@
 platform: linux
 
 inputs:
-  - name: gatekeeper-repo
+  - name: repo
   - name: config-repo
   - name: pks-config
 
 run:
-  path: gatekeeper-repo/ci/tasks/helm/helm-deploy/task.sh
+  path: repo/ci/tasks/helm/helm-deploy/task.sh
 
 params:
   FOUNDATION: ""

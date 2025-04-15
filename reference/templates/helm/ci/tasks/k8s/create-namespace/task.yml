@@ -2,11 +2,11 @@
 platform: linux
 
 inputs:
-  - name: gatekeeper-repo
+  - name: repo
   - name: pks-config
 
 run:
-  path: gatekeeper-repo/ci/tasks/k8s/create-namespace/task.sh
+  path: repo/ci/tasks/k8s/create-namespace/task.sh
 
 params:
   FOUNDATION: ""

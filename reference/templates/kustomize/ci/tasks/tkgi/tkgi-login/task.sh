@@ -24,10 +24,22 @@ __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 REPO_ROOT="$(cd "${__DIR}/../../../../.." &>/dev/null && pwd)"
 
 # Validate required environment variables
-[[ -z "${FOUNDATION}" ]] && { echo "Error: FOUNDATION is required"; exit 1; }
-[[ -z "${PKS_API_URL}" ]] && { echo "Error: PKS_API_URL is required"; exit 1; }
-[[ -z "${PKS_USER}" ]] && { echo "Error: PKS_USER is required"; exit 1; }
-[[ -z "${PKS_PASSWORD}" ]] && { echo "Error: PKS_PASSWORD is required"; exit 1; }
+[[ -z "${FOUNDATION}" ]] && {
+  echo "Error: FOUNDATION is required"
+  exit 1
+}
+[[ -z "${PKS_API}" ]] && {
+  echo "Error: PKS_API is required"
+  exit 1
+}
+[[ -z "${PKS_USER}" ]] && {
+  echo "Error: PKS_USER is required"
+  exit 1
+}
+[[ -z "${PKS_PASSWORD}" ]] && {
+  echo "Error: PKS_PASSWORD is required"
+  exit 1
+}
 
 # Set defaults for optional variables
 VERBOSE="${VERBOSE:-false}"
@@ -38,10 +50,10 @@ if [[ "${VERBOSE}" == "true" ]]; then
 fi
 
 echo "Running tkgi-login task for foundation: ${FOUNDATION}"
-echo "Logging into PKS/TKGi API at: ${PKS_API_URL}"
+echo "Logging into PKS/TKGi API at: ${PKS_API}"
 
 # Check if tkgi command exists
-if ! command -v tkgi &> /dev/null; then
+if ! command -v tkgi &>/dev/null; then
   echo "Error: tkgi command not found"
   exit 1
 fi

@@ -21,8 +21,6 @@ create_namespace_if_not_exists "$NAMESPACE"
 # Label the namespace for monitoring, logging, etc.
 info "Adding labels to namespace $NAMESPACE"
 kubectl label namespace "$NAMESPACE" \
-  app.kubernetes.io/name=gatekeeper \
-  app.kubernetes.io/part-of=gatekeeper-system \
   app.kubernetes.io/managed-by=helm \
   --overwrite=true
 
