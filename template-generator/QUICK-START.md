@@ -45,10 +45,10 @@ You can customize basic settings using command line arguments:
 python generate-reference-template.py \
   --output-dir ./my-new-project \
   --template-type kustomize \
-  --org-name "MyOrganization" \
+  --org-name "Utilities-tkgieng" \
   --repo-name "my-service" \
   --default-branch "main" \
-  --default-foundation "aws-k8s-p-01"
+  --default-foundation "cml-k8s-n-01"
 ```
 
 ### Available Template Types
@@ -82,11 +82,11 @@ For more advanced customization, create a YAML configuration file:
 
    ```yaml
    # Organization and repository information
-   org_name: "MyOrganization"
+   org_name: "Utilities-tkgieng"
    repo_name: "my-service"
    
    # Git branch configuration
-   default_branch: "main"
+   default_branch: "develop"
    
    # Custom variables
    pipeline_prefix: "svc"
