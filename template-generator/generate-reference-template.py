@@ -342,9 +342,13 @@ version: '1.0'
             self._generate_template(f"ci/scripts/lib/{lib_file}")
         
         # Generate test files
+        self._generate_template("ci/scripts/tests/README.md")
         self._generate_template("ci/scripts/tests/test-framework.sh")
         self._generate_template("ci/scripts/tests/test_fly_basics.sh", executable=True)
         self._generate_template("ci/scripts/tests/run_tests.sh", executable=True)
+        self._generate_template("ci/scripts/tests/test_fly_parameters.sh", executable=True)
+        self._generate_template("ci/scripts/tests/test_verbose_param.sh", executable=True)
+        self._generate_template("ci/scripts/tests/test_version_param.sh", executable=True)
         
         # Generate sample pipeline files
         self._generate_template("ci/pipelines/main.yml")
