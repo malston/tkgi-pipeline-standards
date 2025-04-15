@@ -11,6 +11,18 @@ This repository contains:
 3. **Migration Plans**: Guides for migrating existing repositories to follow these standards
 4. **Scripts**: Utility scripts for creating and validating standardized repositories
 
+### Reference Implementation Templates
+
+This repository contains reference implementations for several CI/CD patterns, including:
+
+- **Kustomize Template**: For kustomize-based Kubernetes projects
+- **Helm Template**: For Helm chart repositories
+- **CLI Tool Template**: For command-line tool management
+
+For detailed information about available templates and usage instructions, see the [Reference Templates documentation](./reference/TEMPLATES.md).
+
+For instructions on using the template generator tool, see the [template generator quick start guide](./template-generator/QUICK-START.md).
+
 ### Repository Relationships
 
 This repository works together with the following related repositories:
@@ -149,7 +161,9 @@ Tasks are organized by functional category with consistent structure:
 3. **Common Tasks**: Reusable tasks are stored in `ci/tasks/common/` until they can be moved to a shared repository
 
 ### Common Tasks
+
 Place reusable utility tasks and general-purpose operations:
+
 - `common/kapply/`: Kubernetes resource application task
 - `common/kubectl-apply/`: Kubernetes resource application task (kustomize template)
 - `common/kustomize/`: Kustomize resource generation task
@@ -158,7 +172,9 @@ Place reusable utility tasks and general-purpose operations:
 - `common/create-release-info/`: Generate release information for GitHub releases
 
 ### K8s Tasks
+
 Place Kubernetes-specific operational tasks:
+
 - `k8s/create-legacy-netpol/`: Legacy network policy creation task
 - `k8s/create-legacy-rbac/`: Legacy RBAC resource creation task
 - `k8s/create-limits-quotas/`: Resource limits and quotas creation task
@@ -169,11 +185,15 @@ Place Kubernetes-specific operational tasks:
 - `k8s/validate-resources/`: Validates Kubernetes resources (kustomize template)
 
 ### TKGi Tasks
+
 Place TKGi-specific operations:
+
 - `tkgi/tkgi-login/`: TKGi authentication task
 
 ### Testing Tasks
+
 Place testing tasks:
+
 - `testing/run-unit-tests/`: Execute unit tests
 - `testing/run-integration-tests/`: Execute integration tests
 
@@ -527,15 +547,3 @@ Use this checklist to verify compliance with the standardization:
 | cluster-mgmt | To be migrated | Migration planned for future sprint |
 | cert-mgmt  | To be migrated | Migration planned for future sprint |
 | trident    | To be migrated | Migration planned for future sprint |
-
-### Reference Implementation Templates
-
-This repository contains reference implementations for several CI/CD patterns, including:
-
-- **Kustomize Template**: For kustomize-based Kubernetes projects
-- **Helm Template**: For Helm chart repositories
-- **CLI Tool Template**: For command-line tool management
-
-For detailed information about available templates and usage instructions, see the [Reference Templates documentation](./reference/TEMPLATES.md).
-
-For instructions on using the template generator tool, see the [template generator quick start guide](./template-generator/QUICK-START.md).

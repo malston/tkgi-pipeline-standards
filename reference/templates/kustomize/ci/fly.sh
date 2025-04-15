@@ -14,7 +14,7 @@ fi
 # Default values
 PIPELINE="main"
 FOUNDATION=""
-PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params")"
+PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "$HOME/git/params")"
 PARAMS_GIT_BRANCH="master"
 BRANCH="develop"
 

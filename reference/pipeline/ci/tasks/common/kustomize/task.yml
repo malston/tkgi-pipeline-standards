@@ -1,0 +1,20 @@
+---
+platform: linux
+
+inputs:
+  - name: repo           # Repository containing task scripts
+  - name: config         # Configuration repository
+
+outputs:
+  - name: manifests      # Generated Kubernetes manifests
+
+run:
+  path: repo/ci/tasks/common/kustomize/task.sh
+
+params:
+  # Required parameters
+  FOUNDATION: ((foundation))              # Foundation name (e.g., cml-k8s-n-01)
+  
+  # Optional parameters
+  FOUNDATION_PATH: ((foundation_path))    # Path within config repo to foundation
+  VERBOSE: ((verbose))                    # Enable verbose output

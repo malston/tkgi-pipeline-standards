@@ -11,6 +11,7 @@ PIPELINE_DIR="${SCRIPT_DIR}/pipelines"
 
 # Source repository helper functions if available
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
+
 if [[ -f "${REPO_ROOT}/scripts/helpers.sh" ]]; then
     source "${REPO_ROOT}/scripts/helpers.sh"
 fi
@@ -18,7 +19,7 @@ fi
 # Default values
 PIPELINE="main"
 FOUNDATION=""
-PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "/path/to/params")"
+PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "$HOME/git/params")"
 PARAMS_GIT_BRANCH="master"
 BRANCH="develop"
 

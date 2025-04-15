@@ -1,185 +1,187 @@
 #!/usr/bin/env bash
 #
-# Simple test framework for bash scripts
+# test_framework.sh - Simple test framework for the fly.sh script
 #
 
-# Colors for output
+# Define colors for test output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Test counters
-TESTS_TOTAL=0
-TESTS_PASSED=0
-TESTS_FAILED=0
+# Counter for passed and failed tests
+PASSED=0
+FAILED=0
 
-# Enable strict mode
-set -o errexit
-set -o pipefail
+# Enable test mode to avoid actual fly commands
+export TEST_MODE=true
 
-# Get script directory for relative paths
-__TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-__SCRIPTS_DIR="$(cd "${__TEST_DIR}/.." &>/dev/null && pwd)"
-
-# Functions
-function echo_color() {
-  local color="$1"
-  local message="$2"
-  echo -e "${color}${message}${NC}"
-}
-
-function info() {
-  echo_color "$YELLOW" "INFO: $1"
-}
-
-function success() {
-  echo_color "$GREEN" "SUCCESS: $1"
-}
-
-function error() {
-  echo_color "$RED" "ERROR: $1" >&2
-}
-
-function start_test() {
-  local test_name="$1"
-  echo
-  echo_color "$YELLOW" "=== Running test: $test_name ==="
-  ((TESTS_TOTAL++)) || return 0
-}
-
-function test_pass() {
-  local test_name="$1"
-  success "Test passed: $test_name"
-  ((TESTS_PASSED++)) || return 0
-}
-
-function test_fail() {
-  local test_name="$1"
-  local message="$2"
-  error "Test failed: $test_name"
-  error "Reason: $message"
-  ((TESTS_FAILED++)) || return 0
-}
-
+# Define helpers for assertions
 function assert_equals() {
-  local expected="$1"
-  local actual="$2"
-  local message="${3:-Expected '$expected' but got '$actual'}"
+    local expected="$1"
+    local actual="$2"
+    local message="$3"
 
-  if [[ "$expected" != "$actual" ]]; then
-    test_fail "equals assertion" "$message"
-    return 1
-  fi
-  return 0
+    if [[ "${expected}" == "${actual}" ]]; then
+        echo -e "${GREEN}✓ ${message}${NC}"
+        ((PASSED++))
+        return 0
+    else
+        echo -e "${RED}✗ ${message}${NC}"
+        echo -e "  Expected: ${expected}"
+        echo -e "  Actual:   ${actual}"
+        ((FAILED++))
+        return 1
+    fi
 }
 
 function assert_contains() {
-  local haystack="$1"
-  local needle="$2"
-  local message="${3:-"Expected '$haystack' to contain '$needle'"}"
+    local expected="$1"
+    local actual="$2"
+    local message="$3"
 
-  if ! echo "$haystack" | grep -q "$needle"; then
-    test_fail "contains assertion" "$message"
-    return 1
-  fi
-  return 0
+    if [[ "${actual}" == *"${expected}"* ]]; then
+        echo -e "${GREEN}✓ ${message}${NC}"
+        ((PASSED++))
+        return 0
+    else
+        echo -e "${RED}✗ ${message}${NC}"
+        echo -e "  Expected to contain: ${expected}"
+        echo -e "  Actual: ${actual}"
+        ((FAILED++))
+        return 1
+    fi
 }
 
-function assert_exit_code() {
-  local command="$1"
-  local expected_code="$2"
-  local message="${3:-Expected exit code $expected_code}"
+function assert_true() {
+    local condition="$1"
+    local message="$2"
 
-  local exit_code=0
-  eval "$command" >/dev/null 2>&1 || exit_code=$?
-
-  if [[ "$exit_code" != "$expected_code" ]]; then
-    test_fail "exit code assertion" "$message - got $exit_code"
-    return 1
-  fi
-  return 0
+    if [[ "${condition}" == "true" ]]; then
+        echo -e "${GREEN}✓ ${message}${NC}"
+        ((PASSED++))
+        return 0
+    else
+        echo -e "${RED}✗ ${message}${NC}"
+        echo -e "  Expected: true"
+        echo -e "  Actual:   ${condition}"
+        ((FAILED++))
+        return 1
+    fi
 }
 
-function report_results() {
-  echo
-  echo "=== Test Results ==="
-  echo "Total tests: $TESTS_TOTAL"
-  echo_color "$GREEN" "Passed: $TESTS_PASSED"
-  if [[ "$TESTS_FAILED" -gt 0 ]]; then
-    echo_color "$RED" "Failed: $TESTS_FAILED"
-    return 1
-  else
-    echo_color "$GREEN" "All tests passed!"
-    return 0
-  fi
+function assert_false() {
+    local condition="$1"
+    local message="$2"
+
+    if [[ "${condition}" == "false" ]]; then
+        echo -e "${GREEN}✓ ${message}${NC}"
+        ((PASSED++))
+        return 0
+    else
+        echo -e "${RED}✗ ${message}${NC}"
+        echo -e "  Expected: false"
+        echo -e "  Actual:   ${condition}"
+        ((FAILED++))
+        return 1
+    fi
 }
 
-# Mock functions for testing
-function mock_fly() {
-  # Mock the fly CLI for testing
-  # Usage: mock_fly <command> <expected_arguments> [exit_code]
-  local command="$1"
-  local expected_args="$2"
-  local exit_code="${3:-0}"
-
-  # Create a temporary mock script
-  cat >"${__TEST_DIR}/.fly_mock" <<EOF
-#!/usr/bin/env bash
-# This is a temporary mock for fly
-
-# Log the command and arguments
-echo "\$@" > "${__TEST_DIR}/.fly_last_command"
-
-# Check if this is the command we're expecting
-if [[ "\$1" == "$command" ]]; then
-  # Check if arguments match what we expect
-  args="\${@:2}"
-  if [[ "\$args" == *"$expected_args"* ]]; then
-    exit $exit_code
-  fi
-fi
-
-# For testing other commands or argument patterns
-exit $exit_code
-EOF
-
-  chmod +x "${__TEST_DIR}/.fly_mock"
-
-  # Override PATH to use our mock
-  export PATH="${__TEST_DIR}:${PATH}"
-  ln -sf "${__TEST_DIR}/.fly_mock" "${__TEST_DIR}/fly"
+function describe() {
+    local description="$1"
+    echo -e "\n${BLUE}${description}${NC}"
 }
 
-function cleanup_mocks() {
-  # Remove any mock files
-  rm -f "${__TEST_DIR}/.fly_mock" "${__TEST_DIR}/fly" "${__TEST_DIR}/.fly_last_command"
+function it() {
+    local description="$1"
+    echo -e "${YELLOW}  ${description}${NC}"
 }
 
-# Setup and teardown hooks
-function test_setup() {
-  # Called before each test
-  :
+# Initialize test variables
+__TESTS_DIR="$(mktemp -d)"
+__SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+__CURRENT_TEST=""
+__TEST_RESULTS=()
+
+# Mark the start of a test
+function start_test() {
+    local test_name="$1"
+    __CURRENT_TEST="$test_name"
+    echo -e "\n${YELLOW}Starting test: ${test_name}${NC}"
 }
 
-function test_teardown() {
-  # Called after each test
-  cleanup_mocks
+# Mark a test as passed
+function test_pass() {
+    local message="$1"
+    echo -e "${GREEN}✓ ${message}${NC}"
+    __TEST_RESULTS+=("PASS: ${__CURRENT_TEST}")
+    ((PASSED++))
 }
 
+# Mark a test as failed
+function test_fail() {
+    local where="$1"
+    local message="$2"
+    echo -e "${RED}✗ FAIL in ${where}: ${message}${NC}"
+    __TEST_RESULTS+=("FAIL: ${__CURRENT_TEST} - ${where}: ${message}")
+    ((FAILED++))
+}
+
+# Run a test function
 function run_test() {
-  local test_func="$1"
-
-  test_setup
-  $test_func
-  test_teardown
+    local test_function="$1"
+    
+    # Reset counters for this test
+    PASSED_BEFORE=${PASSED}
+    FAILED_BEFORE=${FAILED}
+    
+    if declare -f "$test_function" >/dev/null; then
+        # Run the test function
+        if "$test_function"; then
+            if [[ ${FAILED} -eq ${FAILED_BEFORE} ]]; then
+                echo -e "${GREEN}Test function ${test_function} completed successfully${NC}"
+            else
+                echo -e "${RED}Test function ${test_function} had failures${NC}"
+            fi
+        else
+            echo -e "${RED}Test function ${test_function} failed to run${NC}"
+            ((FAILED++))
+        fi
+    else
+        echo -e "${RED}Test function ${test_function} not found${NC}"
+        ((FAILED++))
+    fi
 }
 
-# Export functions
-export -f echo_color info success error
-export -f start_test test_pass test_fail
-export -f assert_equals assert_contains assert_exit_code
-export -f mock_fly cleanup_mocks
-export -f test_setup test_teardown run_test
-export TESTS_TOTAL TESTS_PASSED TESTS_FAILED
-export __TEST_DIR __SCRIPTS_DIR
+# Print test summary
+function print_summary() {
+    echo -e "\n${BLUE}Test Summary:${NC}"
+    echo -e "  ${GREEN}Passed: ${PASSED}${NC}"
+    echo -e "  ${RED}Failed: ${FAILED}${NC}"
+
+    if [[ ${FAILED} -eq 0 ]]; then
+        echo -e "\n${GREEN}All tests passed!${NC}"
+        return 0
+    else
+        echo -e "\n${RED}Some tests failed!${NC}"
+        return 1
+    fi
+}
+
+# Report test results
+function report_results() {
+    print_summary
+    
+    # Clean up temp directory
+    if [[ -d "${__TESTS_DIR}" ]]; then
+        rm -rf "${__TESTS_DIR}"
+    fi
+    
+    # Exit with failure if any tests failed
+    if [[ ${FAILED} -gt 0 ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
