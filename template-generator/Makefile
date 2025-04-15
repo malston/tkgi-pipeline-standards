@@ -19,7 +19,7 @@ help:
 	@echo "  make setup              Create virtual environment and install dependencies"
 	@echo "  make generate           Generate a template using default settings"
 	@echo "  make generate-kustomize Generate a kustomize template"
-	@echo "  make generate-helm      Generate a helm template" 
+	@echo "  make generate-helm      Generate a helm template"
 	@echo "  make generate-cli       Generate a CLI tool template"
 	@echo "  make test               Run template filtering tests"
 	@echo "  make validate           Run template compliance validation"
@@ -28,6 +28,7 @@ help:
 	@echo "Examples:"
 	@echo "  make generate OUTPUT_DIR=~/my-new-project ORG_NAME=MyOrg REPO_NAME=my-service"
 	@echo "  make generate-helm OUTPUT_DIR=~/my-helm-chart"
+	@echo "  make validate PROJECT_DIR=~/my-helm-chart"
 
 # Setup virtual environment
 .PHONY: setup
