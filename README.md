@@ -562,15 +562,25 @@ The ns-mgmt repository serves as a real-world implementation of the standardized
 To use these reference templates for a new project:
 
 1. **Create a new repository**: Set up the basic repository structure
-2. **Copy template structure**: Copy the appropriate template from `/reference/templates/` to your repository
-3. **Update configuration**:
+2. **Generate template structure using the template generator**:
+   - Run the template generator script from the repository root:
+     ```sh
+     ./template-generator/generate-reference-template.py
+     ```
+   - Follow the prompts to select a template type and configure your project
+   - This will create the appropriate directory structure based on the selected template
+3. **Alternatively, copy template structure manually**:
+   - Copy the appropriate template from `/reference/templates/` to your repository
+4. **Update configuration**:
    - Rename files and update references to match your project
    - Update pipeline files to reference your repositories
    - Configure foundation-specific parameters
-4. **Test the implementation**: Run the included tests to validate your setup
+5. **Test the implementation**: Run the included tests to validate your setup
    - For kustomize template, use `cd ci/scripts/tests && ./run_tests.sh`
    - These tests validate command handling, option parsing, environment determination, and flag behavior
-5. **Deploy pipelines**: Use the provided `fly.sh` script to deploy your pipelines
+6. **Deploy pipelines**: Use the provided `fly.sh` script to deploy your pipelines
 
 The reference templates are designed to be used with minimal modifications while providing a
 fully-functional CI/CD implementation that follows these standards.
+
+For more detailed instructions on using the template generator, see the [template generator quick start guide](./template-generator/QUICK-START.md).
