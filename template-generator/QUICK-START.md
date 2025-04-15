@@ -7,12 +7,32 @@ This guide explains how to use the `generate-reference-template.py` script to cr
 - Python 3.6 or higher
 - PyYAML library (`pip install pyyaml`)
 
-## Basic Usage
+## Running the Script
 
-The simplest way to generate a reference template is to specify the output directory:
+### Standard Execution
 
 ```bash
+cd template-generator
 python generate-reference-template.py --output-dir ./my-new-project
+```
+
+### Using a Virtual Environment
+
+For isolated dependencies:
+
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install required dependencies
+pip install pyyaml
+
+# Run the script
+python generate-reference-template.py --output-dir ./my-new-project
+
+# When finished
+deactivate
 ```
 
 This will create a complete reference template using default values in the specified directory.
