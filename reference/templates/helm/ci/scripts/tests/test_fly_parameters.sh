@@ -118,13 +118,10 @@ EOF
     test_pass "Params branch parameter handled correctly"
 }
 
-# Note: Verbose parameter testing is now in a separate file: test_verbose_param.sh
-
 # Run all tests
 run_test test_pipeline_params
 run_test test_branch_param
 run_test test_params_repo
-# Verbose parameter is tested in a separate file (test_verbose_param.sh)
 
 # Report test results
 report_results
