@@ -95,6 +95,25 @@ Each task calls the corresponding script in the repository's scripts directory.
 
 ## How to Use This Template
 
+You can use this template for a new CLI tool-based component using one of two methods:
+
+### Method 1: Using the Template Generator (Recommended)
+
+1. Run the template generator script from the tkgi-pipeline-standards repository root:
+   ```bash
+   cd /path/to/tkgi-pipeline-standards
+   ./template-generator/generate-reference-template.py
+   ```
+2. Follow the prompts to select the CLI Tool template type and configure your project
+3. The script will generate the entire directory structure based on this template
+4. Customize the scripts for your specific CLI tool
+5. Update the pipeline definitions to match your workflow
+6. Configure appropriate variables in the params repository
+
+For more details, see the [template generator quick start guide](../../../template-generator/QUICK-START.md).
+
+### Method 2: Manual Copy
+
 1. Copy the template structure to your repository
 2. Customize the scripts for your specific CLI tool
 3. Update the pipeline definitions to match your workflow

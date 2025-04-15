@@ -222,6 +222,31 @@ jobs:
           FOUNDATION_PATH: ((foundation_path))
 ```
 
+## Using This Template
+
+You can use this template for a new project using one of two methods:
+
+### Method 1: Using the Template Generator (Recommended)
+
+1. Run the template generator script from the tkgi-pipeline-standards repository root:
+   ```bash
+   cd /path/to/tkgi-pipeline-standards
+   ./template-generator/generate-reference-template.py
+   ```
+2. Follow the prompts to select the Kustomize template type and configure your project
+3. The script will generate the entire directory structure based on this template
+4. Customize the generated files as needed for your specific project
+
+For more details, see the [template generator quick start guide](../../../template-generator/QUICK-START.md).
+
+### Method 2: Manual Copy
+
+1. Copy the template structure to your new repository
+2. Update file references and configuration to match your project
+3. Customize the kustomize structure as needed
+4. Adjust the pipelines for your specific requirements
+5. Set up your params in the params repository
+
 ## Implementation Notes
 
 This template aligns with the CI/CD standardization work done in the ns-mgmt repository migration while providing additional advanced functionality:
