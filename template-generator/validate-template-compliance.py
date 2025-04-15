@@ -489,7 +489,7 @@ class TemplateValidator:
         print("Consider using the template generator to create a reference project and compare with your existing project:")
         print(f"python generate-reference-template.py --output-dir ./reference-{self.template_type} --template-type {self.template_type}")
         print("\nThen use a diff tool to compare and identify the specific changes needed:")
-        print(f"diff -r --exclude='.git' ./reference-{self.template_type} {self.project_dir}")
+        print(f"diff -r --exclude='.git' ./reference/templates/{self.template_type} {self.project_dir}")
         
 def parse_args() -> Dict[str, Any]:
     """Parse command line arguments
