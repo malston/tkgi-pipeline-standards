@@ -530,57 +530,12 @@ Use this checklist to verify compliance with the standardization:
 
 ### Reference Implementation Templates
 
-The tkgi-pipeline-standards repository contains reference implementations for several CI/CD patterns:
+This repository contains reference implementations for several CI/CD patterns, including:
 
-1. **Kustomize Template**: A complete reference for kustomize-based projects
-   - Located at `/reference/templates/kustomize/`
-   - Features a hybrid approach with two fly.sh scripts:
-     - Simple version in `ci/fly.sh` (similar to ns-mgmt)
-     - Advanced version in `ci/scripts/fly.sh` with modular architecture
-   - Includes a sophisticated modular architecture in `ci/scripts/lib/` with dedicated files:
-     - `commands.sh`: Command implementations
-     - `help.sh`: Help text and documentation
-     - `parsing.sh`: Argument parsing functions
-     - `pipelines.sh`: Pipeline management functions
-     - `utils.sh`: Utility and helper functions
-   - Comprehensive test framework in `ci/scripts/tests/` for CI scripts
-   - Makefile in `ci/scripts/` for build and test automation
+- **Kustomize Template**: For kustomize-based Kubernetes projects
+- **Helm Template**: For Helm chart repositories
+- **CLI Tool Template**: For command-line tool management
 
-2. **Helm Template**: A reference for helm-based projects
-   - Located at `/reference/templates/helm/`
+For detailed information about available templates and usage instructions, see the [Reference Templates documentation](./reference/TEMPLATES.md).
 
-The ns-mgmt repository serves as a real-world implementation of the standardized CI/CD structure. Key aspects of this implementation include:
-
-1. **Task Organization**: Tasks are categorized into common, k8s, tkgi, and testing directories
-2. **Task Definition**: Each task has both a task.yml (definition) and task.sh (implementation) file
-3. **Pipeline Structure**: Pipeline files reference task.yml files instead of defining tasks inline
-4. **Documentation**: The CI directory includes comprehensive documentation about its structure and usage
-5. **Standardized fly.sh**: Implements the full command interface as specified in this guide
-
-### Using the Reference Templates
-
-To use these reference templates for a new project:
-
-1. **Create a new repository**: Set up the basic repository structure
-2. **Generate template structure using the template generator**:
-   - Run the template generator script from the repository root:
-     ```sh
-     ./template-generator/generate-reference-template.py
-     ```
-   - Follow the prompts to select a template type and configure your project
-   - This will create the appropriate directory structure based on the selected template
-3. **Alternatively, copy template structure manually**:
-   - Copy the appropriate template from `/reference/templates/` to your repository
-4. **Update configuration**:
-   - Rename files and update references to match your project
-   - Update pipeline files to reference your repositories
-   - Configure foundation-specific parameters
-5. **Test the implementation**: Run the included tests to validate your setup
-   - For kustomize template, use `cd ci/scripts/tests && ./run_tests.sh`
-   - These tests validate command handling, option parsing, environment determination, and flag behavior
-6. **Deploy pipelines**: Use the provided `fly.sh` script to deploy your pipelines
-
-The reference templates are designed to be used with minimal modifications while providing a
-fully-functional CI/CD implementation that follows these standards.
-
-For more detailed instructions on using the template generator, see the [template generator quick start guide](./template-generator/QUICK-START.md).
+For instructions on using the template generator tool, see the [template generator quick start guide](./template-generator/QUICK-START.md).
