@@ -16,7 +16,7 @@ PIPELINE="main"
 FOUNDATION=""
 # Use realpath only if not in TEST_MODE
 if [[ "${TEST_MODE}" != "true" ]]; then
-    PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "/path/to/params")"
+    PARAMS_REPO="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "$HOME/git/params")"
 else
     PARAMS_REPO="/test/path/to/params"
 fi

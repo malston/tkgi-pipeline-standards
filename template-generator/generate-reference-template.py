@@ -3,7 +3,7 @@
 Template Generator for Pipeline Standards
 
 This script generates a standardized reference template for CI/CD pipelines
-based on the tkgi-pipeline-standards. It copies template files from the reference 
+based on the tkgi-pipeline-standards. It copies template files from the reference
 directory and customizes them with the provided configuration.
 
 Usage:
@@ -56,17 +56,17 @@ class TemplateGenerator:
         script_dir = self._get_script_dir()
         repo_root = script_dir.parent
         self.repo_root = repo_root
-        
+
         # Set up template directories
         template_type = self.config.get("template_type", "kustomize").lower()
         self.template_type = template_type
-        
+
         # Primary template directory - specific to the template type
         self.template_dir = repo_root / "reference" / "templates" / template_type
-        
+
         # Fallback directory - common reference pipeline
         self.fallback_dir = repo_root / "reference" / "pipeline"
-        
+
         # Validate template directories
         if not self.template_dir.exists():
             print(f"Warning: Template directory {self.template_dir} does not exist.")
@@ -81,13 +81,13 @@ class TemplateGenerator:
             print(f"Warning: Fallback directory {self.fallback_dir} does not exist.")
             print("Will only use template-specific files.")
             self.fallback_dir = None
-            
+
         print(f"Using template from: {self.template_dir}")
         if self.fallback_dir:
             print(f"Using fallback source: {self.fallback_dir}")
-        
+
         self.output_dir = Path(self.config.get("output_dir", "./output"))
-        
+
         # Ensure the output directory exists
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -110,7 +110,7 @@ class TemplateGenerator:
         """
         # Replace ${VAR_NAME} style variables
         pattern = r'\$\{([A-Za-z0-9_]+)\}'
-        
+
         def replace_var(match: re.Match) -> str:
             var_name = match.group(1)
             if var_name.lower() in self.config:
@@ -121,9 +121,9 @@ class TemplateGenerator:
                     if key.lower() == var_name.lower():
                         return str(self.config[key])
             return f"${{{var_name}}}"
-        
+
         return re.sub(pattern, replace_var, content)
-    
+
     def _is_binary_file(self, file_path: Path) -> bool:
         """Check if a file is binary
 
@@ -146,7 +146,7 @@ class TemplateGenerator:
         """
         # Make sure the parent directory exists
         dest_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Check if the file is binary
         if self._is_binary_file(src_path):
             # Copy binary file directly
@@ -156,12 +156,12 @@ class TemplateGenerator:
             try:
                 with open(src_path, 'r', encoding='utf-8') as file:
                     content = file.read()
-                
+
                 rendered_content = self._render_template(content)
-                
+
                 with open(dest_path, 'w', encoding='utf-8') as file:
                     file.write(rendered_content)
-                
+
                 # Preserve executable permissions
                 if os.access(src_path, os.X_OK):
                     mode = os.stat(dest_path).st_mode
@@ -169,44 +169,44 @@ class TemplateGenerator:
             except UnicodeDecodeError:
                 # Fall back to binary copy if we can't read as text
                 shutil.copy2(src_path, dest_path)
-        
+
         print(f"Generated {dest_path}")
 
     def _should_copy_task_directory(self, rel_path: Path) -> bool:
         """Determine if a task directory should be copied based on template type
-        
+
         Args:
             rel_path: Path relative to the source directory
-            
+
         Returns:
             True if the directory should be copied, False otherwise
         """
         # If not in the tasks directory, always copy
         if not str(rel_path).startswith("ci/tasks/"):
             return True
-            
+
         # Handle shallow scripts in the tasks directory
         if len(rel_path.parts) == 2:  # Just "ci/tasks"
             return True
-            
+
         # Get specific task category
         task_category = rel_path.parts[2] if len(rel_path.parts) > 2 else None
-        
+
         # Common categories that should always be included
         common_categories = ["common", "tkgi", "testing"]
         if task_category in common_categories:
             return True
-            
+
         # Template-specific task directories
         template_type_tasks = {
             "kustomize": [],  # kustomize uses tasks in the common directory
             "helm": ["helm", "k8s"],
             "cli-tool": ["cli-tool"]
         }
-        
+
         # Check if task category is relevant for the current template type
         return task_category in template_type_tasks.get(self.template_type, [])
-    
+
     def _copy_directory(self, src_dir: Path, dest_dir: Path, relative_path: Path = Path(".")) -> None:
         """Recursively copy a directory with variable replacement
 
@@ -218,19 +218,19 @@ class TemplateGenerator:
         # Create destination directory if it doesn't exist
         current_src_dir = src_dir / relative_path
         current_dest_dir = dest_dir / relative_path
-        
+
         # Skip task directories that don't apply to the current template type
         if not self._should_copy_task_directory(relative_path):
             return
-            
+
         current_dest_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Copy all files and subdirectories
         for item in current_src_dir.iterdir():
             src_item = current_src_dir / item.name
             dest_item = current_dest_dir / item.name
             rel_item = relative_path / item.name
-            
+
             if item.is_dir():
                 # Recursive copy for directories
                 self._copy_directory(src_dir, dest_dir, rel_item)
@@ -240,7 +240,7 @@ class TemplateGenerator:
                 if self.fallback_dir and current_src_dir.is_relative_to(self.fallback_dir) and dest_item.exists():
                     # Skip this file, it was already copied from the primary template
                     continue
-                    
+
                 # Copy and render file
                 self._copy_file(src_item, dest_item)
 
@@ -254,7 +254,7 @@ class TemplateGenerator:
                     print(f"    {subkey}: {subvalue}")
             else:
                 print(f"  {key}: {value}")
-        
+
         # Display which task categories will be included
         common_categories = ["common", "tkgi", "testing"]
         template_specific_tasks = {
@@ -262,26 +262,26 @@ class TemplateGenerator:
             "helm": ["helm", "k8s"],
             "cli-tool": ["cli-tool"]
         }
-        
+
         template_type_tasks = common_categories + template_specific_tasks.get(self.template_type, [])
-        
+
         print(f"\nIncluding task categories for {self.template_type} template:")
         for task in template_type_tasks:
             print(f"  - {task}")
-        
+
         # First copy the template directory to the output directory
         self._copy_directory(self.template_dir, self.output_dir)
-        
+
         # Then copy any missing files from the fallback directory
         if self.fallback_dir:
             self._copy_directory(self.fallback_dir, self.output_dir)
-        
-        # Generate a CLAUDE.md file 
-        claude_md_path = self.output_dir / "CLAUDE.md"
-        if not claude_md_path.exists():
-            claude_content = f"""# CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+        # Generate a GUIDE.md file
+        guide_md_path = self.output_dir / "GUIDE.md"
+        if not guide_md_path.exists():
+            guide_content = f"""# GUIDE.md
+
+This file provides guidance to Engineers when working with code in this repository.
 
 ## Build/Test Commands
 - `./ci/scripts/tests/run_tests.sh` - Run all tests
@@ -316,10 +316,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Generated by template-generator on {datetime.datetime.now().strftime('%Y-%m-%d')}
 """
-            with open(claude_md_path, 'w') as file:
-                file.write(claude_content)
-            print(f"Generated {claude_md_path}")
-        
+            with open(guide_md_path, 'w') as file:
+                file.write(guide_content)
+            print(f"Generated {guide_md_path}")
+
         print("\nTemplate generation complete!")
         print(f"Template generated at: {self.output_dir}")
         print("\nNext steps:")
@@ -336,53 +336,53 @@ def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser(
         description="Generate a reference template for CI/CD pipelines"
     )
-    
+
     parser.add_argument(
-        "--output-dir", 
+        "--output-dir",
         required=True,
         help="Directory where the template should be generated"
     )
-    
+
     parser.add_argument(
-        "--config", 
+        "--config",
         help="Path to configuration file (YAML or JSON)"
     )
-    
+
     parser.add_argument(
         "--template-type",
         choices=["kustomize", "helm", "cli-tool"],
         default="kustomize",
         help="Type of template to generate (default: kustomize)"
     )
-    
+
     parser.add_argument(
-        "--org-name", 
+        "--org-name",
         help=f"GitHub organization name (default: {DEFAULTS['org_name']})"
     )
-    
+
     parser.add_argument(
-        "--repo-name", 
+        "--repo-name",
         help=f"Repository name (default: {DEFAULTS['repo_name']})"
     )
-    
+
     parser.add_argument(
-        "--default-branch", 
+        "--default-branch",
         help=f"Default git branch (default: {DEFAULTS['default_branch']})"
     )
-    
+
     parser.add_argument(
-        "--default-foundation", 
+        "--default-foundation",
         help=f"Default foundation (default: {DEFAULTS['default_foundation']})"
     )
-    
+
     parser.add_argument(
-        "--default-pipeline", 
+        "--default-pipeline",
         help=f"Default pipeline name (default: {DEFAULTS['default_pipeline']})"
     )
-    
+
     args = parser.parse_args()
     config = {}
-    
+
     # Load configuration from file if provided
     if args.config:
         with open(args.config, 'r') as file:
@@ -393,7 +393,7 @@ def parse_args() -> Dict[str, Any]:
             else:
                 print(f"Unsupported config file format: {args.config}")
                 sys.exit(1)
-    
+
     # Override with command line arguments
     if args.output_dir:
         config['output_dir'] = args.output_dir
@@ -409,7 +409,7 @@ def parse_args() -> Dict[str, Any]:
         config['default_foundation'] = args.default_foundation
     if args.default_pipeline:
         config['default_pipeline'] = args.default_pipeline
-    
+
     return config
 
 def main():

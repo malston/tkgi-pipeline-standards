@@ -39,7 +39,9 @@ function cmd_set_pipeline() {
     return 1
   fi
 
-  local params_repo="${REPO_ROOT}/../../../../params"
+  local params_repo
+  params_repo="$(realpath "${REPO_ROOT}/../../../../params" 2>/dev/null || echo "$HOME/git/params")"
+
   if [[ ! -d "$params_repo" ]]; then
     warn "Params repo not found at $params_repo. Using environment variables instead."
   fi
