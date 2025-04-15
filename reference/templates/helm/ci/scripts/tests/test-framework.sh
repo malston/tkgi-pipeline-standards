@@ -152,8 +152,8 @@ EOF
 }
 
 function cleanup_mocks() {
-    # Remove any mock files
-    rm -f "${__TEST_DIR}/.fly_mock" "${__TEST_DIR}/fly" "${__TEST_DIR}/.fly_last_command"
+    # Remove any mock files and test artifacts
+    rm -f "${__TEST_DIR}/.fly_mock" "${__TEST_DIR}/fly" "${__TEST_DIR}/.fly_last_command" "${__TEST_DIR}/fly_output.log"
 }
 
 # Setup and teardown hooks

@@ -67,14 +67,14 @@ jobs:
             params:
             subject: "Validation Successful: ${repo_name}"
             body: |
-                ✅ *${repo_name}* validation successful for foundation ((foundation)).
+              ✅ *${repo_name}* validation successful for foundation ((foundation)).
               View build details: <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
         on_failure:
             put: email
             params:
             subject: "Validation Failed: ${repo_name}"
             body: |
-                ❌ *${repo_name}* validation FAILED for foundation ((foundation)).
+              ❌ *${repo_name}* validation FAILED for foundation ((foundation)).
               View build details: <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
 
   - name: deploy
@@ -106,12 +106,12 @@ jobs:
           params:
             subject: "Deployment Successful: ${repo_name}"
             body: |
-                🚀 *${repo_name}* successfully deployed to ((foundation)).
+              🚀 *${repo_name}* successfully deployed to ((foundation)).
               View build details: <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
         on_failure:
           put: email
           params:
             subject: "Deployment Failed: ${repo_name}"
             body: |
-                ❌ *${repo_name}* deployment FAILED on ((foundation)).
+              ❌ *${repo_name}* deployment FAILED on ((foundation)).
               View build details: <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>

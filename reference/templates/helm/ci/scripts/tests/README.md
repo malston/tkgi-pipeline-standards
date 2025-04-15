@@ -7,6 +7,8 @@ This directory contains tests for the CI scripts in the Helm template. The tests
 - `test-framework.sh`: Core testing utilities and helpers
 - `test_fly_basics.sh`: Tests for basic functionality of the fly.sh script
 - `test_fly_parameters.sh`: Tests for parameter handling in fly.sh
+- `test_verbose_param.sh`: Dedicated test for the `--verbose` parameter
+- `test_version_param.sh`: Dedicated test for the `--version` parameter
 - `run_tests.sh`: Script to run all tests
 
 ## Running Tests
@@ -17,10 +19,20 @@ To run all tests:
 ./run_tests.sh
 ```
 
-To run a specific test file:
+To run specific test files:
 
 ```bash
+# Test basic fly functionality
 ./test_fly_basics.sh
+
+# Test parameter handling
+./test_fly_parameters.sh
+
+# Test verbose parameter handling
+./test_verbose_param.sh
+
+# Test version parameter handling
+./test_version_param.sh
 ```
 
 ## Test Coverage
@@ -32,12 +44,15 @@ The tests for fly.sh cover:
    - Exit code when required parameters are missing
    - Basic set pipeline command
    - Foundation parsing
-   
+
 2. Advanced functionality:
    - Custom pipeline names
    - Branch parameter handling
-   - Custom params repository path
-   - Verbose mode
+   - Custom params repository branch (`-d/--params-branch`)
+   - Verbose mode handling (`--verbose`)
+   - Version parameter handling (`-v/--version`)
+
+Note: Verbose and version parameters are now tested in dedicated test files for better maintainability.
 
 ## Adding New Tests
 

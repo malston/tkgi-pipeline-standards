@@ -85,9 +85,9 @@ EOF
     test_pass "Branch parameter handled correctly"
 }
 
-# Test params repo parameter
+# Test params branch parameter
 function test_params_repo() {
-    start_test "Params repo parameter handling"
+    start_test "Params branch parameter handling"
 
     # Mock fly command
     cat >"${TEST_TMP_DIR}/fly" <<EOF
@@ -102,60 +102,29 @@ EOF
     mkdir -p "${__SCRIPTS_DIR}/../pipelines"
     touch "${__SCRIPTS_DIR}/../pipelines/main.yml"
 
-    # Run the script with custom params repo
-    "${FLY_SCRIPT}" -f test-foundation -t test-target -d /custom/params/path >/dev/null 2>&1
+    # Run the script with custom params branch
+    "${FLY_SCRIPT}" -f test-foundation -t test-target -d custom-branch >/dev/null 2>&1
 
-    # Check if correct params repo was used
+    # Check if params_git_branch is set correctly
     if [[ -f "${TEST_TMP_DIR}/fly_output.log" ]]; then
         local output=$(cat "${TEST_TMP_DIR}/fly_output.log")
-        if ! echo "$output" | grep -q -- "-l /custom/params/path"; then
-            test_fail "params repo parameter" "Command should use custom params path, but got: $output"
+        if ! echo "$output" | grep -q -- "params_git_branch=custom-branch"; then
+            test_fail "params repo parameter" "Command should use custom params branch, but got: $output"
         fi
     else
         test_fail "params repo parameter" "No fly command was executed"
     fi
 
-    test_pass "Params repo parameter handled correctly"
+    test_pass "Params branch parameter handled correctly"
 }
 
-# Test verbose parameter
-function test_verbose_param() {
-    start_test "Verbose parameter handling"
-
-    # Mock fly command
-    cat >"${TEST_TMP_DIR}/fly" <<EOF
-#!/usr/bin/env bash
-echo "MOCK FLY CALLED WITH: \$@" > "${TEST_TMP_DIR}/fly_output.log"
-exit 0
-EOF
-    chmod +x "${TEST_TMP_DIR}/fly"
-    export PATH="${TEST_TMP_DIR}:${PATH}"
-
-    # Create test directory and files
-    mkdir -p "${__SCRIPTS_DIR}/../pipelines"
-    touch "${__SCRIPTS_DIR}/../pipelines/main.yml"
-
-    # Run the script with verbose flag
-    "${FLY_SCRIPT}" -f test-foundation -t test-target -v >/dev/null 2>&1
-
-    # Check if verbose parameter was passed correctly
-    if [[ -f "${TEST_TMP_DIR}/fly_output.log" ]]; then
-        local output=$(cat "${TEST_TMP_DIR}/fly_output.log")
-        if ! echo "$output" | grep -q -- "verbose=true"; then
-            test_fail "verbose parameter" "Command should set verbose flag, but got: $output"
-        fi
-    else
-        test_fail "verbose parameter" "No fly command was executed"
-    fi
-
-    test_pass "Verbose parameter handled correctly"
-}
+# Note: Verbose parameter testing is now in a separate file: test_verbose_param.sh
 
 # Run all tests
 run_test test_pipeline_params
 run_test test_branch_param
 run_test test_params_repo
-run_test test_verbose_param
+# Verbose parameter is tested in a separate file (test_verbose_param.sh)
 
 # Report test results
 report_results

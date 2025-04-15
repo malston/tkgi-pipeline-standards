@@ -24,12 +24,13 @@ Options:
   -t, --target TARGET          Concourse target (defaults to foundation name)
   -p, --pipeline PIPELINE      Pipeline name (default: main)
   -b, --branch BRANCH          Git branch to use (default: develop)
+  -d, --params-branch BRANCH   Params repo branch (default: master)
   -r, --release                Set release pipeline
   -e, --environment ENV        Environment (lab, nonprod, prod)
   -v, --version VERSION        Version to use for release
+  --verbose                    Enable verbose output
   -o, --org GITHUB_ORG         GitHub organization (default: Utilities-tkgieng)
   --dry-run                    Print commands without executing
-  --verbose                    Enable verbose output
 EOF
 
     exit "$exit_code"
@@ -51,6 +52,7 @@ Options:
   -f, --foundation FOUNDATION  Foundation to target (required)
   -t, --target TARGET          Concourse target (defaults to foundation name)
   -b, --branch BRANCH          Git branch to use (default: develop)
+  -d, --params-branch BRANCH   Params repo branch (default: master)
   -e, --environment ENV        Environment (lab, nonprod, prod)
   --dry-run                    Print commands without executing
   --verbose                    Enable verbose output
@@ -66,6 +68,7 @@ Options:
   -f, --foundation FOUNDATION  Foundation to target (required)
   -t, --target TARGET          Concourse target (defaults to foundation name)
   -b, --branch BRANCH          Git branch to use (default: develop)
+  -d, --params-branch BRANCH   Params repo branch (default: master)
   -e, --environment ENV        Environment (lab, nonprod, prod)
   --dry-run                    Print commands without executing
   --verbose                    Enable verbose output
@@ -104,9 +107,10 @@ Options:
   -t, --target TARGET          Concourse target (defaults to foundation name)
   -v, --version VERSION        Version to use for release
   -b, --branch BRANCH          Git branch to use (default: master)
+  -d, --params-branch BRANCH   Params repo branch (default: master)
   -e, --environment ENV        Environment (lab, nonprod, prod)
-  --dry-run                    Print commands without executing
   --verbose                    Enable verbose output
+  --dry-run                    Print commands without executing
 EOF
         ;;
     *)

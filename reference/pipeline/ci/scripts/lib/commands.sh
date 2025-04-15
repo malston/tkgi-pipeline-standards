@@ -23,6 +23,7 @@ function cmd_set_pipeline() {
     local git_uri="${16}"
     local config_git_uri="${17}"
     local config_git_branch="${18}"
+    local params_git_branch="${19}"
 
     # Validate required pipeline file exists
     local pipeline_file="${CI_DIR}/pipelines/${pipeline}.yml"
@@ -90,8 +91,8 @@ function cmd_set_pipeline() {
         fly_cmd+=("-v" "config_git_branch=${config_git_branch}")
     fi
 
-    if [[ -n "${PARAMS_GIT_BRANCH}" ]]; then
-        fly_cmd+=("-v" "params_git_branch=${PARAMS_GIT_BRANCH}")
+    if [[ -n "${params_git_branch}" ]]; then
+        fly_cmd+=("-v" "params_git_branch=${params_git_branch}")
     fi
 
     if [[ -n "${version}" ]]; then
@@ -139,6 +140,7 @@ function cmd_unpause_pipeline() {
     local git_uri="${13}"
     local config_git_uri="${14}"
     local config_git_branch="${15}"
+    local params_git_branch="${16}"
 
     # First set the pipeline
     if ! cmd_set_pipeline "$@"; then
@@ -267,6 +269,7 @@ function cmd_release_pipeline() {
     local git_uri="${15}"
     local config_git_uri="${16}"
     local config_git_branch="${17}"
+    local params_git_branch="${18}"
 
     # Version is required for release pipeline
     if [[ -z "${version}" ]]; then
@@ -281,7 +284,7 @@ function cmd_release_pipeline() {
     local release_pipeline="release"
 
     # Call set_pipeline with the release pipeline
-    if ! cmd_set_pipeline "${release_pipeline}" "${foundation}" "${repo_name}" "${target}" "${environment}" "${datacenter}" "${datacenter_type}" "${branch}" "${git_release_branch}" "${version_file}" "${timer_duration}" "${version}" "${dry_run}" "${verbose}" "${foundation_path}" "${git_uri}" "${config_git_uri}" "${config_git_branch}"; then
+    if ! cmd_set_pipeline "${release_pipeline}" "${foundation}" "${repo_name}" "${target}" "${environment}" "${datacenter}" "${datacenter_type}" "${branch}" "${git_release_branch}" "${version_file}" "${timer_duration}" "${version}" "${dry_run}" "${verbose}" "${foundation_path}" "${git_uri}" "${config_git_uri}" "${config_git_branch}" "${params_git_branch}"; then
         return 1
     fi
 

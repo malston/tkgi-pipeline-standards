@@ -51,6 +51,10 @@ function process_args() {
             BRANCH="$2"
             shift 2
             ;;
+        -d | --params-branch)
+            PARAMS_GIT_BRANCH="$2"
+            shift 2
+            ;;
         -e | --environment)
             ENVIRONMENT="$2"
             shift 2
@@ -67,12 +71,12 @@ function process_args() {
             SET_RELEASE_PIPELINE=true
             shift
             ;;
-        --dry-run)
-            DRY_RUN=true
+        --verbose)
+            VERBOSE="true"
             shift
             ;;
-        --verbose)
-            VERBOSE=true
+        --dry-run)
+            DRY_RUN=true
             shift
             ;;
         --testing)

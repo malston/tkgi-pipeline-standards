@@ -24,6 +24,7 @@ function cmd_set_pipeline() {
   local git_uri="${16}"
   local config_git_uri="${17}"
   local config_git_branch="${18}"
+  local params_git_branch="${19}"
 
   if ! check_fly; then
     error "Failed to check fly command"
@@ -69,6 +70,7 @@ function cmd_set_pipeline() {
     -v "branch=${branch}"
     -v "foundation=${foundation}"
     -v "foundation_path=${foundation_path}"
+    -v "params_git_branch=${params_git_branch}"
     -v "verbose=${verbose}"
     -v "environment=${environment}"
     -v "git_uri=${git_uri}"
@@ -110,9 +112,10 @@ function cmd_unpause_pipeline() {
   local git_uri="${13}"
   local config_git_uri="${14}"
   local config_git_branch="${15}"
+  local params_git_branch="${16}"
 
   # First set the pipeline
-  cmd_set_pipeline "$pipeline" "$foundation" "$REPO_NAME" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$GIT_RELEASE_BRANCH" "$VERSION_FILE" "$timer_duration" "$version" "$dry_run" "$verbose" "$foundation_path" "$git_uri" "$config_git_uri" "$config_git_branch"
+  cmd_set_pipeline "$pipeline" "$foundation" "$REPO_NAME" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$GIT_RELEASE_BRANCH" "$VERSION_FILE" "$timer_duration" "$version" "$dry_run" "$verbose" "$foundation_path" "$git_uri" "$config_git_uri" "$config_git_branch" "$params_git_branch"
   local set_result=$?
 
   if [[ $set_result -ne 0 ]]; then
@@ -201,6 +204,7 @@ function cmd_release_pipeline() {
   local git_uri="${15}"
   local config_git_uri="${16}"
   local config_git_branch="${17}"
+  local params_git_branch="${18}"
 
   # Get the latest version if not specified
   if [[ -z "${version}" ]]; then
@@ -219,6 +223,6 @@ function cmd_release_pipeline() {
   info "Creating release pipeline for version ${version}"
 
   # Set the release pipeline
-  cmd_set_pipeline "${RELEASE_PIPELINE_NAME}" "${foundation}" "${repo_name}" "${target}" "${environment}" "${datacenter}" "${datacenter_type}" "${branch}" "${git_release_branch}" "${version_file}" "${timer_duration}" "${version}" "${dry_run}" "${verbose}" "${foundation_path}" "${git_uri}" "${config_git_uri}" "${config_git_branch}"
+  cmd_set_pipeline "${RELEASE_PIPELINE_NAME}" "${foundation}" "${repo_name}" "${target}" "${environment}" "${datacenter}" "${datacenter_type}" "${branch}" "${git_release_branch}" "${version_file}" "${timer_duration}" "${version}" "${dry_run}" "${verbose}" "${foundation_path}" "${git_uri}" "${config_git_uri}" "${config_git_branch}" "${params_git_branch}"
   return $?
 }

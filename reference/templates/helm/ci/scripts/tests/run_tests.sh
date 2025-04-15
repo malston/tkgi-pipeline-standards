@@ -73,6 +73,9 @@ for test_file in "${TEST_FILES[@]}"; do
     echo
 done
 
+# Clean up any remaining artifacts
+rm -f "$__DIR/fly_output.log"
+
 # Report overall results
 echo_color "$YELLOW" "=============================="
 echo_color "$YELLOW" "Overall Test Results"

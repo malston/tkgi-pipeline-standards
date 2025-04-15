@@ -221,12 +221,12 @@ echo -e "\n${GREEN}Test 3: Verbose flag parsing${NC}"
 TESTS_RUN=$((TESTS_RUN + 1))
 setup
 if type process_args &>/dev/null; then
-    process_args "${SUPPORTED_COMMANDS}" "-f" "cml-k8s-n-01" "-v"
+    process_args "${SUPPORTED_COMMANDS}" "-f" "cml-k8s-n-01" "--verbose"
     if [[ "${VERBOSE}" == "true" ]]; then
-        pass "Verbose flag '-v' is parsed correctly"
+        pass "Verbose flag '--verbose' is parsed correctly"
         TESTS_PASSED=$((TESTS_PASSED + 1))
     else
-        fail "Verbose flag '-v' parsing failed. Expected 'true', got '${VERBOSE}'"
+        fail "Verbose flag '--verbose' parsing failed. Expected 'true', got '${VERBOSE}'"
     fi
 else
     skip "process_args function not found"

@@ -26,10 +26,10 @@ Options:
   -P, --params-repo    Path to params repo (default: $HOME/git/params)
   -d, --params-branch  Params git branch (default: master)
   -e, --environment    Environment (lab, nonprod, prod)
-  --version            Specify version for release pipeline
+  -v, --version        Specify version for release pipeline
   
   --dry-run            Show what would be done without making changes
-  -v, --verbose        Enable verbose output
+  --verbose            Enable verbose output
 EOF
   exit "${exit_code}"
 }

@@ -39,7 +39,7 @@ function process_args() {
         elif [[ "${arg}" == "-e" || "${arg}" == "--environment" ]]; then
             ((i++))
             ENVIRONMENT="${args[$i]}"
-        elif [[ "${arg}" == "--version" ]]; then
+        elif [[ "${arg}" == "-v" || "${arg}" == "--version" ]]; then
             ((i++))
             VERSION="${args[$i]}"
         elif [[ "${arg}" == "--version-file" ]]; then
@@ -50,7 +50,7 @@ function process_args() {
             TIMER_DURATION="${args[$i]}"
 
         # Handle boolean flags
-        elif [[ "${arg}" == "-v" || "${arg}" == "--verbose" ]]; then
+        elif [[ "${arg}" == "--verbose" ]]; then
             VERBOSE="true"
         elif [[ "${arg}" == "--debug" ]]; then
             DEBUG="true"

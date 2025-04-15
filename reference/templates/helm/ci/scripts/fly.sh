@@ -139,10 +139,10 @@ function main() {
     # Execute the requested command with parameters instead of global variables
     case "${COMMAND}" in
     set)
-        cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
+        cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}" "${PARAMS_GIT_BRANCH}"
         ;;
     unpause)
-        cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
+        cmd_unpause_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}" "${PARAMS_GIT_BRANCH}"
         ;;
     destroy)
         cmd_destroy_pipeline "${PIPELINE}" "${FOUNDATION}" "${TARGET}" "${DRY_RUN}"
@@ -151,7 +151,7 @@ function main() {
         cmd_validate_pipeline "${PIPELINE}" "${DRY_RUN}"
         ;;
     release)
-        cmd_release_pipeline "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}"
+        cmd_release_pipeline "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}" "${PARAMS_GIT_BRANCH}"
         ;;
     *)
         error "Unknown command: ${COMMAND}"
