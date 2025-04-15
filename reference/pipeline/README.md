@@ -1,4 +1,4 @@
-# Reference Template for Pipeline Management
+# Reference Template for Pipeline Repo
 
 This reference template demonstrates the recommended structure and implementation for standardized pipeline management scripts. It's designed to be reused across projects with minimal modifications.
 
@@ -41,8 +41,11 @@ Example:
 # Set the main pipeline for foundation cml-k8s-n-01
 ./fly.sh -f cml-k8s-n-01
 
-# Set a custom pipeline with a specific params git branch
-./fly.sh -f cml-k8s-n-01 -p custom -d feature-branch
+# Set a custom pipeline with a specific branch and params git branch
+./fly.sh -f cml-k8s-n-01 -p custom -b feature-branch -d feature-branch
+
+# Set a custom pipeline with a specific branch and params git branch
+./fly.sh -f cml-k8s-n-01 -p custom -b feature-branch -d feature-branch
 ```
 
 ### Advanced CI Script (`ci/scripts/fly.sh`)
