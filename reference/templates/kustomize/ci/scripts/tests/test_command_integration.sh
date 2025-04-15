@@ -6,15 +6,16 @@
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source "${SCRIPT_DIR}/test-framework.sh"
+source "${SCRIPT_DIR}/mock_test_fly.sh"
 
 # Source all necessary modules to test command execution
-source "${__SCRIPTS_DIR}/lib/utils.sh"
-source "${__SCRIPTS_DIR}/lib/environment.sh"
-source "${__SCRIPTS_DIR}/lib/version.sh"
-source "${__SCRIPTS_DIR}/lib/foundation.sh"
-source "${__SCRIPTS_DIR}/lib/commands.sh"
-source "${__SCRIPTS_DIR}/lib/pipelines.sh"
-source "${__SCRIPTS_DIR}/lib/parsing.sh"
+source "${SCRIPT_DIR}/lib/utils.sh"
+source "${SCRIPT_DIR}/lib/environment.sh"
+source "${SCRIPT_DIR}/lib/version.sh"
+source "${SCRIPT_DIR}/lib/foundation.sh"
+source "${SCRIPT_DIR}/lib/commands.sh"
+source "${SCRIPT_DIR}/lib/pipelines.sh"
+source "${SCRIPT_DIR}/lib/parsing.sh"
 
 # Mock get_latest_version if not available
 if ! type get_latest_version &>/dev/null; then
@@ -33,7 +34,7 @@ export -f check_fly
 # Setup test environment
 function setup_test_env() {
   # Get paths
-  local ci_dir="${__SCRIPTS_DIR%/*}"
+  local ci_dir="${SCRIPT_DIR%/*}"
   local repo_root="${ci_dir%/*}"
 
   # Create test pipeline files
@@ -133,15 +134,15 @@ function test_cmd_set_pipeline_with_helpers() {
 
   echo "All checks passed!"
   # Verify output contains expected parameters
-  assert_contains "$output" "set-pipeline" "Should include set-pipeline command"
-  assert_contains "$output" "main-test-foundation" "Should include correct pipeline name"
-  assert_contains "$output" "foundation=test-foundation" "Should include foundation parameter"
-  assert_contains "$output" "environment=lab" "Should include environment parameter"
-  assert_contains "$output" "branch=develop" "Should include branch parameter derived from environment"
-  assert_contains "$output" "foundation_path=foundations/test-foundation" "Should include foundation_path parameter"
-  assert_contains "$output" "git_uri=git@github.com:Utilities-tkgieng/test-repo.git" "Should include correct git_uri"
-  assert_contains "$output" "config_git_uri=git@github.com:Utilities-tkgieng/config-lab.git" "Should include correct config_git_uri"
-  assert_contains "$output" "config_git_branch=master" "Should include correct config_git_branch"
+  assert_contains "set-pipeline" "$output" "Should include set-pipeline command"
+  assert_contains "main-test-foundation" "$output" "Should include correct pipeline name"
+  assert_contains "foundation=test-foundation" "$output" "Should include foundation parameter"
+  assert_contains "environment=lab" "$output" "Should include environment parameter"
+  assert_contains "branch=develop" "$output" "Should include branch parameter derived from environment"
+  assert_contains "foundation_path=foundations/test-foundation" "$output" "Should include foundation_path parameter"
+  assert_contains "git_uri=git@github.com:Utilities-tkgieng/test-repo.git" "$output" "Should include correct git_uri"
+  assert_contains "config_git_uri=git@github.com:Utilities-tkgieng/config-lab.git" "$output" "Should include correct config_git_uri"
+  assert_contains "config_git_branch=master" "$output" "Should include correct config_git_branch"
 
   test_pass "cmd_set_pipeline with lab environment"
 
@@ -166,10 +167,10 @@ function test_cmd_set_pipeline_with_helpers() {
   output=$(cmd_set_pipeline "$pipeline" "$foundation" "$repo" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "release" "version" "3h" "1.0.0" "$dry_run" "$verbose" "$foundation_path" "$git_uri" "$config_git_uri" "$config_git_branch" 2>&1)
 
   # Verify output
-  assert_contains "$output" "environment=nonprod" "Should include nonprod environment parameter"
-  assert_contains "$output" "branch=master" "Should include branch=master for nonprod environment"
-  assert_contains "$output" "git_uri=git@github.com:Utilities-tkgiops/test-repo.git" "Should use tkgiops org for nonprod"
-  assert_contains "$output" "config_git_uri=git@github.com:Utilities-tkgiops/config-nonprod.git" "Should use nonprod config repo"
+  assert_contains "environment=nonprod" "$output" "Should include nonprod environment parameter"
+  assert_contains "branch=master" "$output" "Should include branch=master for nonprod environment"
+  assert_contains "git_uri=git@github.com:Utilities-tkgiops/test-repo.git" "$output" "Should use tkgiops org for nonprod"
+  assert_contains "config_git_uri=git@github.com:Utilities-tkgiops/config-nonprod.git" "$output" "Should use nonprod config repo"
 
   test_pass "cmd_set_pipeline with nonprod environment"
 }
@@ -236,13 +237,13 @@ function test_cmd_release_pipeline() {
   local output=$(cmd_release_pipeline "$foundation" "$repo" "$target" "$environment" "$datacenter" "$datacenter_type" "$branch" "$git_release_branch" "$version_file" "$timer_duration" "$version" "$dry_run" "$verbose" "$foundation_path" "$git_uri" "$config_git_uri" "$config_git_branch" 2>&1)
 
   # Verify it passes correct parameters to cmd_set_pipeline
-  assert_contains "$output" "ARG: release" "Should call cmd_set_pipeline with release pipeline"
-  assert_contains "$output" "ARG: test-foundation" "Should pass foundation"
-  assert_contains "$output" "ARG: test-repo" "Should pass repo name"
-  assert_contains "$output" "ARG: develop" "Should pass branch"
-  assert_contains "$output" "ARG: foundations/test-foundation" "Should pass foundation_path"
-  assert_contains "$output" "ARG: git@github.com:Utilities-tkgieng/test-repo.git" "Should pass git_uri"
-  assert_contains "$output" "ARG: git@github.com:Utilities-tkgieng/config-lab.git" "Should pass config_git_uri"
+  assert_contains "ARG: release" "$output" "Should call cmd_set_pipeline with release pipeline"
+  assert_contains "ARG: test-foundation" "$output" "Should pass foundation"
+  assert_contains "ARG: test-repo" "$output" "Should pass repo name"
+  assert_contains "ARG: develop" "$output" "Should pass branch"
+  assert_contains "ARG: foundations/test-foundation" "$output" "Should pass foundation_path"
+  assert_contains "ARG: git@github.com:Utilities-tkgieng/test-repo.git" "$output" "Should pass git_uri"
+  assert_contains "ARG: git@github.com:Utilities-tkgieng/config-lab.git" "$output" "Should pass config_git_uri"
 
   test_pass "cmd_release_pipeline integration"
 }
