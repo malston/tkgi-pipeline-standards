@@ -44,11 +44,29 @@ You can customize basic settings using command line arguments:
 ```bash
 python generate-reference-template.py \
   --output-dir ./my-new-project \
+  --template-type kustomize \
   --org-name "MyOrganization" \
   --repo-name "my-service" \
   --default-branch "main" \
   --default-foundation "aws-k8s-p-01"
 ```
+
+### Available Template Types
+
+Choose the right template type for your project:
+
+```bash
+# For Kubernetes projects using Kustomize (default)
+python generate-reference-template.py --output-dir ./my-project --template-type kustomize
+
+# For Helm chart repositories
+python generate-reference-template.py --output-dir ./my-chart --template-type helm
+
+# For CLI tool management projects
+python generate-reference-template.py --output-dir ./my-tool --template-type cli-tool
+```
+
+Each template type includes appropriate task definitions organized by category.
 
 ## Customizing Using a Configuration File
 
@@ -84,6 +102,7 @@ For more advanced customization, create a YAML configuration file:
 
 | Option | Description | Default |
 |--------|-------------|---------|
+| `template_type` | Type of template to generate (kustomize, helm, cli-tool) | "kustomize" |
 | `org_name` | GitHub organization name | "Utilities-tkgieng" |
 | `repo_name` | Repository name | "my-service" |
 | `default_branch` | Default git branch | "develop" |
