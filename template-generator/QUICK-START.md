@@ -130,13 +130,41 @@ After generating your reference template:
    ./run_tests.sh
    ```
 
+## Validating an Existing Project
+
+You can validate an existing project against the reference template standards using the validation script:
+
+```bash
+# Validate a project against the kustomize template standards
+./validate-template-compliance.py --project-dir /path/to/your-project --template-type kustomize
+
+# For more detailed output
+./validate-template-compliance.py --project-dir /path/to/your-project --template-type helm --verbose
+```
+
+The validation script checks for:
+
+- Required directory structure
+- Required files
+- Script standards (shebang, strict mode, etc.)
+- fly.sh commands and options
+- Pipeline YAML structure
+- Task file organization
+- Test framework implementation
+
+If issues are found, the script will provide a categorized report and suggest next steps for remediation.
+
 ## Updating an Existing Project
 
 To update an existing project with a new reference template:
 
 1. Generate a new template in a temporary directory
-2. Compare the generated files with your existing files
-3. Merge the changes manually or using tools like `diff` and `patch`
+2. Use the validation script to identify compliance issues:
+   ```bash
+   ./validate-template-compliance.py --project-dir /path/to/your-project --template-type kustomize
+   ```
+3. Compare the generated files with your existing files
+4. Merge the changes manually or using tools like `diff` and `patch`
 
 ## Best Practices
 

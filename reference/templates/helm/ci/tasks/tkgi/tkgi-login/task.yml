@@ -1,0 +1,18 @@
+---
+platform: linux
+
+inputs:
+  - name: gatekeeper-repo
+
+outputs:
+  - name: pks-config
+
+run:
+  path: gatekeeper-repo/ci/tasks/tkgi/tkgi-login/task.sh
+
+params:
+  PKS_API_URL: ""
+  PKS_USER: ""
+  PKS_PASSWORD: ""
+  FOUNDATION: ""
+  SKIP_TLS_VERIFICATION: "true"

@@ -414,12 +414,14 @@ version: '1.0'
 
         # Generate helm tasks
         if template_type == "helm":
-            self._generate_template("ci/tasks/helm/package-chart/task.yml")
-            self._generate_template("ci/tasks/helm/package-chart/task.sh", executable=True)
-            self._generate_template("ci/tasks/helm/lint-chart/task.yml")
-            self._generate_template("ci/tasks/helm/lint-chart/task.sh", executable=True)
-            self._generate_template("ci/tasks/helm/deploy-chart/task.yml")
-            self._generate_template("ci/tasks/helm/deploy-chart/task.sh", executable=True)
+            self._generate_template("ci/tasks/helm/helm-lint/task.yml")
+            self._generate_template("ci/tasks/helm/helm-lint/task.sh", executable=True)
+            self._generate_template("ci/tasks/helm/helm-deploy/task.yml")
+            self._generate_template("ci/tasks/helm/helm-deploy/task.sh", executable=True)
+            self._generate_template("ci/tasks/helm/helm-test/task.yml")
+            self._generate_template("ci/tasks/helm/helm-test/task.sh", executable=True)
+            self._generate_template("ci/tasks/helm/helm-delete/task.yml")
+            self._generate_template("ci/tasks/helm/helm-delete/task.sh", executable=True)
 
         # Generate cli-tool tasks
         if template_type == "cli-tool":

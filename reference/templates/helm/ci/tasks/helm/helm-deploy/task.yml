@@ -1,0 +1,20 @@
+---
+platform: linux
+
+inputs:
+  - name: gatekeeper-repo
+  - name: config-repo
+  - name: pks-config
+
+run:
+  path: gatekeeper-repo/ci/tasks/helm/helm-deploy/task.sh
+
+params:
+  FOUNDATION: ""
+  NAMESPACE: ""
+  RELEASE_NAME: ""
+  CHART_PATH: ""
+  VALUES_FILE: ""
+  GATEKEEPER_VERSION: ""
+  TIMEOUT: "10m"
+  PIPELINE_DRY_RUN: "false"
