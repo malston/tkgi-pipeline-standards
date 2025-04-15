@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 #
-# Script: help.sh
-# Description: Help text and usage information for the fly.sh script
+# help.sh - Help functions for the fly.sh script
 #
 
-# Show script usage information
+# Show general usage information
 function show_usage() {
-    local exit_code=${1:-0}
-
-    cat <<EOF
-Usage: $0 [options] [command] [pipeline_name]
+  local exit_code=${1:-0}
+  cat <<EOF
+Usage: fly.sh [options] [command] [pipeline_name]
 
 Commands:
   set          Set pipeline (default)
@@ -19,134 +17,153 @@ Commands:
   release      Create a release pipeline
 
 Options:
-  -h, --help                   Show this help message
-  -f, --foundation FOUNDATION  Foundation to target (required)
-  -t, --target TARGET          Concourse target (defaults to foundation name)
-  -p, --pipeline PIPELINE      Pipeline name (default: main)
-  -b, --branch BRANCH          Git branch to use (default: develop)
-  -d, --params-branch BRANCH   Params repo branch (default: master)
-  -r, --release                Set release pipeline
-  -e, --environment ENV        Environment (lab, nonprod, prod)
-  -v, --version VERSION        Version to use for release
-  --verbose                    Enable verbose output
-  -o, --org GITHUB_ORG         GitHub organization (default: Utilities-tkgieng)
-  --dry-run                    Print commands without executing
+  -h, --help           Show this help message
+  --help-<command>     Show help for a specific command
+  -f, --foundation     Specify foundation to deploy (required)
+  -t, --target         Concourse target (default: foundation name)
+  -b, --branch         Git branch to use (default: develop)
+  -p, --pipeline       Pipeline name (default: main)
+  -P, --params-repo    Path to params repo (default: $HOME/git/params)
+  -d, --params-branch  Params git branch (default: master)
+  -e, --environment    Environment (lab, nonprod, prod)
+  -v, --version        Specify version for release pipeline
+  
+  --dry-run            Show what would be done without making changes
+  --verbose            Enable verbose output
 EOF
-
-    exit "$exit_code"
+  exit "${exit_code}"
 }
 
 # Show command-specific help
 function show_command_help() {
-    local command=$1
-    local exit_code=${2:-0}
+  local command=$1
+  local exit_code=${2:-0}
 
-    case "$command" in
-    set)
-        cat << EOF
-Command: set - Set a pipeline
+  case "${command}" in
+  set)
+    cat <<EOF
+Usage: fly.sh [options] set [pipeline_name]
 
-Usage: $0 set [options] [pipeline_name]
+Set a pipeline in Concourse.
+
+Required Options:
+  -f, --foundation     Specify foundation to deploy
+
+Additional Options:
+  -t, --target         Concourse target (default: foundation name)
+  -b, --branch         Git branch to use (default: develop)
+  -p, --pipeline       Pipeline name (default: main)
+  -P, --params-repo    Path to params repo
+  -d, --params-branch  Params git branch (default: master)
+  -v, --verbose        Enable verbose output
+  --dry-run            Show what would be done without making changes
+
+Examples:
+  ./fly.sh -f cml-k8s-n-01 set
+  ./fly.sh -f cml-k8s-n-01 -p custom set
+  ./fly.sh -f cml-k8s-n-01 --params-branch feature-branch set
+EOF
+    ;;
+  unpause)
+    cat <<EOF
+Usage: fly.sh [options] unpause [pipeline_name]
+
+Set and unpause a pipeline in Concourse.
+
+Required Options:
+  -f, --foundation     Specify foundation to deploy
+
+Additional Options:
+  Same as the "set" command
+
+Examples:
+  ./fly.sh -f cml-k8s-n-01 unpause
+  ./fly.sh -f cml-k8s-n-01 -p custom unpause
+EOF
+    ;;
+  destroy)
+    cat <<EOF
+Usage: fly.sh [options] destroy [pipeline_name]
+
+Destroy a pipeline in Concourse.
+
+Required Options:
+  -f, --foundation     Specify foundation to deploy
+  -t, --target         Concourse target (if different from foundation)
+
+Additional Options:
+  -p, --pipeline       Pipeline name (default: main)
+  --dry-run            Show what would be done without making changes
+
+Examples:
+  ./fly.sh -f cml-k8s-n-01 destroy
+  ./fly.sh -f cml-k8s-n-01 -p custom destroy
+EOF
+    ;;
+  validate)
+    cat <<EOF
+Usage: fly.sh [options] validate [pipeline_name]
+
+Validate a pipeline YAML without setting it in Concourse.
 
 Options:
-  -f, --foundation FOUNDATION  Foundation to target (required)
-  -t, --target TARGET          Concourse target (defaults to foundation name)
-  -b, --branch BRANCH          Git branch to use (default: develop)
-  -d, --params-branch BRANCH   Params repo branch (default: master)
-  -e, --environment ENV        Environment (lab, nonprod, prod)
-  --dry-run                    Print commands without executing
-  --verbose                    Enable verbose output
+  -f, --foundation     Specify foundation (for parameter interpolation)
+  -p, --pipeline       Pipeline name (default: main)
+  --dry-run            Always true for this command
+
+Examples:
+  ./fly.sh -f cml-k8s-n-01 validate
+  ./fly.sh -f cml-k8s-n-01 -p custom validate
 EOF
-        ;;
-    unpause)
-        cat << EOF
-Command: unpause - Set pipeline and unpause it
+    ;;
+  release)
+    cat <<EOF
+Usage: fly.sh [options] release
 
-Usage: $0 unpause [options] [pipeline_name]
+Create and set a release pipeline in Concourse.
 
-Options:
-  -f, --foundation FOUNDATION  Foundation to target (required)
-  -t, --target TARGET          Concourse target (defaults to foundation name)
-  -b, --branch BRANCH          Git branch to use (default: develop)
-  -d, --params-branch BRANCH   Params repo branch (default: master)
-  -e, --environment ENV        Environment (lab, nonprod, prod)
-  --dry-run                    Print commands without executing
-  --verbose                    Enable verbose output
+Required Options:
+  -f, --foundation     Specify foundation to deploy
+  --version            Version for release (e.g., 1.2.3)
+
+Additional Options:
+  Same as the "set" command, plus:
+  --version-file       File containing version (default: version)
+
+Examples:
+  ./fly.sh -f cml-k8s-n-01 --version 1.2.3 release
+  ./fly.sh -f cml-k8s-n-01 --version-file custom-version release
 EOF
-        ;;
-    destroy)
-        cat << EOF
-Command: destroy - Destroy a pipeline
+    ;;
+  *)
+    error "Unknown command: ${command}"
+    show_usage 1
+    ;;
+  esac
 
-Usage: $0 destroy [options] [pipeline_name]
-
-Options:
-  -f, --foundation FOUNDATION  Foundation to target (required)
-  -t, --target TARGET          Concourse target (defaults to foundation name)
-  --dry-run                    Print commands without executing
-EOF
-        ;;
-    validate)
-        cat << EOF
-Command: validate - Validate pipeline YAML without setting
-
-Usage: $0 validate [options] [pipeline_name]
-
-Options:
-  --dry-run                    Print commands without executing
-EOF
-        ;;
-    release)
-        cat << EOF
-Command: release - Create a release pipeline
-
-Usage: $0 release [options]
-
-Options:
-  -f, --foundation FOUNDATION  Foundation to target (required)
-  -t, --target TARGET          Concourse target (defaults to foundation name)
-  -v, --version VERSION        Version to use for release
-  -b, --branch BRANCH          Git branch to use (default: master)
-  -d, --params-branch BRANCH   Params repo branch (default: master)
-  -e, --environment ENV        Environment (lab, nonprod, prod)
-  --verbose                    Enable verbose output
-  --dry-run                    Print commands without executing
-EOF
-        ;;
-    *)
-        show_usage "$exit_code"
-        ;;
-    esac
-
-    exit "$exit_code"
+  exit "${exit_code}"
 }
 
-# Check if help flags were provided and show appropriate help
+# Process help flags, display help if requested
 function check_help_flags() {
-    local supported_commands=$1
-    shift
+  local supported_commands=$1
+  shift
 
-    # Look at the first non-option argument (if any) to identify the command
-    local command=""
-    for arg in "$@"; do
-        if [[ ! "$arg" =~ ^- ]]; then
-            if [[ "$arg" =~ ^($supported_commands)$ ]]; then
-                command="$arg"
-                break
-            fi
-        fi
-    done
+  local args=("$@")
+  local command=""
 
-    # Check for help flags
-    for arg in "$@"; do
-        case "$arg" in
-        -h | --help | help)
-            if [[ -n "$command" ]]; then
-                show_command_help "$command" 0
-            else
-                show_usage 0
-            fi
-            ;;
-        esac
-    done
+  # Process global help flag
+  for arg in "${args[@]}"; do
+    if [[ "${arg}" == "--help" || "${arg}" == "-h" ]]; then
+      show_usage 0
+    elif [[ "${arg}" =~ ^--help-(.+)$ ]]; then
+      command="${BASH_REMATCH[1]}"
+      if [[ "${command}" =~ ^(${supported_commands})$ ]]; then
+        show_command_help "${command}" 0
+      else
+        error "Unknown command for help: ${command}"
+        show_usage 1
+      fi
+    fi
+  done
 }

@@ -1,91 +1,95 @@
 #!/usr/bin/env bash
 #
-# Script: utils.sh
-# Description: Utility functions for pipeline management
+# utils.sh - Utility functions for the fly.sh script
 #
 
-# Print an error message
+# Display error message and exit with error code
 function error() {
-    echo "[ERROR] $*" >&2
+    echo -e "\033[0;31mERROR: $1\033[0m" >&2
 }
 
-# Print a warning message
+# Display warning message
 function warn() {
-    echo "[WARNING] $*" >&2
+    echo -e "\033[0;33mWARN: $1\033[0m" >&2
 }
 
-# Print an info message
+# Display info message
 function info() {
-    echo "[INFO] $*"
+    echo -e "\033[0;36mINFO: $1\033[0m"
 }
 
-# Print a debug message (only when DEBUG=true)
+# Display success message
+function success() {
+    echo -e "\033[0;32mSUCCESS: $1\033[0m"
+}
+
+# Display debug message if debug is enabled
 function debug() {
     if [[ "${DEBUG}" == "true" ]]; then
-        echo "[DEBUG] $*"
+        echo -e "\033[0;35mDEBUG: $1\033[0m" >&2
     fi
 }
 
-# Check if command exists
-function command_exists() {
-    command -v "$1" &>/dev/null
-}
-
-# Check if fly is installed and working
+# Check if fly is installed and logged in
 function check_fly() {
     if [[ "${TEST_MODE}" == "true" ]]; then
+        debug "Skipping fly check in test mode"
         return 0
     fi
 
-    if ! command_exists fly; then
-        error "fly command not found. Please install it first."
+    if ! command -v fly &>/dev/null; then
+        error "fly command not found. Please install it: https://concourse-ci.org/download.html"
+        return 1
+    fi
+
+    if ! fly --version &>/dev/null; then
+        error "Failed to run fly --version. It may be outdated or not properly installed."
         return 1
     fi
 
     return 0
 }
 
-# Run a command with dry run support
-function run_command() {
-    if [[ "$DRY_RUN" == "true" ]]; then
-        echo "[DRY RUN] Would execute: $*"
-        return 0
-    fi
-
-    "$@"
+# Check if a command exists
+function command_exists() {
+    command -v "$1" &>/dev/null
 }
 
-# Generic version comparison function
-# Returns 0 if version1 >= version2, 1 otherwise
-function compare_versions() {
-    local version1="$1"
-    local version2="$2"
-
-    if [[ "$version1" == "$version2" ]]; then
-        return 0
+# Verify the existence of a file
+function verify_file_exists() {
+    local file="$1"
+    if [[ ! -f "${file}" ]]; then
+        error "File not found: ${file}"
+        return 1
     fi
+    return 0
+}
 
-    local IFS=.
-    local i ver1=($version1) ver2=($version2)
+# Verify the existence of a directory
+function verify_dir_exists() {
+    local dir="$1"
+    if [[ ! -d "${dir}" ]]; then
+        error "Directory not found: ${dir}"
+        return 1
+    fi
+    return 0
+}
 
-    # Fill empty fields with zeros
-    for ((i = ${#ver1[@]}; i < ${#ver2[@]}; i++)); do
-        ver1[i]=0
-    done
+# Get the absolute path for a file
+function get_abs_path() {
+    local path="$1"
+    echo "$(cd "$(dirname "${path}")" && pwd)/$(basename "${path}")"
+}
 
-    for ((i = 0; i < ${#ver1[@]}; i++)); do
-        if [[ -z ${ver2[i]} ]]; then
-            ver2[i]=0
-        fi
-
-        if ((10#${ver1[i]} > 10#${ver2[i]})); then
+# Check if a value is in an array
+function in_array() {
+    local value="$1"
+    shift
+    local array=("$@")
+    for item in "${array[@]}"; do
+        if [[ "${item}" == "${value}" ]]; then
             return 0
         fi
-
-        if ((10#${ver1[i]} < 10#${ver2[i]})); then
-            return 1
-        fi
     done
-
-    return 0
+    return 1
 }
