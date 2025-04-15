@@ -41,7 +41,24 @@ VERBOSE=false
 
 # Function to display usage
 function show_usage() {
-  grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+  cat <<EOF
+Script: install.sh
+Description: Installs a component using a CLI tool
+
+Usage: ./install.sh [options]
+
+Options:
+  -f, --foundation FOUNDATION   Foundation name (e.g., cml-k8s-n-01)
+  -t, --tool TOOL_NAME          Tool name (e.g., tridentctl)
+  -v, --version VERSION         Tool version
+  -c, --config-repo PATH        Path to configuration repository
+  -n, --namespace NAMESPACE     Namespace to install into (default: tool-specific)
+  -h, --harbor HOSTNAME         Harbor registry hostname
+  -o, --options OPTIONS         Additional installation options
+  -m, --mode MODE               Operation mode (install, wipe, etc.)
+  -V, --verbose                 Enable verbose output
+  --help                        Show this help message
+EOF
   exit 1
 }
 

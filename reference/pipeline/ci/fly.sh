@@ -23,21 +23,23 @@ PARAMS_GIT_BRANCH="master"
 BRANCH="develop"
 
 usage() {
-    echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-P PARAMS_REPO] [-d PARAMS_BRANCH] [-b BRANCH]"
-    echo "  -f FOUNDATION    Foundation to use (cml-k8s-n-01, etc.)"
-    echo "  -p PIPELINE      Pipeline to set (main or release)"
-    echo "  -t TARGET        Concourse target to use"
-    echo "  -P PARAMS_REPO   Path to params repository (default: $PARAMS_REPO)"
-    echo "  -d PARAMS_BRANCH Params git branch to use (default: $PARAMS_GIT_BRANCH)"
-    echo "  -b BRANCH        Branch to use (default: $BRANCH)"
-    echo ""
-    echo "Note: For more advanced options, use ci/scripts/fly.sh which provides:"
-    echo "  - Command support (set, unpause, destroy, validate, release)"
-    echo "  - Command-specific help (try: scripts/fly.sh --help set)"
-    echo "  - Improved params handling"
-    echo "  - More configuration options"
-    echo ""
-    echo "Run: ${SCRIPT_DIR}/scripts/fly.sh --help for full details"
+    cat <<EOF
+Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-P PARAMS_REPO] [-d PARAMS_BRANCH] [-b BRANCH]
+  -f FOUNDATION    Foundation to use (cml-k8s-n-01, etc.)
+  -p PIPELINE      Pipeline to set (main or release)
+  -t TARGET        Concourse target to use
+  -P PARAMS_REPO   Path to params repository (default: $PARAMS_REPO)
+  -d PARAMS_BRANCH Params git branch to use (default: $PARAMS_GIT_BRANCH)
+  -b BRANCH        Branch to use (default: $BRANCH)
+
+Note: For more advanced options, use ci/scripts/fly.sh which provides:
+  - Command support (set, unpause, destroy, validate, release)
+  - Command-specific help (try: scripts/fly.sh --help set)
+  - Improved params handling
+  - More configuration options
+
+Run: ${SCRIPT_DIR}/scripts/fly.sh --help for full details
+EOF
 }
 
 if [[ $# -eq 0 ]]; then

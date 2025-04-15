@@ -37,7 +37,22 @@ VERBOSE=false
 
 # Function to display usage
 function show_usage() {
-  grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+  cat <<EOF
+Script: configure.sh
+Description: Configures a component after installation
+
+Usage: ./configure.sh [options]
+
+Options:
+  -f, --foundation FOUNDATION   Foundation name (e.g., cml-k8s-n-01)
+  -t, --tool TOOL_NAME          Tool name (e.g., tridentctl)
+  -c, --config-path PATH        Path to configuration files
+  -o, --output-dir DIRECTORY    Output directory for results
+  -n, --namespace NAMESPACE     Namespace to configure (default: tool-specific)
+  -O, --options OPTIONS         Additional configuration options
+  -V, --verbose                 Enable verbose output
+  --help                        Show this help message
+EOF
   exit 1
 }
 

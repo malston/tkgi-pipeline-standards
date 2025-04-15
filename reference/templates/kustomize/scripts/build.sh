@@ -35,7 +35,19 @@ VERBOSE=false
 
 # Function to display usage
 function show_usage() {
-  grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+  cat <<EOF
+Script: build.sh
+Description: Builds Kubernetes resources using kustomize
+
+Usage: ./build.sh [options]
+
+Options:
+  -f, --foundation FOUNDATION   Foundation name (e.g., cml-k8s-n-01)
+  -c, --config PATH             Path to configuration directory
+  -o, --output PATH             Path to output directory (default: ./build)
+  -v, --verbose                 Enable verbose output
+  -h, --help                    Show this help message
+EOF
   exit 1
 }
 

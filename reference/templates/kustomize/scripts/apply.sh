@@ -39,7 +39,21 @@ VERBOSE=false
 
 # Function to display usage
 function show_usage() {
-  grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+  cat <<EOF
+Script: apply.sh
+Description: Applies Kubernetes resources to a cluster
+
+Usage: ./apply.sh [options]
+
+Options:
+  -f, --foundation FOUNDATION   Foundation name (e.g., cml-k8s-n-01)
+  -p, --password PASSWORD       PKS/TKGi password
+  -k, --kinds KINDS             Comma-separated list of kinds to apply (default: all)
+  -n, --namespace-limit LIMIT   Number of namespaces to process (default: 0 = all)
+  -m, --manifests PATH          Path to manifests directory (default: ./build)
+  -v, --verbose                 Enable verbose output
+  -h, --help                    Show this help message
+EOF
   exit 1
 }
 

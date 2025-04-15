@@ -23,21 +23,23 @@ BRANCH="${default_branch}"
 VERBOSE="false"
 
 usage() {
-    echo "Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-d PARAMS_REPO] [-b BRANCH] [-v]"
-    echo "  -f FOUNDATION   Foundation to use (${default_foundation}, etc.)"
-    echo "  -p PIPELINE     Pipeline to set (main or release)"
-    echo "  -t TARGET       Concourse target to use"
-    echo "  -d PARAMS_REPO  Path to config repository (default: $PARAMS_REPO)"
-    echo "  -b BRANCH       Branch to use (default: $BRANCH)"
-    echo "  -v              Verbose output"
-    echo ""
-    echo "Note: For more advanced options, use ci/scripts/fly.sh which provides:"
-    echo "  - Command support (set, unpause, destroy, validate, release)"
-    echo "  - Command-specific help (try: scripts/fly.sh --help set)"
-    echo "  - Improved params handling"
-    echo "  - More configuration options"
-    echo ""
-    echo "Run: ${SCRIPT_DIR}/scripts/fly.sh --help for full details"
+    cat <<EOF
+Usage: $0 -f FOUNDATION [-p PIPELINE] [-t TARGET] [-d PARAMS_REPO] [-b BRANCH] [-v]
+  -f FOUNDATION   Foundation to use (\${default_foundation}, etc.)
+  -p PIPELINE     Pipeline to set (main or release)
+  -t TARGET       Concourse target to use
+  -d PARAMS_REPO  Path to config repository (default: $PARAMS_REPO)
+  -b BRANCH       Branch to use (default: $BRANCH)
+  -v              Verbose output
+
+Note: For more advanced options, use ci/scripts/fly.sh which provides:
+  - Command support (set, unpause, destroy, validate, release)
+  - Command-specific help (try: scripts/fly.sh --help set)
+  - Improved params handling
+  - More configuration options
+
+Run: ${SCRIPT_DIR}/scripts/fly.sh --help for full details
+EOF
 }
 
 if [[ $# -eq 0 ]]; then

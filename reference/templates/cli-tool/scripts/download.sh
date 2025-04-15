@@ -35,7 +35,21 @@ VERBOSE=false
 
 # Function to display usage
 function show_usage() {
-  grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+  cat <<EOF
+Script: download.sh
+Description: Downloads a CLI tool
+
+Usage: ./download.sh [options]
+
+Options:
+  -t, --tool TOOL_NAME          Tool name (e.g., tridentctl)
+  -v, --version VERSION         Tool version
+  -o, --output-dir DIRECTORY    Output directory (default: ./bin)
+  -u, --url URL                 Custom download URL
+  -h, --harbor HOSTNAME         Harbor registry hostname
+  -V, --verbose                 Enable verbose output
+  --help                        Show this help message
+EOF
   exit 1
 }
 

@@ -35,7 +35,21 @@ VERBOSE=false
 
 # Function to display usage
 function show_usage() {
-  grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# \{0,1\}//'
+  cat <<EOF
+Script: validate.sh
+Description: Validates the installation of a component
+
+Usage: ./validate.sh [options]
+
+Options:
+  -f, --foundation FOUNDATION   Foundation name (e.g., cml-k8s-n-01)
+  -t, --tool TOOL_NAME          Tool name (e.g., tridentctl)
+  -c, --config-repo PATH        Path to configuration repository
+  -o, --output-dir DIRECTORY    Output directory for validation results
+  -n, --namespace NAMESPACE     Namespace to validate (default: tool-specific)
+  -V, --verbose                 Enable verbose output
+  --help                        Show this help message
+EOF
   exit 1
 }
 
