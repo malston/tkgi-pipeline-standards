@@ -20,14 +20,32 @@ set -o pipefail
 # Get script directory for relative paths
 __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# Get repository root directory
-REPO_ROOT="$(cd "${__DIR}/../../../../.." &>/dev/null && pwd)"
-
 # Validate required environment variables
-[[ -z "${FOUNDATION}" ]] && { echo "Error: FOUNDATION is required"; exit 1; }
-[[ -z "${PKS_API_URL}" ]] && { echo "Error: PKS_API_URL is required"; exit 1; }
-[[ -z "${PKS_USER}" ]] && { echo "Error: PKS_USER is required"; exit 1; }
-[[ -z "${PKS_PASSWORD}" ]] && { echo "Error: PKS_PASSWORD is required"; exit 1; }
+[[ -z "${FOUNDATION}" ]] && {
+  PKS_API_URL="https://api.cml-k8s-n-01.k8s.wellsfargo.net"
+  # Parse foundation name from PKS_API_URL if not provided
+  if [[ "${PKS_API_URL}" =~ ^https?://([^.]+)\.([^.]+)\. ]]; then
+    FOUNDATION="${BASH_REMATCH[2]}"
+  else
+    echo "Error: FOUNDATION is required and PKS_API_URL is not in the expected format"
+    exit 1
+  fi
+}
+
+[[ -z "${PKS_API_URL}" ]] && {
+  echo "Error: PKS_API_URL is required"
+  exit 1
+}
+
+[[ -z "${PKS_USER}" ]] && {
+  echo "Error: PKS_USER is required"
+  exit 1
+}
+
+[[ -z "${PKS_PASSWORD}" ]] && {
+  echo "Error: PKS_PASSWORD is required"
+  exit 1
+}
 
 # Set defaults for optional variables
 VERBOSE="${VERBOSE:-false}"
@@ -41,7 +59,7 @@ echo "Running tkgi-login task for foundation: ${FOUNDATION}"
 echo "Logging into PKS/TKGi API at: ${PKS_API_URL}"
 
 # Check if tkgi command exists
-if ! command -v tkgi &> /dev/null; then
+if ! command -v tkgi &>/dev/null; then
   echo "Error: tkgi command not found"
   exit 1
 fi
@@ -54,33 +72,29 @@ echo "Logging into PKS/TKGi API"
 tkgi login -a "${PKS_API_URL}" -u "${PKS_USER}" -p "${PKS_PASSWORD}" -k
 
 # Check login status
-if [[ $? -ne 0 ]]; then
+if ! tkgi login -a "${PKS_API_URL}" -u "${PKS_USER}" -p "${PKS_PASSWORD}"; then
   echo "Error: Failed to login to PKS/TKGi API"
   exit 1
 fi
 
 # Save clusters information
 echo "Retrieving clusters information"
-tkgi clusters --json > pks-config/clusters.json
-
-# Filter clusters for this foundation
-echo "Filtering clusters for foundation: ${FOUNDATION}"
-jq ".[] | select(.name | startswith(\"${FOUNDATION}\"))" pks-config/clusters.json > pks-config/foundation-clusters.json
+tkgi clusters --json >pks-config/clusters.json
 
 # Get the first cluster for this foundation
-FIRST_CLUSTER=$(jq -r ".[0].name" pks-config/foundation-clusters.json)
+FIRST_CLUSTER=$(jq -r ".[0]?.name" pks-config/clusters.json)
 
 if [[ -z "${FIRST_CLUSTER}" || "${FIRST_CLUSTER}" == "null" ]]; then
   echo "Warning: No clusters found for foundation: ${FOUNDATION}"
 else
   echo "Getting credentials for cluster: ${FIRST_CLUSTER}"
   tkgi get-credentials "${FIRST_CLUSTER}"
-  
+
   # Export KUBECONFIG
   KUBECONFIG_FILE="$(find ~/.kube -name "config" -o -name "*${FIRST_CLUSTER}*" | head -n 1)"
   if [[ -f "${KUBECONFIG_FILE}" ]]; then
     cp "${KUBECONFIG_FILE}" pks-config/kubeconfig
-    echo "KUBECONFIG=${KUBECONFIG_FILE}" > pks-config/environment
+    echo "KUBECONFIG=${KUBECONFIG_FILE}" >pks-config/environment
     echo "Saved kubeconfig to: pks-config/kubeconfig"
   else
     echo "Warning: Could not find kubeconfig file for cluster: ${FIRST_CLUSTER}"
@@ -88,11 +102,6 @@ else
 fi
 
 # Save PKS/TKGi credentials
-cat > pks-config/credentials <<EOF
-PKS_API_URL=${PKS_API_URL}
-PKS_USER=${PKS_USER}
-PKS_PASSWORD=${PKS_PASSWORD}
-FOUNDATION=${FOUNDATION}
-EOF
+cp "$HOME/.pks/creds.yml" pks-config/creds.yml
 
 echo "Task completed successfully"

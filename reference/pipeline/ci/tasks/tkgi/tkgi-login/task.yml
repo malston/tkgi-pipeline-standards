@@ -12,10 +12,10 @@ run:
 
 params:
   # Required parameters
-  FOUNDATION: ((foundation))        # Foundation name (e.g., cml-k8s-n-01)
   PKS_API_URL: ((pks_api_url))      # PKS/TKGi API URL
   PKS_USER: ((pks_api_admin))       # PKS/TKGi username
   PKS_PASSWORD: ((pks_api_admin_pw)) # PKS/TKGi password
   
   # Optional parameters
+  FOUNDATION: ((foundation))        # Foundation name for PKS/TKGi (will be parsed from PKS_API_URL if not provided)
   VERBOSE: ((verbose))              # Enable verbose output
