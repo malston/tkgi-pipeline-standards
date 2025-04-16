@@ -5,17 +5,18 @@
 
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+LIB_DIR="${SCRIPT_DIR}/../lib"
 source "${SCRIPT_DIR}/test-framework.sh"
 source "${SCRIPT_DIR}/mock_test_fly.sh"
 
 # Source all necessary modules to test command execution
-source "${SCRIPT_DIR}/lib/utils.sh"
-source "${SCRIPT_DIR}/lib/environment.sh"
-source "${SCRIPT_DIR}/lib/version.sh"
-source "${SCRIPT_DIR}/lib/foundation.sh"
-source "${SCRIPT_DIR}/lib/commands.sh"
-source "${SCRIPT_DIR}/lib/pipelines.sh"
-source "${SCRIPT_DIR}/lib/parsing.sh"
+source "${LIB_DIR}/utils.sh"
+source "${LIB_DIR}/environment.sh"
+source "${LIB_DIR}/version.sh"
+source "${LIB_DIR}/foundation.sh"
+source "${LIB_DIR}/commands.sh"
+source "${LIB_DIR}/pipelines.sh"
+source "${LIB_DIR}/parsing.sh"
 
 # Mock get_latest_version if not available
 if ! type get_latest_version &>/dev/null; then

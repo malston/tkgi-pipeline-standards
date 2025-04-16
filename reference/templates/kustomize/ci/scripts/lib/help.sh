@@ -7,7 +7,7 @@
 # Function to display command-specific usage
 function show_command_usage() {
   local command="$1"
-  
+
   case "$command" in
     set)
       cat << USAGE_SET
@@ -58,7 +58,7 @@ Description: Destroy a pipeline in Concourse
 
 Usage: ./fly.sh [options] destroy [pipeline_name]
 
-Permanently deletes a pipeline from Concourse. 
+Permanently deletes a pipeline from Concourse.
 Will prompt for confirmation unless pipe input is detected.
 
 Options:
@@ -154,7 +154,7 @@ Options:
   --timer DURATION           Set timer trigger duration
   --enable-validation-testing Enable validation testing
   -h, --help                 Show this help message and exit
-  
+
 For more detailed help on a specific command, use any of these formats:
   ./fly.sh --help [command]   Example: ./fly.sh --help set
   ./fly.sh -h [command]       Example: ./fly.sh -h unpause

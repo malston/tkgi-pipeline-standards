@@ -27,8 +27,10 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make generate OUTPUT_DIR=~/my-new-project ORG_NAME=MyOrg REPO_NAME=my-service"
+	@echo "  make validate PROJECT_DIR=~/my-new-project"
 	@echo "  make generate-helm OUTPUT_DIR=~/my-helm-chart"
-	@echo "  make validate PROJECT_DIR=~/my-helm-chart"
+	@echo "  make validate PROJECT_DIR=~/my-helm-chart TEMPLATE_TYPE=helm"
+	@echo "  make compliance-test OUTPUT_DIR=~/my-new-project TEMPLATE_TYPE=cli-tool"
 
 # Setup virtual environment
 .PHONY: setup
@@ -103,6 +105,36 @@ validate:
 		--project-dir $(PROJECT_DIR) \
 		$(if $(TEMPLATE_TYPE),--template-type "$(TEMPLATE_TYPE)") \
 		$(if $(VERBOSE),--verbose)
+
+.PHONY: compliance-test
+compliance-test:
+	# Check if the output directory is set
+	@if [ -z "$(OUTPUT_DIR)" ]; then \
+		echo "Error: OUTPUT_DIR is not set. Please set it to the output directory."; \
+		exit 1; \
+	fi
+	# Check if the template type is set
+	@if [ -z "$(TEMPLATE_TYPE)" ]; then \
+		echo "Error: TEMPLATE_TYPE is not set. Please set it to the template type."; \
+		exit 1; \
+	fi
+	@echo "Running compliance test..."
+	@rm -rf $(OUTPUT_DIR)
+	@echo "Generating template..."
+	$(PYTHON_VENV) generate-reference-template.py \
+		--output-dir $(OUTPUT_DIR) \
+		$(if $(ORG_NAME),--org-name "$(ORG_NAME)") \
+		$(if $(REPO_NAME),--repo-name "$(REPO_NAME)") \
+		$(if $(TEMPLATE_TYPE),--template-type "$(TEMPLATE_TYPE)") \
+		$(if $(DEFAULT_BRANCH),--default-branch "$(DEFAULT_BRANCH)") \
+		$(if $(DEFAULT_FOUNDATION),--default-foundation "$(DEFAULT_FOUNDATION)") \
+		$(if $(CONFIG),--config "$(CONFIG)")
+	$(PYTHON_VENV) validate-template-compliance.py \
+		--project-dir $(OUTPUT_DIR) \
+		$(if $(TEMPLATE_TYPE),--template-type "$(TEMPLATE_TYPE)") \
+		$(if $(VERBOSE),--verbose)
+	@../reference/templates/$(TEMPLATE_TYPE)/ci/scripts/tests/run_tests.sh
+
 
 # Clean output directories and cache files
 .PHONY: clean

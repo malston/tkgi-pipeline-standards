@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
+# Enable strict mode
+set -o errexit
+set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PIPELINE_DIR="${SCRIPT_DIR}/pipelines"
 
 # Source repository helper functions if available
@@ -84,6 +86,12 @@ shift $((OPTIND - 1))
 
 if [[ -z "${TARGET}" ]]; then
   TARGET="${FOUNDATION}"
+fi
+
+if [[ -z "${FOUNDATION}" ]]; then
+    echo "Error: Foundation not specified"
+    usage
+    exit 1
 fi
 
 # Determine which DC the foundation belongs to

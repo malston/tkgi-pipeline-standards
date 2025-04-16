@@ -9,7 +9,6 @@ set -e
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 CI_DIR="$(cd "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
-REPO_ROOT="$(cd "${CI_DIR}/.." &>/dev/null && pwd)"
 SCRIPT_PATH="${CI_DIR}/fly.sh"
 
 # Colors for output

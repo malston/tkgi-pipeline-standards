@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Script: helpers.sh
 # Description: Helper functions for repository scripts

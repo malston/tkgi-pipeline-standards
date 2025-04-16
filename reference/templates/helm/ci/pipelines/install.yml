@@ -1,0 +1,266 @@
+resource_types: []
+
+groups: []
+
+resources:
+  - name: s3-container-image
+    type: s3
+    icon: package
+    source:
+      access_key_id: ((concourse_s3_access_key_id))
+      bucket: ((concourse-s3-bucket))
+      endpoint: ((concourse-s3-endpoint))
+      regexp: ((cflinux_current_image))/((cflinux_current_image))-(.*).tgz
+      secret_access_key: ((concourse_s3_secret_access_key))
+    tags:
+      - ((worker_tags))
+
+  - name: config-repo
+    type: git
+    icon: github
+    source:
+      branch: ((config_git_branch))
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+      uri: ((config_git_uri))
+      paths: [foundations/((foundation))]
+    tags:
+      - ((worker_tags))
+
+  - name: gatekeeper-repo
+    type: git
+    icon: github
+    source:
+      branch: ((gatekeeper_git_branch))
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+      uri: ((gatekeeper_git_uri))
+    tags:
+      - ((worker_tags))
+
+  - name: time-trigger
+    type: time
+    icon: clock
+    source: { interval: 700h }
+    tags:
+      - ((worker_tags))
+
+  - name: t-15m
+    type: time
+    icon: clock
+    source:
+      interval: 15m
+    tags:
+      - ((worker_tags))
+
+jobs:
+  - name: wipe-gatekeeper
+    max_in_flight: 1
+    plan:
+      - get: s3-container-image
+        params:
+          unpack: true
+        tags:
+          - ((worker_tags))
+
+      - get: gatekeeper-repo
+        tags:
+          - ((worker_tags))
+
+      - get: config-repo
+        trigger: false
+        tags:
+          - ((worker_tags))
+
+      - task: wipe-gatekeeper
+        config:
+          platform: linux
+          inputs:
+            - name: gatekeeper-repo
+            - name: config-repo
+          run:
+            path: gatekeeper-repo/ci/tasks/gatekeeper-wipe.sh
+          params:
+            OPSMAN_DOMAIN_OR_IP_ADDRESS: ((opsman_domain_or_ip_address))
+            OPSMAN_CLIENT_ID: ((opsman_client_id))
+            OPSMAN_CLIENT_SECRET: ((opsman_client_secret))
+            K8S_MGMT_USER: ((pks_api_admin))
+            K8S_MGMT_PW: ((pks_api_admin_pw))
+            PKS_API_ENDPOINT: ((pks_api_url))
+            GATEKEEPER_VERSION: ((gatekeeper_version))
+            FOUNDATION: ((foundation))
+            NSUPDATE_KEY: ((nsupdate_key))
+            DNS_MASTERS: ((dns_masters))
+            WIPE_OVERRIDE: ((wipe_override))
+            PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
+
+  - name: install-gatekeeper
+    max_in_flight: 1
+    plan:
+      - get: s3-container-image
+        params:
+          unpack: true
+        tags:
+          - ((worker_tags))
+
+      - get: gatekeeper-repo
+        tags:
+          - ((worker_tags))
+
+      - get: config-repo
+        trigger: false
+        tags:
+          - ((worker_tags))
+
+      - task: install-gatekeeper
+        config:
+          platform: linux
+          inputs:
+            - name: gatekeeper-repo
+            - name: config-repo
+          run:
+            path: gatekeeper-repo/ci/tasks/gatekeeper-install.sh
+          params:
+            OPSMAN_DOMAIN_OR_IP_ADDRESS: ((opsman_domain_or_ip_address))
+            OPSMAN_CLIENT_ID: ((opsman_client_id))
+            OPSMAN_CLIENT_SECRET: ((opsman_client_secret))
+            K8S_MGMT_USER: ((pks_api_admin))
+            K8S_MGMT_PW: ((pks_api_admin_pw))
+            PKS_API_ENDPOINT: ((pks_api_url))
+            GATEKEEPER_VERSION: ((gatekeeper_version))
+            GATEKEEPER_DOCKERREPO: ((gatekeeper_dockerrepo))
+            FOUNDATION: ((foundation))
+            PKS_WILDCARD_CERT: ((wildcard_cert))
+            PKS_WILDCARD_PRIVATE_KEY: ((wildcard_private_key))
+            INTERMEDIATE_ROOT_CERT: ((wf_intermediate_only_ca))
+            NSUPDATE_KEY: ((nsupdate_key))
+            DNS_MASTERS: ((dns_masters))
+            SPLUNK_TOKEN: ((tkgi_splunk_token))
+            PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
+
+      - put: time-trigger
+        tags:
+          - ((worker_tags))
+
+  - name: constraints-tests
+    max_in_flight: 1
+    plan:
+      - get: s3-container-image
+        params:
+          unpack: true
+        tags:
+          - ((worker_tags))
+
+      - get: gatekeeper-repo
+        tags:
+          - ((worker_tags))
+
+      - get: config-repo
+        trigger: false
+        tags:
+          - ((worker_tags))
+
+      - get: time-trigger
+        trigger: true
+        passed:
+          - deploy-gatekeeper-constraints
+        tags:
+          - ((worker_tags))
+
+      - task: constraints-unit-test
+        config:
+          platform: linux
+          inputs:
+            - name: gatekeeper-repo
+            - name: config-repo
+          run:
+            path: gatekeeper-repo/ci/tasks/constraints-unit-test.sh
+          params:
+            FOUNDATION: ((foundation))
+            OPSMAN_DOMAIN_OR_IP_ADDRESS: ((opsman_domain_or_ip_address))
+            OPSMAN_CLIENT_ID: ((opsman_client_id))
+            OPSMAN_CLIENT_SECRET: ((opsman_client_secret))
+            PKS_API_ENDPOINT: ((pks_api_url))
+            PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
+
+      - task: constraints-integration-test
+        config:
+          platform: linux
+          inputs:
+            - name: gatekeeper-repo
+            - name: config-repo
+          run:
+            path: gatekeeper-repo/ci/tasks/constraints-integration-test.sh
+          params:
+            FOUNDATION: ((foundation))
+            OPSMAN_DOMAIN_OR_IP_ADDRESS: ((opsman_domain_or_ip_address))
+            OPSMAN_CLIENT_ID: ((opsman_client_id))
+            OPSMAN_CLIENT_SECRET: ((opsman_client_secret))
+            PKS_API_ENDPOINT: ((pks_api_url))
+            PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
+
+  - name: deploy-gatekeeper-constraints
+    max_in_flight: 1
+    plan:
+      - in_parallel:
+          - get: s3-container-image
+            params:
+              unpack: true
+            tags:
+              - ((worker_tags))
+
+          - get: time-trigger
+            trigger: true
+            passed:
+              - install-gatekeeper
+            tags:
+              - ((worker_tags))
+
+          - get: gatekeeper-repo
+            tags:
+              - ((worker_tags))
+
+          - get: config-repo
+            tags:
+              - ((worker_tags))
+
+          - get: t-15m
+            trigger: true
+            tags:
+              - ((worker_tags))
+
+      - task: gatekeeper-constraints-deploy
+        config:
+          platform: linux
+          inputs:
+            - name: gatekeeper-repo
+            - name: config-repo
+          run:
+            path: gatekeeper-repo/ci/tasks/gatekeeper-constraints.sh
+          params:
+            FOUNDATION: ((foundation))
+            K8S_ENV: ((k8s_env))
+            K8S_MGMT_USER: ((pks_api_admin))
+            K8S_MGMT_PW: ((pks_api_admin_pw))
+            PKS_API_ENDPOINT: ((pks_api_url))
+            OPSMAN_CLIENT_ID: ((opsman_client_id))
+            OPSMAN_CLIENT_SECRET: ((opsman_client_secret))
+            OPSMAN_DOMAIN_OR_IP_ADDRESS: ((opsman_domain_or_ip_address))
+            PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
+
+      - put: time-trigger
+        tags:
+          - ((worker_tags))

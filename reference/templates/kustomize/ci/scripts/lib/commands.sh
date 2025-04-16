@@ -353,6 +353,36 @@ function cmd_validate_pipeline() {
   return 0
 }
 
+# Command: Set set-pipeline pipeline
+function cmd_set_pipeline_pipeline() {
+    local foundation="$1"
+    local repo_name="$2"
+    local target="$3"
+    local environment="$4"
+    local datacenter="$5"
+    local datacenter_type="$6"
+    local branch="$7"
+    local git_release_branch="$8"
+    local version_file="$9"
+    local timer_duration="${10}"
+    local version="${11}"
+    local dry_run="${12}"
+    local verbose="${13}"
+    local foundation_path="${14}"
+    local git_uri="${15}"
+    local config_git_uri="${16}"
+    local config_git_branch="${17}"
+    local params_git_branch="${18}"
+
+    # Set set pipeline name
+    local set_pipeline="set-release-pipeline"
+
+    # Call set_pipeline with the release pipeline
+    if ! cmd_set_pipeline "${set_pipeline}" "${foundation}" "${repo_name}" "${target}" "${environment}" "${datacenter}" "${datacenter_type}" "${branch}" "${git_release_branch}" "${version_file}" "${timer_duration}" "${version}" "${dry_run}" "${verbose}" "${foundation_path}" "${git_uri}" "${config_git_uri}" "${config_git_branch}" "${params_git_branch}"; then
+        return 1
+    fi
+}
+
 # Implementation of release pipeline command (legacy behavior)
 # This function takes parameters instead of using global variables
 # @param foundation The foundation name

@@ -6,12 +6,13 @@
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source "${SCRIPT_DIR}/test-framework.sh"
+LIB_DIR="${SCRIPT_DIR}/../lib"
 
 # Source the helper functions we want to test
-source "${__SCRIPTS_DIR}/lib/environment.sh"
-source "${__SCRIPTS_DIR}/lib/version.sh"
-source "${__SCRIPTS_DIR}/lib/foundation.sh"
-source "${__SCRIPTS_DIR}/lib/utils.sh" # for get_latest_version
+source "${LIB_DIR}/environment.sh"
+source "${LIB_DIR}/version.sh"
+source "${LIB_DIR}/foundation.sh"
+source "${LIB_DIR}/utils.sh" # for get_latest_version
 
 # Mock get_latest_version if not available
 if ! type get_latest_version &>/dev/null; then

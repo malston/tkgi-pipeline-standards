@@ -1,19 +1,18 @@
-#!/usr/bin/env bash
-#
 # Script: helpers.sh
 # Description: Helper functions for Helm template scripts
 #
+
 
 # Function to validate if a file exists
 function validate_file_exists() {
   local file_path="$1"
   local description="${2:-File}"
-  
+
   if [[ ! -f "$file_path" ]]; then
     echo "Error: $description not found: $file_path"
     return 1
   fi
-  
+
   return 0
 }
 
@@ -21,12 +20,12 @@ function validate_file_exists() {
 function validate_directory_exists() {
   local dir_path="$1"
   local description="${2:-Directory}"
-  
+
   if [[ ! -d "$dir_path" ]]; then
     echo "Error: $description not found: $dir_path"
     return 1
   fi
-  
+
   return 0
 }
 
@@ -61,18 +60,18 @@ function warning() {
 # Function to validate multiple environment variables are set
 function validate_env() {
   local missing=false
-  
+
   for var_name in "$@"; do
     if [[ -z "${!var_name}" ]]; then
       error "Required environment variable not set: $var_name"
       missing=true
     fi
   done
-  
+
   if [[ "$missing" == "true" ]]; then
     return 1
   fi
-  
+
   return 0
 }
 
@@ -90,7 +89,7 @@ function check_command_exists() {
 function check_variable_set() {
   local var_name="$1"
   local var_value="${!var_name}"
-  
+
   if [[ -z "$var_value" ]]; then
     error "Required variable not set: $var_name"
     return 1
@@ -103,7 +102,7 @@ function get_desired_clusters() {
   local foundation="$1"
   local config_repo_path="$2"
   local clusters_file="${config_repo_path}/foundations/${foundation}/clusters.yml"
-  
+
   # Try to parse the clusters file using Python or jq
   if command -v python &> /dev/null; then
     python -c "import yaml,sys;print(' '.join([c['name'] for c in yaml.safe_load(open('$clusters_file'))['clusters']]))"
@@ -119,7 +118,7 @@ function get_desired_clusters() {
 function output_json() {
   local data="$1"
   local output_file="$2"
-  
+
   if [[ -z "$output_file" ]]; then
     echo "$data"
   else
@@ -133,21 +132,21 @@ function setup_tkgi_credentials() {
     info "Loading TKGI credentials from pks-config/credentials"
     # shellcheck disable=SC1091
     source pks-config/credentials
-    
+
     # Set TLS verification flag
     SKIP_TLS_VERIFICATION="${SKIP_TLS_VERIFICATION:-false}"
     TLS_VERIFICATION=""
     if [[ "$SKIP_TLS_VERIFICATION" == "true" ]]; then
       TLS_VERIFICATION="-k"
     fi
-    
+
     # Login to TKGI
     info "Logging into TKGI API: $pks_api_url"
     if ! tkgi login -a "$pks_api_url" -u "$pks_user" -p "$pks_password" $TLS_VERIFICATION; then
       error "Failed to log in to TKGI API"
       exit 1
     fi
-    
+
     # If cluster is specified, get credentials
     if [[ -n "$CLUSTER" ]]; then
       info "Getting Kubernetes credentials for cluster: $CLUSTER"
@@ -164,7 +163,7 @@ function setup_tkgi_credentials() {
 # Function to create a namespace if it doesn't exist
 function create_namespace_if_not_exists() {
   local namespace="$1"
-  
+
   if ! kubectl get namespace "$namespace" &>/dev/null; then
     info "Creating namespace: $namespace"
     kubectl create namespace "$namespace"
@@ -179,6 +178,6 @@ function ensure_helm() {
     error "Helm is not installed"
     exit 1
   fi
-  
+
   info "Using Helm version: $(helm version --short)"
 }

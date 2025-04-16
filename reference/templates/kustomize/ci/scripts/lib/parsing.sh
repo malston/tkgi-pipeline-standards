@@ -70,7 +70,7 @@ function check_help_flags() {
 # @param ... The rest of the arguments passed to the script
 function process_args() {
   # First argument is the command pattern
-  local cmd_pattern="${1:-set|unpause|destroy|validate|release}"
+  local cmd_pattern="${1:-set|unpause|destroy|validate|release|set-pipeline}"
   shift
 
   # Array to hold the non-flag arguments
@@ -229,7 +229,7 @@ function process_args() {
       CREATE_RELEASE=true
       shift
       ;;
-    -s | --set-release-pipeline)
+    -s | --set-release-pipeline | set-pipeline)
       SET_RELEASE_PIPELINE=true
       shift
       ;;
