@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
+# Enable strict mode
+set -o errexit
+set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PIPELINE_DIR="${SCRIPT_DIR}/pipelines"
 
 # Source repository helper functions if available

@@ -1,0 +1,256 @@
+groups:
+  - name: management
+    jobs:
+      - prepare
+      - deploy-gatekeeper
+      - test-gatekeeper
+      - deploy-constraints
+      - validate-constraints
+
+resources:
+  - name: s3-container-image
+    type: s3
+    icon: package
+    source:
+      access_key_id: ((concourse_s3_access_key_id))
+      bucket: ((concourse-s3-bucket))
+      endpoint: ((concourse-s3-endpoint))
+      regexp: ((cflinux_current_image))/((cflinux_current_image))-(.*).tgz
+      secret_access_key: ((concourse_s3_secret_access_key))
+    tags:
+      - ((worker_tags))
+
+  - name: config-repo
+    type: git
+    icon: github
+    source:
+      branch: ((config_git_branch))
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+      uri: ((config_git_uri))
+      paths: [foundations/((foundation))]
+    tags:
+      - ((worker_tags))
+
+  - name: gatekeeper-repo
+    type: git
+    icon: github
+    source:
+      branch: ((git_release_tag))
+      private_key: ((dtca_tkgi_eng_git_org_private_key))
+      uri: ((git_uri))
+    tags:
+      - ((worker_tags))
+
+  - name: time-trigger
+    type: time
+    icon: clock
+    source: { interval: 24h }
+    tags:
+      - ((worker_tags))
+
+jobs:
+  - name: prepare
+    plan:
+      - in_parallel:
+          - get: gatekeeper-repo
+            trigger: true
+          - get: config-repo
+            trigger: true
+          - get: s3-container-image
+            params:
+              unpack: true
+            tags:
+              - ((worker_tags))
+
+  - name: deploy-gatekeeper
+    plan:
+      - in_parallel:
+          - get: gatekeeper-repo
+            passed: [prepare]
+            trigger: true
+          - get: config-repo
+            passed: [prepare]
+            trigger: true
+          - get: s3-container-image
+            params:
+              unpack: true
+            passed: [prepare]
+            tags:
+              - ((worker_tags))
+
+      - task: tkgi-login
+        file: gatekeeper-repo/ci/tasks/tkgi/tkgi-login/task.yml
+        image: s3-container-image
+        params:
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+          FOUNDATION: ((foundation))
+        tags:
+          - ((worker_tags))
+
+      - task: create-namespace
+        file: gatekeeper-repo/ci/tasks/k8s/create-namespace/task.yml
+        image: s3-container-image
+        params:
+          FOUNDATION: ((foundation))
+          NAMESPACE: ((component_namespace))
+        tags:
+          - ((worker_tags))
+
+      - task: helm-deploy
+        file: gatekeeper-repo/ci/tasks/helm/helm-deploy/task.yml
+        image: s3-container-image
+        params:
+          FOUNDATION: ((foundation))
+          NAMESPACE: ((component_namespace))
+          RELEASE_NAME: ((release_name))
+          # Use version-specific chart if specified, otherwise use the latest
+          CHART_PATH: gatekeeper-repo/charts/((component_name))((#gatekeeper_version_tag))-v((gatekeeper_version_tag))((\/gatekeeper_version_tag))
+          VALUES_FILE: gatekeeper-repo/charts/((component_name))/values/((environment)).yaml
+          GATEKEEPER_VERSION: ((gatekeeper_version))
+          TIMEOUT: 10m
+          PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        tags:
+          - ((worker_tags))
+
+  - name: test-gatekeeper
+    plan:
+      - in_parallel:
+          - get: gatekeeper-repo
+            passed: [deploy-gatekeeper]
+            trigger: true
+          - get: config-repo
+            passed: [deploy-gatekeeper]
+          - get: s3-container-image
+            params:
+              unpack: true
+            passed: [deploy-gatekeeper]
+            tags:
+              - ((worker_tags))
+
+      - task: tkgi-login
+        file: gatekeeper-repo/ci/tasks/tkgi/tkgi-login/task.yml
+        image: s3-container-image
+        params:
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+          FOUNDATION: ((foundation))
+        tags:
+          - ((worker_tags))
+
+      - task: helm-test
+        file: gatekeeper-repo/ci/tasks/helm/helm-test/task.yml
+        image: s3-container-image
+        params:
+          FOUNDATION: ((foundation))
+          NAMESPACE: ((component_namespace))
+          RELEASE_NAME: ((release_name))
+          PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        tags:
+          - ((worker_tags))
+
+  - name: deploy-constraints
+    plan:
+      - in_parallel:
+          - get: gatekeeper-repo
+            passed: [test-gatekeeper]
+            trigger: true
+          - get: config-repo
+            passed: [test-gatekeeper]
+          - get: s3-container-image
+            params:
+              unpack: true
+            passed: [test-gatekeeper]
+            tags:
+              - ((worker_tags))
+
+      - task: tkgi-login
+        file: gatekeeper-repo/ci/tasks/tkgi/tkgi-login/task.yml
+        image: s3-container-image
+        params:
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+          FOUNDATION: ((foundation))
+        tags:
+          - ((worker_tags))
+
+      - task: deploy-constraints
+        config:
+          platform: linux
+          inputs:
+            - name: gatekeeper-repo
+            - name: config-repo
+          run:
+            path: gatekeeper-repo/ci/tasks/gatekeeper-constraints.sh
+          params:
+            FOUNDATION: ((foundation))
+            K8S_ENV: ((k8s_env))
+            K8S_MGMT_USER: ((pks_api_admin))
+            K8S_MGMT_PW: ((pks_api_admin_pw))
+            PKS_API_ENDPOINT: ((pks_api_url))
+            OPSMAN_CLIENT_ID: ((opsman_client_id))
+            OPSMAN_CLIENT_SECRET: ((opsman_client_secret))
+            OPSMAN_DOMAIN_OR_IP_ADDRESS: ((opsman_domain_or_ip_address))
+            PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
+
+  - name: validate-constraints
+    plan:
+      - in_parallel:
+          - get: gatekeeper-repo
+            passed: [deploy-constraints]
+            trigger: true
+          - get: config-repo
+            passed: [deploy-constraints]
+          - get: s3-container-image
+            params:
+              unpack: true
+            passed: [deploy-constraints]
+            tags:
+              - ((worker_tags))
+
+      - task: tkgi-login
+        file: gatekeeper-repo/ci/tasks/tkgi/tkgi-login/task.yml
+        image: s3-container-image
+        params:
+          PKS_API_URL: ((pks_api_url))
+          PKS_USER: ((pks_api_admin))
+          PKS_PASSWORD: ((pks_api_admin_pw))
+          FOUNDATION: ((foundation))
+        tags:
+          - ((worker_tags))
+
+      - task: validate-deployment
+        file: gatekeeper-repo/ci/tasks/k8s/validate-deployment/task.yml
+        image: s3-container-image
+        params:
+          FOUNDATION: ((foundation))
+          NAMESPACE: ((component_namespace))
+          RELEASE_NAME: ((release_name))
+          PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        tags:
+          - ((worker_tags))
+
+      - task: constraints-tests
+        config:
+          platform: linux
+          inputs:
+            - name: gatekeeper-repo
+            - name: config-repo
+          run:
+            path: gatekeeper-repo/ci/tasks/constraints-integration-test.sh
+          params:
+            FOUNDATION: ((foundation))
+            OPSMAN_DOMAIN_OR_IP_ADDRESS: ((opsman_domain_or_ip_address))
+            OPSMAN_CLIENT_ID: ((opsman_client_id))
+            OPSMAN_CLIENT_SECRET: ((opsman_client_secret))
+            PKS_API_ENDPOINT: ((pks_api_url))
+            PIPELINE_DRY_RUN: ((pipeline_dry_run))
+        image: s3-container-image
+        tags:
+          - ((worker_tags))
