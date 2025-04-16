@@ -152,7 +152,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         fi
         CREATE_RELEASE=true
         ;;
-    -s | --set-release-pipeline)
+    -s | --set-release-pipeline | set-pipeline)
         if [[ $2 =~ ^- ]]; then
             SET_PIPELINE_NAME="$PIPELINE_NAME-set-release-pipeline"
         elif [ -n "$2" ]; then

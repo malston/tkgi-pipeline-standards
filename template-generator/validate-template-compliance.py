@@ -289,13 +289,13 @@ class TemplateValidator:
         """Validate the fly.sh script for required commands and options"""
         self._log("Validating fly.sh script...")
 
-        fly_script = self.project_dir / "ci/scripts/fly.sh"
-        if not fly_script.exists():
-            self.issues.append("Missing ci/scripts/fly.sh script")
+        fly_args = self.project_dir / "ci/scripts/lib/parsing.sh"
+        if not fly_args.exists():
+            self.issues.append("Missing ci/scripts/lib/parsing.sh")
             return
 
         try:
-            with open(fly_script, "r") as f:
+            with open(fly_args, "r") as f:
                 content = f.read()
 
             # Check for required commands

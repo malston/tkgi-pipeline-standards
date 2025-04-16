@@ -229,7 +229,7 @@ function process_args() {
       CREATE_RELEASE=true
       shift
       ;;
-    -s | --set-release-pipeline)
+    -s | --set-release-pipeline | set-pipeline)
       SET_RELEASE_PIPELINE=true
       shift
       ;;
