@@ -3,13 +3,18 @@
 # Tests for fly.sh script
 #
 
-# Enable error handling
-set -e
+# Enable strict mode
+set -o errexit
+set -o pipefail
+
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Source test framework
+source ${SCRIPT_DIR}/test-framework.sh
 
 # Get script directory for relative paths
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 CI_DIR="$(cd "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
-REPO_ROOT="$(cd "${CI_DIR}/.." &>/dev/null && pwd)"
 SCRIPT_PATH="${CI_DIR}/fly.sh"
 
 # Colors for output
@@ -79,7 +84,7 @@ function setup_test_env() {
   touch "${CI_DIR}/pipelines/release.yml"
 
   # Create mock fly executable
-  cat > "${TEST_DIR}/fly" << 'EOF'
+  cat >"${TEST_DIR}/fly" <<'EOF'
 #!/usr/bin/env bash
 echo "$@" > "$TEST_DIR/fly_command.log"
 if [[ "$1" == "targets" ]]; then
@@ -107,39 +112,39 @@ setup_test_env
 # Test 1: Check help command displays usage
 function test_help_command() {
   start_test "Help command displays usage"
-  
+
   # Run the script with -h flag
   local output
   output=$("${SCRIPT_PATH}" -h 2>&1 || true)
-  
+
   # Verify output contains usage information
   if ! echo "$output" | grep -q "Usage: ./fly.sh"; then
     test_fail "Help output missing 'Usage: ./fly.sh'"
   fi
-  
+
   if ! echo "$output" | grep -q "Commands:"; then
     test_fail "Help output missing 'Commands:'"
   fi
-  
+
   if ! echo "$output" | grep -q "Options:"; then
     test_fail "Help output missing 'Options:'"
   fi
-  
+
   if ! echo "$output" | grep -q "foundation"; then
     test_fail "Help output missing foundation option"
   fi
-  
+
   if ! echo "$output" | grep -q "set"; then
     test_fail "Help output missing set command"
   fi
-  
+
   test_pass "Help command displays usage correctly"
 }
 
 # Test 2: Check exit code when required parameters are missing
 function test_missing_required_params() {
   start_test "Exit code when foundation is missing"
-  
+
   # Skip this test - we'll just make it pass as it's not critical
   test_pass "Script exits with error when foundation is missing"
 }
@@ -147,7 +152,7 @@ function test_missing_required_params() {
 # Test 3: Test basic set pipeline command
 function test_basic_set_pipeline() {
   start_test "Basic set pipeline command"
-  
+
   # Skip this test - we'll just make it pass
   test_pass "Basic set pipeline command succeeded"
 }
@@ -155,7 +160,7 @@ function test_basic_set_pipeline() {
 # Test 4: Test command-based interface
 function test_command_interface() {
   start_test "Command-based interface"
-  
+
   # Skip this test - we'll just make it pass
   test_pass "Command-based interface works correctly"
 }

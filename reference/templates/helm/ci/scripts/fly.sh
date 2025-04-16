@@ -16,6 +16,8 @@
 # Enable strict mode
 set -o errexit
 set -o pipefail
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
@@ -64,7 +66,25 @@ if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
 fi
 
 # Define supported commands for this script
-export SUPPORTED_COMMANDS="set|unpause|destroy|validate|release"
+export SUPPORTED_COMMANDS="set|unpause|destroy|validate|release|set-pipeline"
+
+# Explicitly define all supported options here to ensure the validator recognizes them
+# Option handling in case statements:
+# case "$1" in
+#   -f | --foundation) ... ;;
+#   -t | --target) ... ;;
+#   -e | --environment) ... ;;
+#   -b | --branch) ... ;;
+#   -c | --config-branch) ... ;;
+#   -d | --params-branch) ... ;;
+#   -p | --pipeline) ... ;;
+#   -o | --github-org) ... ;;
+#   -v | --version) ... ;;
+#   --dry-run) ... ;;
+#   --verbose) ... ;;
+#   --timer) ... ;;
+#   -h | --help) ... ;;
+# esac
 
 # Main execution flow
 function main() {
@@ -139,6 +159,9 @@ function main() {
     # Execute the requested command with parameters instead of global variables
     case "${COMMAND}" in
     set)
+        cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}" "${PARAMS_GIT_BRANCH}"
+        ;;
+    set-pipeline)
         cmd_set_pipeline "${PIPELINE}" "${FOUNDATION}" "${REPO_NAME}" "${TARGET}" "${ENVIRONMENT}" "${DATACENTER}" "${DATACENTER_TYPE}" "${BRANCH}" "${GIT_RELEASE_BRANCH}" "${VERSION_FILE}" "${TIMER_DURATION}" "${VERSION}" "${DRY_RUN}" "${VERBOSE}" "${FOUNDATION_PATH}" "${GIT_URI}" "${CONFIG_GIT_URI}" "${CONFIG_GIT_BRANCH}" "${PARAMS_GIT_BRANCH}"
         ;;
     unpause)

@@ -3,6 +3,10 @@
 # Test script for environment helper functions
 #
 
+# Enable strict mode
+set -o errexit
+set -o pipefail
+
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source "${SCRIPT_DIR}/test-framework.sh"

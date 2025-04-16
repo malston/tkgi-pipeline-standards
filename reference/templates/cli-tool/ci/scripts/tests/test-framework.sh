@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 #
 # test_framework.sh - Simple test framework for the fly.sh script
 #

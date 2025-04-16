@@ -5,7 +5,7 @@
 # This module handles environment-specific configuration settings, providing
 # consistent configuration based on the environment type (lab, nonprod, prod).
 #
-# The main function configures branch strategy, GitHub organization, and 
+# The main function configures branch strategy, GitHub organization, and
 # config repository names appropriate for the given environment.
 #
 # Usage:

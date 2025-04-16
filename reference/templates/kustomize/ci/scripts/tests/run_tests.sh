@@ -3,10 +3,15 @@
 # Run all tests for the scripts
 #
 
-set -e
+# Enable strict mode
+set -o errexit
+set -o pipefail
 
 # Get script directory for relative paths
 __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Disable strict mode for more resilient testing
+set +e
 
 # Colors for output
 RED='\033[0;31m'

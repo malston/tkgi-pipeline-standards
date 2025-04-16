@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 set -o errexit
 set -o pipefail
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 # Source helper functions
-source "${__DIR}/../../../scripts/helpers.sh"
+if [[ -f "${__DIR}/../../../scripts/helpers.sh" ]]; then
+  source "${__DIR}/../../../scripts/helpers.sh"
+else
+  echo "Helper script not found at ${__DIR}/../../../scripts/helpers.sh"
+  exit 1
+fi
 
 # Set up TKGi credentials from previous step
 setup_tkgi_credentials

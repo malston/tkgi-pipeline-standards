@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 #
 # Utility functions for fly.sh
 # Contains shared functions used throughout the script

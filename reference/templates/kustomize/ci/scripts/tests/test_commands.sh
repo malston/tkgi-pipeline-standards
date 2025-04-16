@@ -3,11 +3,16 @@
 # Test script for fly.sh commands
 #
 
-set -e
+# Enable strict mode
+set -o errexit
+set -o pipefail
 
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 FLY_SCRIPT="${SCRIPT_DIR}/../fly.sh"
+
+# Source test framework
+source ${SCRIPT_DIR}/test-framework.sh
 
 # Colors for output
 RED='\033[0;31m'
@@ -31,20 +36,44 @@ function error() {
   exit 1
 }
 
+# Test file paths that will be created
+PIPELINES_DIR="${SCRIPT_DIR}/../pipelines"
+MAIN_PIPELINE="${PIPELINES_DIR}/main.yml"
+RELEASE_PIPELINE="${PIPELINES_DIR}/release.yml"
+
 # Set up pipeline directories for tests
-mkdir -p "${SCRIPT_DIR}/../pipelines"
-if [[ ! -f "${SCRIPT_DIR}/../pipelines/main.yml" ]]; then
-  touch "${SCRIPT_DIR}/../pipelines/main.yml"
+mkdir -p "${PIPELINES_DIR}"
+if [[ ! -f "${MAIN_PIPELINE}" ]]; then
+  touch "${MAIN_PIPELINE}"
 fi
-if [[ ! -f "${SCRIPT_DIR}/../pipelines/release.yml" ]]; then
-  touch "${SCRIPT_DIR}/../pipelines/release.yml"
+if [[ ! -f "${RELEASE_PIPELINE}" ]]; then
+  touch "${RELEASE_PIPELINE}"
 fi
+
+# Function to clean up test files and directories
+function cleanup_test_files() {
+  # Only remove the files we created, not the directory if it existed before
+  if [[ -f "${MAIN_PIPELINE}" && "$(cat "${MAIN_PIPELINE}" 2>/dev/null)" == "" ]]; then
+    rm -f "${MAIN_PIPELINE}"
+  fi
+  if [[ -f "${RELEASE_PIPELINE}" && "$(cat "${RELEASE_PIPELINE}" 2>/dev/null)" == "" ]]; then
+    rm -f "${RELEASE_PIPELINE}"
+  fi
+  
+  # Only remove the directory if it's empty and we created it
+  if [[ -d "${PIPELINES_DIR}" && -z "$(ls -A "${PIPELINES_DIR}" 2>/dev/null)" ]]; then
+    rmdir "${PIPELINES_DIR}" 2>/dev/null || true
+  fi
+}
+
+# Set up trap to clean up on exit
+trap cleanup_test_files EXIT
 
 # Ensure we have a TEST_MODE flag to avoid real fly invocations
 export TEST_MODE=true
-export ENVIRONMENT=lab  # Explicitly set an environment for tests
+export ENVIRONMENT=lab # Explicitly set an environment for tests
 
-function test_command() {
+function test_single_command() {
   local command="$1"
   local expected="$2"
 
@@ -55,17 +84,53 @@ function test_command() {
   output=$("$FLY_SCRIPT" -f "test-foundation" -t "test-target" -e "lab" "$command" --pipeline "main" --dry-run --test-mode 2>&1) || {
     echo "Command failed with output:"
     echo "$output"
-    error "Command '$command' failed to execute"
+    assert_fail "Command '$command' failed to execute"
+    return 1
   }
 
   # Check for expected output
   if echo "$output" | grep -q "$expected"; then
     success "Command '$command' works correctly"
+    assert_true "true" "Command '$command' works correctly"
   else
-    error "Command '$command' did not produce expected output"
     echo "Expected to find: $expected"
     echo "Got:"
     echo "$output"
+    assert_fail "Command '$command' did not produce expected output"
+    return 1
+  fi
+}
+
+function test_command() {
+  # Test set command
+  test_single_command "set" "set-pipeline"
+  
+  # Test unpause command
+  test_single_command "unpause" "unpause-pipeline"
+  
+  # Test validate command
+  test_single_command "validate" "validate-pipeline"
+  
+  # Test release command
+  test_single_command "release" "release"
+  
+  # Test destroy command (more complex due to confirmation)
+  echo_color "$YELLOW" "Testing 'destroy' command..."
+  output=$(echo "y" | "$FLY_SCRIPT" -f "test-foundation" -t "test-target" -e "lab" "destroy" --pipeline "main" --dry-run --test-mode 2>&1) || {
+    echo "Command failed with output:"
+    echo "$output"
+    assert_fail "Command 'destroy' failed to execute"
+    return 1
+  }
+  
+  if echo "$output" | grep -q "destroy-pipeline"; then
+    success "Command 'destroy' works correctly"
+    assert_true "true" "Command 'destroy' works correctly"
+  else
+    echo "Got:"
+    echo "$output"
+    assert_fail "Command 'destroy' did not produce expected output"
+    return 1
   fi
 }
 
@@ -97,33 +162,8 @@ setup_mock
 # Main tests
 echo "Testing all fly.sh commands..."
 
-# Test set command
-test_command "set" "set-pipeline"
-
-# Test unpause command
-test_command "unpause" "unpause-pipeline"
-
-# Test validate command
-test_command "validate" "validate-pipeline"
-
-# Test release command
-test_command "release" "release"
-
-# Test destroy command (more complex due to confirmation)
-echo_color "$YELLOW" "Testing 'destroy' command..."
-output=$(echo "y" | "$FLY_SCRIPT" -f "test-foundation" -t "test-target" -e "lab" "destroy" --pipeline "main" --dry-run --test-mode 2>&1) || {
-  echo "Command failed with output:"
-  echo "$output"
-  error "Command 'destroy' failed to execute"
-}
-
-if echo "$output" | grep -q "destroy-pipeline"; then
-  success "Command 'destroy' works correctly"
-else
-  error "Command 'destroy' did not produce expected output"
-  echo "Got:"
-  echo "$output"
-fi
-
 echo_color "$GREEN" "All command tests passed! The fly.sh script handles all commands correctly."
-exit 0
+
+# Run tests and generate report using the test framework
+run_test test_command
+report_results

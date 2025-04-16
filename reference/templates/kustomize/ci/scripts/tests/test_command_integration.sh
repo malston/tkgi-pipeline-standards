@@ -3,19 +3,24 @@
 # Test script for fly.sh command integration with environment helpers
 #
 
+# Enable strict mode
+set -o errexit
+set -o pipefail
+
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source "${SCRIPT_DIR}/test-framework.sh"
 source "${SCRIPT_DIR}/mock_test_fly.sh"
 
 # Source all necessary modules to test command execution
-source "${SCRIPT_DIR}/lib/utils.sh"
-source "${SCRIPT_DIR}/lib/environment.sh"
-source "${SCRIPT_DIR}/lib/version.sh"
-source "${SCRIPT_DIR}/lib/foundation.sh"
-source "${SCRIPT_DIR}/lib/commands.sh"
-source "${SCRIPT_DIR}/lib/pipelines.sh"
-source "${SCRIPT_DIR}/lib/parsing.sh"
+LIB_DIR="${SCRIPT_DIR}/../lib"
+source "${LIB_DIR}/utils.sh"
+source "${LIB_DIR}/environment.sh"
+source "${LIB_DIR}/version.sh"
+source "${LIB_DIR}/foundation.sh"
+source "${LIB_DIR}/commands.sh"
+source "${LIB_DIR}/pipelines.sh"
+source "${LIB_DIR}/parsing.sh"
 
 # Mock get_latest_version if not available
 if ! type get_latest_version &>/dev/null; then
@@ -31,27 +36,57 @@ function check_fly() {
 }
 export -f check_fly
 
+# Global variables for test files
+CI_DIR="${SCRIPT_DIR%/*}"
+REPO_ROOT="${CI_DIR%/*}"
+PIPELINES_DIR="${CI_DIR}/pipelines"
+MAIN_PIPELINE="${PIPELINES_DIR}/main.yml"
+RELEASE_PIPELINE="${PIPELINES_DIR}/release.yml"
+FLY_OUTPUT_LOG="${SCRIPT_DIR}/fly_output.log"
+MAIN_CONTENT="pipeline: main"
+RELEASE_CONTENT="pipeline: release"
+
+# Function to clean up test files and directories
+function cleanup_test_files() {
+  # Clean up log file if it exists
+  if [[ -f "${FLY_OUTPUT_LOG}" ]]; then
+    rm -f "${FLY_OUTPUT_LOG}"
+  fi
+  
+  # Only remove the files we created, not the directory if it existed before
+  if [[ -f "${MAIN_PIPELINE}" && "$(cat "${MAIN_PIPELINE}" 2>/dev/null)" == "${MAIN_CONTENT}" ]]; then
+    rm -f "${MAIN_PIPELINE}"
+  fi
+  if [[ -f "${RELEASE_PIPELINE}" && "$(cat "${RELEASE_PIPELINE}" 2>/dev/null)" == "${RELEASE_CONTENT}" ]]; then
+    rm -f "${RELEASE_PIPELINE}"
+  fi
+  
+  # Only remove the directory if it's empty and we created it
+  if [[ -d "${PIPELINES_DIR}" && -z "$(ls -A "${PIPELINES_DIR}" 2>/dev/null)" ]]; then
+    rmdir "${PIPELINES_DIR}" 2>/dev/null || true
+  fi
+}
+
+# Set up trap to clean up on exit
+trap cleanup_test_files EXIT
+
 # Setup test environment
 function setup_test_env() {
-  # Get paths
-  local ci_dir="${SCRIPT_DIR%/*}"
-  local repo_root="${ci_dir%/*}"
-
   # Create test pipeline files
-  mkdir -p "${ci_dir}/pipelines"
-  if [[ ! -f "${ci_dir}/pipelines/main.yml" ]]; then
-    echo "pipeline: main" >"${ci_dir}/pipelines/main.yml"
+  mkdir -p "${PIPELINES_DIR}"
+  if [[ ! -f "${MAIN_PIPELINE}" ]]; then
+    echo "${MAIN_CONTENT}" > "${MAIN_PIPELINE}"
   fi
-  if [[ ! -f "${ci_dir}/pipelines/release.yml" ]]; then
-    echo "pipeline: release" >"${ci_dir}/pipelines/release.yml"
+  if [[ ! -f "${RELEASE_PIPELINE}" ]]; then
+    echo "${RELEASE_CONTENT}" > "${RELEASE_PIPELINE}"
   fi
 
   # Setup mock fly command
   mock_fly "set-pipeline" "-p main-test-foundation" 0
 
   # Set global vars for the test
-  export CI_DIR="${ci_dir}"
-  export REPO_ROOT="${repo_root}"
+  export CI_DIR="${CI_DIR}"
+  export REPO_ROOT="${REPO_ROOT}"
 
   # echo "Test setup complete. CI_DIR=${CI_DIR}, REPO_ROOT=${REPO_ROOT}"
 }

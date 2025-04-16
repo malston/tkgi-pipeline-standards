@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 #
 # help.sh - Help functions for the fly.sh script
 #
@@ -11,6 +17,7 @@ Usage: fly.sh [options] [command] [pipeline_name]
 
 Commands:
   set          Set pipeline (default)
+  set-pipeline Set pipeline (alias for set)
   unpause      Set and unpause pipeline
   destroy      Destroy specified pipeline
   validate     Validate pipeline YAML without setting

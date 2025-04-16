@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-#
-# Test script to verify the command-specific help functionality in fly.sh
-#
-set -e
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
 
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 FLY_SCRIPT="${SCRIPT_DIR}/../fly.sh"
+
+# Source test framework
+source ${SCRIPT_DIR}/test-framework.sh
 
 # Colors for output
 RED='\033[0;31m'
@@ -40,3 +43,15 @@ ${FLY_SCRIPT} --help | grep -q "Usage:" && {
 
 echo_color "$GREEN" "All command-specific help tests passed!"
 exit 0
+
+# Test function
+function test_example() {
+  echo "Running example test"
+  assert_true "true" "Example assertion"
+}
+
+# Run tests
+run_test test_example
+
+# Report test results
+report_results

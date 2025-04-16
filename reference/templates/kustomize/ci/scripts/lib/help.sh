@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 #
 # Help command module for fly.sh
 # Contains functions related to displaying help messages
@@ -9,12 +15,13 @@ function show_command_usage() {
   local command="$1"
   
   case "$command" in
-    set)
+    set|set-pipeline)
       cat << USAGE_SET
 Command: set
 Description: Set a pipeline in Concourse
 
 Usage: ./fly.sh [options] set [pipeline_name]
+   or: ./fly.sh [options] set-pipeline [pipeline_name]
 
 Sets a pipeline configuration to Concourse. This is the default command when none is specified.
 
@@ -27,7 +34,7 @@ Options:
 
 Example:
   ./fly.sh -f cml-k8s-n-01 set main
-  ./fly.sh -f cml-k8s-n-01 -e lab set main --dry-run
+  ./fly.sh -f cml-k8s-n-01 -e lab set-pipeline main --dry-run
 USAGE_SET
       ;;
     unpause)
@@ -131,6 +138,7 @@ Usage: ./fly.sh [options] [command] [pipeline_name]
 
 Commands:
   set          Set pipeline (default)
+  set-pipeline Set pipeline (alias for set)
   unpause      Set and unpause pipeline
   destroy      Destroy specified pipeline
   validate     Validate pipeline YAML without setting

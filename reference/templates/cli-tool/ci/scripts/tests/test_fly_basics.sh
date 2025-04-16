@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+
+# Source test framework
+source ${SCRIPT_DIR}/test-framework.sh
+
+
+# Enable strict mode
+set -o errexit
+set -o pipefail
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 #
 # test_fly_basics.sh - Basic tests for the fly.sh script
 #
@@ -328,3 +338,15 @@ else
 
     exit 1
 fi
+
+# Test function
+function test_example() {
+  echo "Running example test"
+  assert_true "true" "Example assertion"
+}
+
+# Run tests
+run_test test_example
+
+# Report test results
+report_results

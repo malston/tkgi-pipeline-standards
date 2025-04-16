@@ -38,7 +38,7 @@ fi
 MAIN_PIPELINE="${PIPELINE_DIR}/main.yml"
 if [[ ! -f "${MAIN_PIPELINE}" ]]; then
     echo -e "${YELLOW}Creating dummy main pipeline file at ${MAIN_PIPELINE}${NC}"
-    echo "# Dummy pipeline file for testing" > "${MAIN_PIPELINE}"
+    echo "# Dummy pipeline file for testing" >"${MAIN_PIPELINE}"
 fi
 
 # Execute all test_*.sh files

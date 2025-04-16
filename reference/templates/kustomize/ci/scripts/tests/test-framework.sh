@@ -3,6 +3,10 @@
 # test_framework.sh - Simple test framework for the fly.sh script
 #
 
+# Enable strict mode
+set -o errexit
+set -o pipefail
+
 # Define colors for test output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -88,6 +92,14 @@ function assert_false() {
     fi
 }
 
+function assert_fail() {
+    local message="$1"
+    
+    echo -e "${RED}✗ ${message}${NC}"
+    ((FAILED++))
+    return 1
+}
+
 function describe() {
     local description="$1"
     echo -e "\n${BLUE}${description}${NC}"
@@ -131,11 +143,11 @@ function test_fail() {
 # Run a test function
 function run_test() {
     local test_function="$1"
-    
+
     # Reset counters for this test
     PASSED_BEFORE=${PASSED}
     FAILED_BEFORE=${FAILED}
-    
+
     if declare -f "$test_function" >/dev/null; then
         # Run the test function
         if "$test_function"; then
@@ -172,12 +184,12 @@ function print_summary() {
 # Report test results
 function report_results() {
     print_summary
-    
+
     # Clean up temp directory
     if [[ -d "${__TESTS_DIR}" ]]; then
         rm -rf "${__TESTS_DIR}"
     fi
-    
+
     # Exit with failure if any tests failed
     if [[ ${FAILED} -gt 0 ]]; then
         return 1

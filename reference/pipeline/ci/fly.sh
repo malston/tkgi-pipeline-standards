@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-#
-# Simplified fly.sh script for reference-template
-# This is a wrapper around the more advanced scripts/fly.sh
-# Use this for basic pipeline operations
 
-set -e
+# Enable strict mode
+set -o errexit
+set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PIPELINE_DIR="${SCRIPT_DIR}/pipelines"
 
 # Source repository helper functions if available
