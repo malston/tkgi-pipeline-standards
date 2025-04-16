@@ -54,10 +54,6 @@ source "${LIB_DIR}/utils.sh"
 source "${LIB_DIR}/help.sh"
 source "${LIB_DIR}/parsing.sh"
 source "${LIB_DIR}/commands.sh"
-source "${LIB_DIR}/pipelines.sh"
-source "${LIB_DIR}/environment.sh"
-source "${LIB_DIR}/version.sh"
-source "${LIB_DIR}/foundation.sh"
 
 # Source additional helper functions if available
 if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
