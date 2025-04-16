@@ -68,24 +68,6 @@ fi
 # This can be customized by different scripts that use the parsing module
 export SUPPORTED_COMMANDS="set|unpause|destroy|validate|release|set-pipeline"
 
-# Explicitly define all supported options here to ensure the validator recognizes them
-# Option handling in case statements:
-# case "$1" in
-#   -f | --foundation) ... ;;
-#   -t | --target) ... ;;
-#   -e | --environment) ... ;;
-#   -b | --branch) ... ;;
-#   -c | --config-branch) ... ;;
-#   -d | --params-branch) ... ;;
-#   -p | --pipeline) ... ;;
-#   -o | --github-org) ... ;;
-#   -v | --version) ... ;;
-#   --dry-run) ... ;;
-#   --verbose) ... ;;
-#   --timer) ... ;;
-#   -h | --help) ... ;;
-# esac
-
 # Main execution flow
 main() {
   # Process help flags first
