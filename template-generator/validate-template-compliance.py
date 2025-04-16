@@ -59,7 +59,9 @@ TEMPLATE_STRUCTURES = {
             "shebang": r"^#!/usr/bin/env bash$",
             "strict_mode": r"set -o errexit.*set -o pipefail",
             "script_dir": r"[A-Za-z_]+(DIR|_DIR)=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
-        }
+        },
+        # Default relaxed rules - nothing relaxed by default
+        "relaxed_rules": {}
     },
     "helm": {
         "required_dirs": [
@@ -96,7 +98,9 @@ TEMPLATE_STRUCTURES = {
             "shebang": r"^#!/usr/bin/env bash$",
             "strict_mode": r"set -o errexit.*set -o pipefail",
             "script_dir": r"[A-Za-z_]+(DIR|_DIR)=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
-        }
+        },
+        # Default relaxed rules - nothing relaxed by default
+        "relaxed_rules": {}
     },
     "cli-tool": {
         "required_dirs": [
@@ -133,7 +137,9 @@ TEMPLATE_STRUCTURES = {
             "shebang": r"^#!/usr/bin/env bash$",
             "strict_mode": r"set -o errexit.*set -o pipefail",
             "script_dir": r"[A-Za-z_]+(DIR|_DIR)=.*\$\(cd.*\$\{BASH_SOURCE\[0\]\}.*pwd\)"
-        }
+        },
+        # Default relaxed rules - nothing relaxed by default
+        "relaxed_rules": {}
     }
 }
 
@@ -160,17 +166,26 @@ FLY_OPTIONS = [
 class TemplateValidator:
     """Validator for CI/CD template compliance"""
 
-    def __init__(self, project_dir: str, template_type: str, verbose: bool = False):
+    def __init__(self, project_dir: str, template_type: str, verbose: bool = False, 
+                 relax_rules_file: str = None, skip_dirs: List[str] = None, 
+                 skip_files: List[str] = None, skip_tasks: List[str] = None):
         """Initialize the validator
 
         Args:
             project_dir: Path to the project directory to validate
             template_type: Type of template to validate against (kustomize, helm, cli-tool)
             verbose: Whether to print verbose output
+            relax_rules_file: Path to a JSON or YAML file containing rules to relax
+            skip_dirs: List of required directories to skip checking
+            skip_files: List of required files to skip checking
+            skip_tasks: List of critical task directories to skip checking
         """
         self.project_dir = Path(project_dir)
         self.template_type = template_type.lower()
         self.verbose = verbose
+        self.skip_dirs = skip_dirs or []
+        self.skip_files = skip_files or []
+        self.skip_tasks = skip_tasks or []
 
         if not self.project_dir.exists():
             raise ValueError(f"Project directory {project_dir} does not exist")
@@ -178,8 +193,86 @@ class TemplateValidator:
         if self.template_type not in TEMPLATE_STRUCTURES:
             raise ValueError(f"Unknown template type: {template_type}, must be one of: {', '.join(TEMPLATE_STRUCTURES.keys())}")
 
-        self.structure = TEMPLATE_STRUCTURES[self.template_type]
+        # Clone the structure to avoid modifying the original
+        self.structure = {k: v.copy() if isinstance(v, dict) else v.copy() if hasattr(v, 'copy') else v 
+                          for k, v in TEMPLATE_STRUCTURES[self.template_type].items()}
+        
+        # Apply relaxed rules if specified
+        if relax_rules_file:
+            self._load_relaxed_rules(relax_rules_file)
+            
+        # Apply skip options
+        self._apply_skip_options()
+            
         self.issues = []
+
+    def _load_relaxed_rules(self, rules_file: str) -> None:
+        """Load relaxed rules from a file
+
+        Args:
+            rules_file: Path to a JSON or YAML file containing rules to relax
+        """
+        rules_path = Path(rules_file)
+        if not rules_path.exists():
+            raise ValueError(f"Relaxed rules file {rules_file} does not exist")
+            
+        try:
+            with open(rules_path, "r") as f:
+                if rules_path.suffix.lower() in ['.yaml', '.yml']:
+                    relaxed_rules = yaml.safe_load(f)
+                elif rules_path.suffix.lower() == '.json':
+                    relaxed_rules = json.load(f)
+                else:
+                    raise ValueError(f"Unsupported file format: {rules_path.suffix}")
+                    
+            # Merge relaxed rules with default rules
+            if relaxed_rules:
+                self._log(f"Applying relaxed rules from {rules_file}")
+                
+                for rule_type, rules in relaxed_rules.items():
+                    if rule_type == 'skip_dirs' and isinstance(rules, list):
+                        self.skip_dirs.extend(rules)
+                    elif rule_type == 'skip_files' and isinstance(rules, list):
+                        self.skip_files.extend(rules)
+                    elif rule_type == 'skip_tasks' and isinstance(rules, list):
+                        self.skip_tasks.extend(rules)
+                    else:
+                        self._log(f"Unknown rule type: {rule_type}")
+                        
+        except Exception as e:
+            raise ValueError(f"Error loading relaxed rules: {str(e)}")
+            
+    def _apply_skip_options(self) -> None:
+        """Apply skip options to the structure"""
+        # Remove skipped directories from required_dirs
+        for dir_path in self.skip_dirs:
+            if dir_path in self.structure["required_dirs"]:
+                self.structure["required_dirs"].remove(dir_path)
+                self._log(f"Skipping required directory check: {dir_path}")
+                
+        # Remove skipped files from required_files
+        for file_path in self.skip_files:
+            if file_path in self.structure["required_files"]:
+                self.structure["required_files"].remove(file_path)
+                self._log(f"Skipping required file check: {file_path}")
+            else:
+                # Support for glob patterns in skip_files
+                for required_file in list(self.structure["required_files"]):
+                    if fnmatch.fnmatch(required_file, file_path):
+                        self.structure["required_files"].remove(required_file)
+                        self._log(f"Skipping required file check (pattern match): {required_file}")
+                
+        # Remove skipped tasks from critical_task_dirs
+        for task_path in self.skip_tasks:
+            if task_path in self.structure["critical_task_dirs"]:
+                self.structure["critical_task_dirs"].remove(task_path)
+                self._log(f"Skipping critical task check: {task_path}")
+            else:
+                # Support for glob patterns in skip_tasks
+                for critical_task in list(self.structure["critical_task_dirs"]):
+                    if fnmatch.fnmatch(critical_task, task_path):
+                        self.structure["critical_task_dirs"].remove(critical_task)
+                        self._log(f"Skipping critical task check (pattern match): {critical_task}")
 
     def _log(self, message: str) -> None:
         """Log a message if verbose mode is enabled
@@ -542,6 +635,26 @@ def parse_args() -> Dict[str, Any]:
         action="store_true",
         help="Print verbose validation information"
     )
+    
+    parser.add_argument(
+        "--relax-rules",
+        help="Path to a JSON or YAML file containing rules to relax"
+    )
+    
+    parser.add_argument(
+        "--skip-dirs",
+        help="Comma-separated list of required directories to skip checking"
+    )
+    
+    parser.add_argument(
+        "--skip-files",
+        help="Comma-separated list of required files to skip checking"
+    )
+    
+    parser.add_argument(
+        "--skip-tasks",
+        help="Comma-separated list of critical task directories to skip checking"
+    )
 
     args = parser.parse_args()
 
@@ -549,7 +662,11 @@ def parse_args() -> Dict[str, Any]:
     return {
         "project_dir": args.project_dir,
         "template_type": args.template_type,
-        "verbose": args.verbose
+        "verbose": args.verbose,
+        "relax_rules": args.relax_rules,
+        "skip_dirs": args.skip_dirs.split(",") if args.skip_dirs else [],
+        "skip_files": args.skip_files.split(",") if args.skip_files else [],
+        "skip_tasks": args.skip_tasks.split(",") if args.skip_tasks else []
     }
 
 def main():
@@ -560,14 +677,18 @@ def main():
         validator = TemplateValidator(
             project_dir=args["project_dir"],
             template_type=args["template_type"],
-            verbose=args["verbose"]
+            verbose=args["verbose"],
+            relax_rules_file=args["relax_rules"],
+            skip_dirs=args["skip_dirs"],
+            skip_files=args["skip_files"],
+            skip_tasks=args["skip_tasks"]
         )
 
-        validator.validate()
+        issues = validator.validate()
         validator.print_report()
 
         # Exit with non-zero code if issues were found
-        if validator.issues:
+        if issues:
             sys.exit(1)
 
     except Exception as e:

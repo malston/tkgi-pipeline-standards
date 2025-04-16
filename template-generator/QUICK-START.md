@@ -5,7 +5,38 @@ This guide explains how to use the `generate-reference-template.py` script to cr
 ## Prerequisites
 
 - Python 3.6 or higher
-- PyYAML library (`pip install pyyaml`)
+- PyYAML library (installed automatically with the steps below)
+
+## Setting Up a Virtual Environment
+
+It's recommended to use a Python virtual environment to run the template generator:
+
+```bash
+# Create a virtual environment
+python3 -m venv .venv
+
+# Activate the virtual environment
+# On macOS/Linux:
+source .venv/bin/activate
+# On Windows:
+# .venv\Scripts\activate
+
+# Install required dependencies
+pip install pyyaml
+
+# Now you can run the template generator
+python generate-reference-template.py --output-dir ./my-new-project
+```
+
+Alternatively, you can use the provided Makefile:
+
+```bash
+# Set up the virtual environment and install dependencies
+make setup
+
+# Generate a template
+make generate OUTPUT_DIR=./my-new-project
+```
 
 ## Running the Script
 
@@ -201,15 +232,70 @@ The validation script checks for:
 
 If issues are found, the script will provide a categorized report and suggest next steps for remediation.
 
+## Relaxing Validation Rules
+
+In some cases, you might need to relax specific compliance checks for certain projects. The validation script now supports relaxing rules in several ways:
+
+### Using Command Line Arguments
+
+```bash
+# Skip checking specific required directories
+./validate-template-compliance.py --project-dir /path/to/project --skip-dirs "ci/tasks/helm,ci/tasks/k8s"
+
+# Skip checking specific required files
+./validate-template-compliance.py --project-dir /path/to/project --skip-files "ci/pipelines/release.yml"
+
+# Skip checking specific critical task directories
+./validate-template-compliance.py --project-dir /path/to/project --skip-tasks "ci/tasks/tkgi/tkgi-login"
+```
+
+### Using a Relaxed Rules Configuration File
+
+For more complex rule relaxation, create a YAML or JSON configuration file:
+
+```yaml
+# relaxed-rules.yml
+skip_dirs:
+  - "ci/tasks/helm"
+  - "ci/tasks/k8s"
+skip_files:
+  - "ci/pipelines/release.yml"
+  - "ci/pipelines/set-pipeline.yml"
+skip_tasks:
+  - "ci/tasks/tkgi/tkgi-login"
+```
+
+Then use the `--relax-rules` parameter:
+
+```bash
+./validate-template-compliance.py --project-dir /path/to/project --relax-rules relaxed-rules.yml
+```
+
+This approach is especially useful when you need to apply the same relaxations consistently across multiple validations or in CI/CD pipelines.
+
+### Makefile Support
+
+The provided Makefile also supports relaxed rule validation:
+
+```bash
+# Pass comma-separated lists directly
+make validate PROJECT_DIR=/path/to/project SKIP_DIRS="ci/tasks/helm,ci/tasks/k8s"
+
+# Use a rules file
+make validate PROJECT_DIR=/path/to/project RELAX_RULES=relaxed-rules.yml
+```
+
 ## Updating an Existing Project
 
 To update an existing project with a new reference template:
 
 1. Generate a new template in a temporary directory
 2. Use the validation script to identify compliance issues:
+
    ```bash
    ./validate-template-compliance.py --project-dir /path/to/your-project --template-type kustomize
    ```
+
 3. Compare the generated files with your existing files
 4. Merge the changes manually or using tools like `diff` and `patch`
 
@@ -241,6 +327,7 @@ make test VERBOSE=true
 ```
 
 The test scripts:
+
 1. Generate templates for each template type (kustomize, helm, cli-tool)
 2. Validate that only the correct task directories are included for each template type
 3. Validate each generated template using validate-template-compliance.py
@@ -254,3 +341,4 @@ This is useful for checking that the template generator produces fully compliant
 - Add tests for any custom functionality you add
 - Consider contributing improvements back to the reference template
 - Run the validation script regularly to ensure ongoing compliance
+- Use rule relaxation sparingly and only when necessary
