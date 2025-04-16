@@ -27,8 +27,9 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make generate OUTPUT_DIR=~/my-new-project ORG_NAME=MyOrg REPO_NAME=my-service"
+	@echo "  make validate PROJECT_DIR=~/my-new-project"
 	@echo "  make generate-helm OUTPUT_DIR=~/my-helm-chart"
-	@echo "  make validate PROJECT_DIR=~/my-helm-chart"
+	@echo "  make validate PROJECT_DIR=~/my-helm-chart TEMPLATE_TYPE=helm"
 
 # Setup virtual environment
 .PHONY: setup

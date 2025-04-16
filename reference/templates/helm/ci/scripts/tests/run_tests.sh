@@ -66,15 +66,15 @@ fi
 # Run each test file
 FAILURES=0
 
+# Set up a trap to clean up any remaining artifacts on exit
+trap 'rm -f "$__DIR/fly_output.log"' EXIT
+
 for test_file in "${TEST_FILES[@]}"; do
     if ! run_test_file "$test_file"; then
         ((FAILURES++))
     fi
     echo
 done
-
-# Clean up any remaining artifacts
-rm -f "$__DIR/fly_output.log"
 
 # Report overall results
 echo_color "$YELLOW" "=============================="

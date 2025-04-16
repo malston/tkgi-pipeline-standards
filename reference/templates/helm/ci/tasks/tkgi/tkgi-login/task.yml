@@ -2,17 +2,21 @@
 platform: linux
 
 inputs:
-  - name: repo
+  - name: repo           # Repository containing task scripts
 
 outputs:
-  - name: pks-config
+  - name: pks-config     # TKGi configuration output
 
 run:
   path: repo/ci/tasks/tkgi/tkgi-login/task.sh
 
 params:
-  PKS_API_URL: ""
-  PKS_USER: ""
-  PKS_PASSWORD: ""
-  FOUNDATION: ""
-  SKIP_TLS_VERIFICATION: "true"
+  # Required parameters
+  PKS_API_URL: ((pks_api_url))       # PKS/TKGi API URL
+  PKS_USER: ((pks_api_admin))        # PKS/TKGi username
+  PKS_PASSWORD: ((pks_api_admin_pw)) # PKS/TKGi password
+  
+  # Optional parameters
+  FOUNDATION: ((foundation))         # Foundation name (e.g., cml-k8s-n-01)
+  VERBOSE: ((verbose))               # Enable verbose output
+  SKIP_TLS_VERIFICATION: ((skip_tls_verification)) # Skip TLS verification (default: false)
