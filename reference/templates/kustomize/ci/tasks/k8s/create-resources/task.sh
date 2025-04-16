@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
+
 set -o errexit
 set -o pipefail
-# Script directory
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-__DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
 # Source helper functions
-source "${__DIR}/../../../scripts/helpers.sh"
+source "${SCRIPT_DIR}/../../../scripts/helpers.sh"
 
 # Validate required parameters
 validate_env "FOUNDATION" "NAMESPACE"
@@ -15,17 +14,17 @@ validate_env "FOUNDATION" "NAMESPACE"
 # Setup TKGI credentials if provided
 if [[ -f "pks-config/credentials" ]]; then
   source pks-config/credentials
-  
+
   # Login to TKGI if credentials provided
   if [[ -n "$PKS_API_URL" && -n "$PKS_USER" && -n "$PKS_PASSWORD" ]]; then
     info "Logging into TKGI API: $PKS_API_URL"
-    
+
     # Set TLS verification flag
     TLS_VERIFICATION=""
     if [[ "$SKIP_TLS_VERIFICATION" == "true" ]]; then
       TLS_VERIFICATION="-k"
     fi
-    
+
     tkgi login -a "$PKS_API_URL" -u "$PKS_USER" -p "$PKS_PASSWORD" $TLS_VERIFICATION
   fi
 fi
