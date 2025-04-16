@@ -1,0 +1,19 @@
+---
+platform: linux
+
+inputs:
+  - name: repo
+  - name: manifests
+  - name: pks-config
+    optional: true
+
+params:
+  FOUNDATION:
+  NAMESPACE:
+  CLUSTER:
+  WAIT_TIME: "60" # Time in seconds to wait for resources to be ready
+  DEBUG: "false"
+  VERBOSE: "false"
+
+run:
+  path: repo/ci/tasks/k8s/validate-resources/task.sh

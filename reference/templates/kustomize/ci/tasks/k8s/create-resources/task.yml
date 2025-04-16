@@ -1,0 +1,18 @@
+---
+platform: linux
+
+inputs:
+  - name: repo
+  - name: manifests
+  - name: pks-config
+    optional: true
+
+params:
+  FOUNDATION:
+  NAMESPACE:
+  CLUSTER:
+  DEBUG: "false"
+  VERBOSE: "false"
+
+run:
+  path: repo/ci/tasks/k8s/create-resources/task.sh
