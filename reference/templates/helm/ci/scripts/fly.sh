@@ -11,6 +11,7 @@
 #   destroy      Destroy specified pipeline
 #   validate     Validate pipeline YAML without setting
 #   release      Create a release pipeline
+#   set-pipeline Create the set-pipeline pipeline
 #
 
 # Enable strict mode

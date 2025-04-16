@@ -19,11 +19,11 @@ set -o errexit
 set -o pipefail
 
 # Get script directory for relative paths
-__DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-CI_DIR="$(cd "${__DIR}/.." &>/dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+CI_DIR="$(cd "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
 REPO_ROOT="$(cd "${CI_DIR}/.." &>/dev/null && pwd)"
 REPO_NAME=$(basename "${REPO_ROOT}")
-LIB_DIR="${__DIR}/lib"
+LIB_DIR="${SCRIPT_DIR}/lib"
 
 # Test mode for automated testing (used in check_fly and other functions)
 TEST_MODE=false
@@ -56,8 +56,8 @@ source "${LIB_DIR}/parsing.sh"
 source "${LIB_DIR}/commands.sh"
 
 # Source additional helper functions if available
-if [[ -f "${__DIR}/helpers.sh" ]]; then
-    source "${__DIR}/helpers.sh"
+if [[ -f "${SCRIPT_DIR}/helpers.sh" ]]; then
+    source "${SCRIPT_DIR}/helpers.sh"
 fi
 
 # Define supported commands for this script
@@ -100,33 +100,33 @@ function determine_foundation_environment() {
     # Set environment based on datacenter if not explicitly provided
     if [[ -z "$environment" ]]; then
         case "$datacenter" in
-            cml)
-                environment="lab"
-                ;;
-            cmd)
-                environment="nonprod"
-                ;;
-            cmp)
-                environment="prod"
-                ;;
-            *)
-                environment="lab" # default
-                ;;
+        cml)
+            environment="lab"
+            ;;
+        cmd)
+            environment="nonprod"
+            ;;
+        cmp)
+            environment="prod"
+            ;;
+        *)
+            environment="lab" # default
+            ;;
         esac
     fi
 
     # Set config repo name based on environment
     if [[ -z "$config_repo_name" ]]; then
         case "$environment" in
-            lab)
-                config_repo_name="config-lab"
-                ;;
-            nonprod)
-                config_repo_name="config-nonprod"
-                ;;
-            prod)
-                config_repo_name="config-prod"
-                ;;
+        lab)
+            config_repo_name="config-lab"
+            ;;
+        nonprod)
+            config_repo_name="config-nonprod"
+            ;;
+        prod)
+            config_repo_name="config-prod"
+            ;;
         esac
     fi
 
@@ -143,15 +143,15 @@ function configure_environment() {
     # Set branch based on environment if not provided
     if [[ -z "$branch" || "$branch" == "develop" ]]; then
         case "$environment" in
-            lab)
-                branch="develop"
-                ;;
-            nonprod)
-                branch="release"
-                ;;
-            prod)
-                branch="main"
-                ;;
+        lab)
+            branch="develop"
+            ;;
+        nonprod)
+            branch="release"
+            ;;
+        prod)
+            branch="main"
+            ;;
         esac
     fi
 
