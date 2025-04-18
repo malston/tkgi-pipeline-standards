@@ -286,10 +286,12 @@ You can use this template for a new component using one of two methods:
 ### Method 1: Using the Template Generator (Recommended)
 
 1. Run the template generator script from the tkgi-pipeline-standards repository root:
+
    ```bash
    cd /path/to/tkgi-pipeline-standards
-   ./template-generator/generate-reference-template.py
+   ./tools/template-generator/generate-reference-template.py
    ```
+
 2. Follow the prompts to select the Helm template type and configure your project
 3. The script will generate the entire directory structure based on this template
 4. Customize the generated files as needed for your specific project
@@ -297,7 +299,7 @@ You can use this template for a new component using one of two methods:
 6. Create environment-specific values files
 7. Set up your params in the params repository
 
-For more details, see the [template generator quick start guide](../../../template-generator/QUICK-START.md).
+For more details, see the [template generator quick start guide](../../../tools/template-generator/QUICK-START.md).
 
 ### Method 2: Manual Copy
 

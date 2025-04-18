@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+# Help text for fly.sh
+
+# Function to display usage
+function show_usage() {
+    cat <<EOF
+Usage:
+    $0 [options] [command] [pipeline_name]
+
+Commands:
+    set              Set a pipeline (default)
+    unpause          Set and unpause a pipeline
+    destroy          Destroy a pipeline
+    validate         Validate pipeline YAML without setting
+    release          Create a release pipeline
+    set-pipeline     Create a set-pipeline pipeline
+
+Options:
+    -f, --foundation NAME      Foundation name (required)
+    -t, --target TARGET        Concourse target (default: <foundation>)
+    -e, --environment ENV      Environment type (lab|nonprod|prod)
+    -b, --branch BRANCH        Git branch for pipeline repository (default: develop)
+    -c, --config-branch BRANCH Git branch for config repository (default: master)
+    -d, --params-branch BRANCH Params git branch (default: master)
+    -n, --config-repo-name NAME Config repo name
+    -p, --pipeline NAME        Custom pipeline name
+    -o, --github-org ORG       GitHub organization or Owner
+    -v, --version VERSION      Pipeline version
+
+    --dry-run                  Simulate without making changes
+    --verbose                  Increase output verbosity
+    --timer DURATION           Set timer trigger duration
+
+    -h, --help                 Show help message
+    --help [command]           Show help for specific command
+
+Examples:
+  Fly the pipeline on a branch for pipeline and a branch for the config repo:
+    $0 -f cml-k8s-n-08 -b BJSB-000-update-{{ pipeline_name }} -c BJSB-000-update-config
+
+  Fly the 'release' pipeline:
+    $0 -f cml-k8s-n-08 -r "Includes all the corrective action work."
+
+  Fly the set-pipeline pipeline in a lab foundation:
+    $0 -f cml-k8s-n-08 -s
+
+  Fly the set-pipeline pipeline in a nonprod foundation:
+    $0 -f temr-k8s-n-02 -s -e nonprod
+EOF
+}
+
+# Function to display command-specific help
+function show_command_help() {
+    local command=$1
+    case $command in
+    set)
+        cat <<EOF
+Command: set
+Description: Set a pipeline
+
+Usage:
+    $0 [options] set [pipeline_name]
+
+Options:
+    -f, --foundation NAME      Foundation name (required)
+    -t, --target TARGET        Concourse target (default: <foundation>)
+    -e, --environment ENV      Environment type (lab|nonprod|prod)
+    -b, --branch BRANCH        Git branch for pipeline repository (default: develop)
+    -c, --config-branch BRANCH Git branch for config repository (default: master)
+    -p, --pipeline NAME        Custom pipeline name
+    --verbose                  Increase output verbosity
+    --timer DURATION           Set timer trigger duration
+
+Example:
+    $0 -f cml-k8s-n-08 -b feature-branch set custom-pipeline-name
+EOF
+        ;;
+    unpause)
+        cat <<EOF
+Command: unpause
+Description: Set and unpause a pipeline
+
+Usage:
+    $0 [options] unpause [pipeline_name]
+
+Options:
+    -f, --foundation NAME      Foundation name (required)
+    -t, --target TARGET        Concourse target (default: <foundation>)
+    -e, --environment ENV      Environment type (lab|nonprod|prod)
+    -b, --branch BRANCH        Git branch for pipeline repository (default: develop)
+    -c, --config-branch BRANCH Git branch for config repository (default: master)
+    -p, --pipeline NAME        Custom pipeline name
+    --verbose                  Increase output verbosity
+    --timer DURATION           Set timer trigger duration
+
+Example:
+    $0 -f cml-k8s-n-08 -b feature-branch unpause custom-pipeline-name
+EOF
+        ;;
+    destroy)
+        cat <<EOF
+Command: destroy
+Description: Destroy a pipeline
+
+Usage:
+    $0 [options] destroy [pipeline_name]
+
+Options:
+    -f, --foundation NAME      Foundation name (required)
+    -t, --target TARGET        Concourse target (default: <foundation>)
+    -p, --pipeline NAME        Custom pipeline name
+
+Example:
+    $0 -f cml-k8s-n-08 destroy custom-pipeline-name
+EOF
+        ;;
+    validate)
+        cat <<EOF
+Command: validate
+Description: Validate pipeline YAML without setting
+
+Usage:
+    $0 [options] validate [pipeline_name]
+
+Options:
+    -f, --foundation NAME      Foundation name (required)
+    -t, --target TARGET        Concourse target (default: <foundation>)
+    -e, --environment ENV      Environment type (lab|nonprod|prod)
+    -b, --branch BRANCH        Git branch for pipeline repository (default: develop)
+    -c, --config-branch BRANCH Git branch for config repository (default: master)
+    -p, --pipeline NAME        Custom pipeline name
+    --verbose                  Increase output verbosity
+
+Example:
+    $0 -f cml-k8s-n-08 -b feature-branch validate custom-pipeline-name
+EOF
+        ;;
+    release)
+        cat <<EOF
+Command: release
+Description: Create a release pipeline
+
+Usage:
+    $0 [options] release [release_body]
+
+Options:
+    -f, --foundation NAME      Foundation name (required)
+    -o, --github-org ORG       GitHub organization or Owner
+    -v, --version VERSION      Pipeline version
+
+Example:
+    $0 -f cml-k8s-n-08 release "Fix for JIRA-123"
+EOF
+        ;;
+    set-pipeline)
+        cat <<EOF
+Command: set-pipeline
+Description: Create a set-pipeline pipeline
+
+Usage:
+    $0 [options] set-pipeline [pipeline_name]
+
+Options:
+    -f, --foundation NAME      Foundation name (required)
+    -t, --target TARGET        Concourse target (default: <foundation>)
+    -e, --environment ENV      Environment type (lab|nonprod|prod)
+    -b, --branch BRANCH        Git branch for pipeline repository (default: develop)
+    -c, --config-branch BRANCH Git branch for config repository (default: master)
+    -d, --params-branch BRANCH Params git branch (default: master)
+    -o, --github-org ORG       GitHub organization or Owner
+
+Example:
+    $0 -f cml-k8s-n-08 -e nonprod set-pipeline
+EOF
+        ;;
+    *)
+        show_usage
+        ;;
+    esac
+}

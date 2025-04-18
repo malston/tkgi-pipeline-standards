@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Standardized fly.sh script for {{ template_type }} repository
+
+set -o errexit
+set -o pipefail
+
+__DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Source helper libraries
+source "$__DIR/lib/utils.sh"
+source "$__DIR/lib/commands.sh"
+source "$__DIR/lib/help.sh"
+source "$__DIR/lib/parsing.sh"
+
+# Global defaults
+PIPELINE="{{ pipeline_name }}"
+RELEASE_PIPELINE_NAME="$PIPELINE-release"
+PIPELINE_FILE_TEMPLATE="$__DIR/../pipelines/main.yml"
+GITHUB_ORG="{{ github_org }}"
+GIT_RELEASE_BRANCH="release"
+CONFIG_GIT_BRANCH="{{ default_config_branch }}"
+PARAMS_GIT_BRANCH="{{ default_params_branch }}"
+VERSION_FILE="version"
+VERSION="$(get_latest_version)"
+CREATE_RELEASE=false
+SET_RELEASE_PIPELINE=false
+DRY_RUN=false
+VERBOSE=false
+ENABLE_VALIDATION_TESTING=false
+ENVIRONMENT=""
+TIMER_DURATION=3h
+
+# Process command line arguments
+parse_arguments "$@"

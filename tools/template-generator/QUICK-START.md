@@ -14,7 +14,7 @@ This guide explains how to use the `generate-reference-template.py` script to cr
 The easiest way to run the template generator is using the provided Makefile, which handles the virtual environment automatically:
 
 ```bash
-cd template-generator
+cd tools/template-generator
 
 # First time setup (creates virtual environment and installs dependencies)
 make setup
@@ -42,7 +42,7 @@ make help
 If you prefer not to use the Makefile:
 
 ```bash
-cd template-generator
+cd tools/template-generator
 python generate-reference-template.py --output-dir ./my-new-project
 ```
 
@@ -207,9 +207,11 @@ To update an existing project with a new reference template:
 
 1. Generate a new template in a temporary directory
 2. Use the validation script to identify compliance issues:
+
    ```bash
    ./validate-template-compliance.py --project-dir /path/to/your-project --template-type kustomize
    ```
+
 3. Compare the generated files with your existing files
 4. Merge the changes manually or using tools like `diff` and `patch`
 
@@ -241,6 +243,7 @@ make test VERBOSE=true
 ```
 
 The test scripts:
+
 1. Generate templates for each template type (kustomize, helm, cli-tool)
 2. Validate that only the correct task directories are included for each template type
 3. Validate each generated template using validate-template-compliance.py

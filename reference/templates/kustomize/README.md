@@ -67,7 +67,7 @@ repository-root/
 
 This template provides a hybrid approach that combines:
 
-1. **NS-MGMT Style Structure**: 
+1. **NS-MGMT Style Structure**:
    - Simple `fly.sh` script in the root of the `ci` directory
    - Task organization by functional category (common, k8s, tkgi, testing)
    - Task structure with task.yml and task.sh files in each directory
@@ -84,23 +84,31 @@ This hybrid approach allows you to use the simpler style following the ns-mgmt p
 Tasks are organized into the following categories:
 
 ### Common Tasks
+
 General-purpose tasks used across different pipelines:
+
 - `common/kustomize/`: Builds Kubernetes resources using kustomize
 - `common/kubectl-apply/`: Applies Kubernetes resources to clusters
 - `common/prepare-kustomize/`: Prepares configurations for kustomize
 - `common/set-pipeline/`: Sets or updates pipelines
 
 ### Kubernetes (k8s) Tasks
+
 Kubernetes-specific tasks:
+
 - `k8s/create-resources/`: Creates Kubernetes resources
 - `k8s/validate-resources/`: Validates Kubernetes resources
 
 ### TKGi Tasks
+
 TKGi-specific operations:
+
 - `tkgi/tkgi-login/`: Authenticates with TKGi/PKS
 
 ### Testing Tasks
+
 Test execution and validation:
+
 - `testing/run-tests/`: Executes tests for the repository
 
 ## Task Structure
@@ -119,6 +127,7 @@ Each task is composed of two files:
    - Error handling
 
 ### Example task.yml
+
 ```yaml
 ---
 platform: linux
@@ -143,6 +152,7 @@ params:
 ```
 
 ### Example task.sh
+
 ```bash
 #!/usr/bin/env bash
 #
@@ -229,15 +239,17 @@ You can use this template for a new project using one of two methods:
 ### Method 1: Using the Template Generator (Recommended)
 
 1. Run the template generator script from the tkgi-pipeline-standards repository root:
+
    ```bash
    cd /path/to/tkgi-pipeline-standards
-   ./template-generator/generate-reference-template.py
+   ./tools/template-generator/generate-reference-template.py
    ```
+
 2. Follow the prompts to select the Kustomize template type and configure your project
 3. The script will generate the entire directory structure based on this template
 4. Customize the generated files as needed for your specific project
 
-For more details, see the [template generator quick start guide](../../../template-generator/QUICK-START.md).
+For more details, see the [template generator quick start guide](../../../tools/template-generator/QUICK-START.md).
 
 ### Method 2: Manual Copy
 
@@ -292,6 +304,7 @@ cd ci/scripts/tests
 ```
 
 The test suite validates key functionality including:
+
 - Command handling
 - Option parsing
 - Environment determination

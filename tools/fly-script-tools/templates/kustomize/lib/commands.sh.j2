@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# Command implementations for fly.sh
+
+# Function to set a pipeline
+function cmd_set() {
+    set_pipeline
+}
+
+# Function to unpause a pipeline
+function cmd_unpause() {
+    set_pipeline
+    pipeline_pause_check "$TARGET" "$PIPELINE_NAME" "$CONCOURSE_URL"
+}
+
+# Function to destroy a pipeline
+function cmd_destroy() {
+    fly -t "$TARGET" destroy-pipeline -p "$PIPELINE_NAME"
+}
+
+# Function to validate a pipeline
+function cmd_validate() {
+    PIPELINE_CONFIG_FILE=$(generate_pipeline_config "$PIPELINE_FILE_TEMPLATE" "$ENVIRONMENT" "$VERSION" "$ENABLE_VALIDATION_TESTING")
+    fly -t "$TARGET" validate-pipeline -c "$PIPELINE_CONFIG_FILE"
+}
+
+# Function to create a release pipeline
+function cmd_release() {
+    PIPELINE_FILE=$__DIR/../pipelines/release.yml
+    TARGET=tkgi-pipeline-upgrade
+    fly -t "$TARGET" sp -p "$RELEASE_PIPELINE_NAME" -c "$PIPELINE_FILE" \
+        -l "$HOME/git/params/global.yml" \
+        -l "$HOME/git/params/$DC/$DC.yml" \
+        -v git_uri="$GIT_URI" \
+        -v git_release_branch="$GIT_RELEASE_BRANCH" \
+        -v release_body="$RELEASE_BODY" \
+        -v github_token="$GITHUB_TOKEN" \
+        -v owner="$GITHUB_ORG" \
+        -v version_file="$VERSION_FILE" \
+        -v worker_tags="cml_mgt_tkgi_workers"
+
+    pipeline_pause_check "$TARGET" "$RELEASE_PIPELINE_NAME" "$CONCOURSE_URL"
+    fly -t "$TARGET" order-pipelines -a &>/dev/null
+}
+
+# Function to set the pipeline setup pipeline
+function cmd_set_pipeline() {
+    PIPELINE_FILE=$__DIR/../pipelines/set-pipeline.yml
+    fly -t "$TARGET" sp -p "$SET_PIPELINE_NAME" -c "$PIPELINE_FILE" \
+        -v dc="$DC" \
+        -v dc_type="$DCTYPE" \
+        -l "$HOME/git/params/global.yml" \
+        -l "$HOME/git/params/$DC/$DC.yml" \
+        -l "$HOME/git/params/$DC/$DC-$DCTYPE.yml" \
+        -l "$HOME/git/params/$DC/$FOUNDATION.yml" \
+        -v owner="$GITHUB_ORG" \
+        -v config_git_uri="$CONFIG_GIT_URI" \
+        -v config_git_branch="$CONFIG_GIT_BRANCH" \
+        -v params_git_branch="$PARAMS_GIT_BRANCH" \
+        -v params_git_uri="git@github.com:$GITHUB_ORG/params.git" \
+        -v release_pipeline_name="$PIPELINE_NAME" \
+        -v pipeline="{{ pipeline_name }}" \
+        -v environment="$ENVIRONMENT" \
+        -v foundation="$FOUNDATION" \
+        -v foundation_path="$FOUNDATION_PATH" \
+        -v test_cluster="cluster01"
+
+    pipeline_pause_check "$TARGET" "$SET_PIPELINE_NAME" "$CONCOURSE_URL"
+    fly -t "$TARGET" order-pipelines -a &>/dev/null
+}
+
+# Function to set the main pipeline
+function set_pipeline() {
+    PIPELINE_CONFIG_FILE=$(generate_pipeline_config "$PIPELINE_FILE_TEMPLATE" "$ENVIRONMENT" "$VERSION" "$ENABLE_VALIDATION_TESTING")
+
+    case $FOUNDATION in
+    cic-vxrail-n-01 | cic-vxrail-n-02 | cic-vxrail-n-03 | cic-vxrail-n-04 | cic-vxrail-n-05 | cic-vxrail-n-06)
+        fly -t "$TARGET" sp -p "$PIPELINE_NAME" -c "$PIPELINE_CONFIG_FILE" \
+            -l "$HOME/git/params/global.yml" \
+            -l "$HOME/git/params/k8s-global.yml" \
+            -l "$HOME/git/params/$DC/$DC.yml" \
+            -l "$HOME/git/params/$DC/$DC-$DCTYPE.yml" \
+            -l "$HOME/git/params/$DC/$FOUNDATION.yml" \
+            -l "$HOME/git/creds/creds-global.yml" \
+            -l "$HOME/git/creds/${DC}/creds-${DC}.yml" \
+            -l "$HOME/git/creds/${DC}/creds-${DC}-${DCTYPE}.yml" \
+            -l "$HOME/git/creds/${DC}/creds-${FOUNDATION}.yml" \
+            -l "$HOME/git/creds/creds-git_repo_keys.yml" \
+            -v foundation="$FOUNDATION" \
+            -v test_cluster="cluster01" \
+            -v git_uri="$GIT_URI" \
+            -v git_release_tag="$GIT_RELEASE_TAG" \
+            -v config_git_uri="$CONFIG_GIT_URI" \
+            -v config_git_branch="$CONFIG_GIT_BRANCH" \
+            -v dry_run="$DRY_RUN" \
+            -v verbose="$VERBOSE" \
+            -v timer_duration="$TIMER_DURATION" \
+            -v foundation_path="$FOUNDATION_PATH"
+        ;;
+    *)
+        fly -t "$TARGET" sp -p "$PIPELINE_NAME" -c "$PIPELINE_CONFIG_FILE" \
+            -l "$HOME/git/params/global.yml" \
+            -l "$HOME/git/params/k8s-global.yml" \
+            -l "$HOME/git/params/$DC/$DC.yml" \
+            -l "$HOME/git/params/$DC/$DC-$DCTYPE.yml" \
+            -l "$HOME/git/params/$DC/$FOUNDATION.yml" \
+            -v foundation="$FOUNDATION" \
+            -v test_cluster="cluster01" \
+            -v git_uri="$GIT_URI" \
+            -v git_release_tag="$GIT_RELEASE_TAG" \
+            -v config_git_uri="$CONFIG_GIT_URI" \
+            -v config_git_branch="$CONFIG_GIT_BRANCH" \
+            -v dry_run="$DRY_RUN" \
+            -v verbose="$VERBOSE" \
+            -v timer_duration="$TIMER_DURATION" \
+            -v foundation_path="$FOUNDATION_PATH"
+        ;;
+    esac
+
+    printf "generated pipeline: %s\n\n" "$PIPELINE_CONFIG_FILE"
+}

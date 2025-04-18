@@ -78,6 +78,7 @@ The task scripts (`ci/tasks/*/task.sh`) serve as pipeline-specific wrappers that
 3. Format outputs for pipeline consumption
 
 This separation allows:
+
 - Scripts to be used directly from the command line
 - Tasks to focus on pipeline integration
 - Core functionality to be tested independently of the pipeline
@@ -100,17 +101,19 @@ You can use this template for a new CLI tool-based component using one of two me
 ### Method 1: Using the Template Generator (Recommended)
 
 1. Run the template generator script from the tkgi-pipeline-standards repository root:
+
    ```bash
    cd /path/to/tkgi-pipeline-standards
-   ./template-generator/generate-reference-template.py
+   ./tools/template-generator/generate-reference-template.py
    ```
+
 2. Follow the prompts to select the CLI Tool template type and configure your project
 3. The script will generate the entire directory structure based on this template
 4. Customize the scripts for your specific CLI tool
 5. Update the pipeline definitions to match your workflow
 6. Configure appropriate variables in the params repository
 
-For more details, see the [template generator quick start guide](../../../template-generator/QUICK-START.md).
+For more details, see the [template generator quick start guide](../../../tools/template-generator/QUICK-START.md).
 
 ### Method 2: Manual Copy
 

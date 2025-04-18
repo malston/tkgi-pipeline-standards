@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+# Command-line argument parsing for fly.sh
+
+# Function to parse command line arguments
+function parse_arguments() {
+    local command="set"
+    local non_flags=()
+
+    while [[ "$1" =~ ^- ]] && [[ "$1" != "--" ]]; do
+        case $1 in
+        -f | --foundation)
+            shift
+            FOUNDATION=$1
+            PIPELINE_NAME="$PIPELINE-$FOUNDATION"
+            if [[ -z $TARGET ]]; then
+                TARGET=$FOUNDATION
+            fi
+            ;;
+        -t | --target)
+            shift
+            TARGET=$1
+            ;;
+        -p | --pipeline)
+            shift
+            PIPELINE_NAME=$1
+            PIPELINE=$PIPELINE_NAME
+            RELEASE_PIPELINE_NAME="$PIPELINE"
+            ;;
+        -o | --github-org)
+            shift
+            GITHUB_ORG=$1
+            ;;
+        -b | --branch)
+            shift
+            GIT_RELEASE_TAG=$1
+            ;;
+        -c | --config-branch)
+            shift
+            CONFIG_GIT_BRANCH=$1
+            ;;
+        -d | --params-branch)
+            shift
+            PARAMS_GIT_BRANCH=$1
+            ;;
+        -n | --config-repo-name)
+            shift
+            CONFIG_REPO_NAME=$1
+            ;;
+        -v | --version)
+            shift
+            VERSION=$1
+            ;;
+        -r | --release)
+            if [[ $2 =~ ^- ]]; then
+                RELEASE_BODY=""
+            elif [ -n "$2" ]; then
+                shift
+                RELEASE_BODY=$1
+            else
+                shift
+                RELEASE_BODY=$1
+            fi
+            command="release"
+            ;;
+        -s | --set-release-pipeline)
+            if [[ $2 =~ ^- ]]; then
+                SET_PIPELINE_NAME="$PIPELINE_NAME-set-release-pipeline"
+            elif [ -n "$2" ]; then
+                shift
+                SET_PIPELINE_NAME="$1"
+            else
+                SET_PIPELINE_NAME="$PIPELINE_NAME-set-release-pipeline"
+            fi
+            command="set-pipeline"
+            ;;
+        -e | --environment)
+            shift
+            ENVIRONMENT=$1
+            ;;
+        --timer | --duration)
+            shift
+            TIMER_DURATION=$1
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            ;;
+        --enable-validation-testing)
+            ENABLE_VALIDATION_TESTING=true
+            ;;
+        --verbose)
+            VERBOSE=true
+            ;;
+        -h | --help)
+            if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                shift
+                show_command_help "$1"
+                exit 0
+            else
+                show_usage
+                exit 0
+            fi
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_usage
+            exit 1
+            ;;
+        esac
+        shift
+    done
+    if [[ "$1" == '--' ]]; then shift; fi
+
+    # Process non-flag arguments
+    while [[ $# -gt 0 ]]; do
+        if [[ "$1" =~ ^(set|unpause|destroy|validate|release|set-pipeline)$ ]]; then
+            command="$1"
+        elif [[ "$command" == "release" && -z "$RELEASE_BODY" ]]; then
+            RELEASE_BODY="$1"
+        else
+            non_flags+=("$1")
+        fi
+        shift
+    done
+
+    # Set pipeline name if provided as positional argument
+    if [ "${{'#'}}non_flags[@]" -gt 0 ]; then
+        PIPELINE_NAME="${non_flags[0]}"
+    fi
+
+    # Validate required arguments
+    if [[ -z $FOUNDATION ]]; then
+        echo "Missing -f <foundation>."
+        echo ""
+        show_usage
+        exit 1
+    fi
+
+    # Set up environment-specific variables
+    setup_environment_variables
+
+    # Execute the requested command
+    case "$command" in
+    set)
+        cmd_set
+        ;;
+    unpause)
+        cmd_unpause
+        ;;
+    destroy)
+        cmd_destroy
+        ;;
+    validate)
+        cmd_validate
+        ;;
+    release)
+        cmd_release
+        ;;
+    set-pipeline)
+        cmd_set_pipeline
+        ;;
+    *)
+        echo "Unknown command: $command"
+        show_usage
+        exit 1
+        ;;
+    esac
+}

@@ -47,10 +47,12 @@ To use these reference templates for a new project:
 1. **Create a new repository**: Set up the basic repository structure
 2. **Generate template structure using the template generator**:
    - Run the template generator script from the repository root:
+
      ```sh
-     cd template-generator
+     cd tools/template-generator
      python generate-reference-template.py --output-dir /path/to/your/new-project
      ```
+
    - This will create the appropriate directory structure based on the selected template
 3. **Alternatively, copy template structure manually**:
    - Copy the appropriate template from `/reference/templates/` to your repository
@@ -71,7 +73,7 @@ fully-functional CI/CD implementation that follows these standards.
 For quickly generating standardized templates, you can use the template generator tool included in the repository:
 
 ```sh
-cd template-generator
+cd tools/template-generator
 python generate-reference-template.py --output-dir ./my-new-project
 ```
 
@@ -81,7 +83,7 @@ The generator provides various customization options:
 - Configuring default branches and environments
 - Setting pipeline prefixes and resource parameters
 
-For more detailed instructions on using the template generator, see the [template generator quick start guide](../template-generator/QUICK-START.md).
+For more detailed instructions on using the template generator, see the [template generator quick start guide](../tools/template-generator/QUICK-START.md).
 
 ## Template Structure
 

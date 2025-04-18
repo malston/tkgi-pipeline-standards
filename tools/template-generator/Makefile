@@ -1,7 +1,7 @@
 # Makefile for template-generator
 
 # Variables
-VENV_DIR = ../.venv
+VENV_DIR = ../../.venv
 PYTHON = python3
 PIP = $(VENV_DIR)/bin/pip
 PYTHON_VENV = $(VENV_DIR)/bin/python

@@ -21,7 +21,7 @@ This repository contains reference implementations for several CI/CD patterns, i
 
 For detailed information about available templates and usage instructions, see the [Reference Templates documentation](./reference/TEMPLATES.md).
 
-For instructions on using the template generator tool, see the [template generator quick start guide](./template-generator/QUICK-START.md).
+For instructions on using the template generator tool, see the [template generator quick start guide](./tools/template-generator/QUICK-START.md).
 
 ### Repository Relationships
 
